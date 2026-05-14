@@ -7,7 +7,6 @@ import react from "@astrojs/react";
 import sanity from "@sanity/astro";
 
 export default defineConfig({
-  output: "static",
   site: "https://yourmove.ai",
   trailingSlash: "never",
 
@@ -57,8 +56,8 @@ export default defineConfig({
     },
   },
 
-  // adapter: cloudflare({
-  // prerenderEnvironment: "node",
-  // imageService: "custom",
-  // }),
+  adapter: cloudflare({
+    prerenderEnvironment: "node",
+    imageService: "custom",
+  }),
 });

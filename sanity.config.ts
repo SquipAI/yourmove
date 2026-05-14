@@ -5,6 +5,7 @@ import type { ComponentType } from "react";
 import {
   HomeIcon, LockIcon, DocumentTextIcon, LinkIcon,
   BookIcon, DocumentsIcon, FilterIcon, MenuIcon, CogIcon, PinIcon,
+  RocketIcon,
 } from "@sanity/icons";
 import {
   schemaTypes,
@@ -12,6 +13,7 @@ import {
   SINGLETON_TYPES,
   NAV_SINGLETONS,
 } from "@studio/schemas";
+import { DeployTool } from "@studio/plugins/DeployTool";
 
 const SINGLETON_ICONS: Record<string, ComponentType> = {
   home: HomeIcon,
@@ -112,4 +114,13 @@ export default defineConfig({
     templates: (prev) =>
       prev.filter((t) => !SINGLETON_TYPES.includes(t.schemaType) && t.schemaType !== "navigation"),
   },
+
+  tools: [
+    {
+      name: "deploy",
+      title: "Deploy",
+      icon: RocketIcon,
+      component: DeployTool,
+    },
+  ],
 });

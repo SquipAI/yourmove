@@ -6,6 +6,9 @@ export default defineCliConfig({
     projectId: "jdxzhhce",
     dataset: "production",
   },
+  deployment: {
+    appId: "hdqaqvn8p08267sp652vjhbl",
+  },
   vite: {
     resolve: {
       alias: {
