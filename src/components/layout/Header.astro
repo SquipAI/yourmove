@@ -1,0 +1,244 @@
+---
+import { LOCALES, DEFAULT_LOCALE } from "@i18n/config";
+import type { Locale } from "@i18n/config";
+import type { NavItem } from "@lib/types";
+
+interface Props {
+  lang?: Locale;
+  alternateUrls?: Partial<Record<Locale, string>>;
+  navItems?: NavItem[];
+}
+
+const { lang = DEFAULT_LOCALE, alternateUrls = {}, navItems = [] } = Astro.props;
+
+function localeHref(l: Locale) {
+  if (alternateUrls[l]) return alternateUrls[l]!;
+  return l === DEFAULT_LOCALE ? "/" : `/${l}`;
+}
+
+const currentPath = Astro.url.pathname;
+function isActive(href: string) {
+  return currentPath === href || currentPath.startsWith(href + "/");
+}
+---
+
+<header id="header" class="sticky top-0 z-50 bg-white border-b border-gray-100">
+  <div class="mx-auto max-w-6xl px-4 flex items-center justify-between h-16">
+
+    <!-- Logo -->
+    <a
+      href={lang === DEFAULT_LOCALE ? "/" : `/${lang}`}
+      aria-label="YourMove AI home"
+      class="font-bold text-lg tracking-tight text-gray-900"
+    >
+      YourMove AI
+    </a>
+
+    <!-- Nav: mobile overlay + desktop inline -->
+    <nav
+      id="site-nav"
+      aria-label="Main navigation"
+      class="fixed inset-0 bg-white flex flex-col gap-8 px-6 pt-20 pb-10
+             opacity-0 pointer-events-none transition-opacity
+             data-open:opacity-100 data-open:pointer-events-auto
+             md:static md:flex-row md:items-center md:gap-6
+             md:opacity-100 md:pointer-events-auto md:p-0 md:transition-none"
+    >
+      {navItems.length > 0 && (
+        <ul class="flex flex-col gap-4 md:flex-row md:items-center md:gap-2">
+          {navItems.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                aria-current={!item.external && isActive(item.href) ? "page" : undefined}
+                {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                class:list={[
+                  "block px-3 py-1 text-sm transition-colors",
+                  !item.external && isActive(item.href) ? "text-gray-900 font-medium" : "text-gray-500 hover:text-gray-900",
+                ]}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <!-- Language switcher desktop -->
+      <div class="relative hidden md:block" id="lang-dropdown">
+        <button
+          id="lang-btn"
+          aria-haspopup="listbox"
+          aria-expanded="false"
+          aria-label={`Language: ${lang.toUpperCase()}, open selector`}
+          class="flex items-center gap-1 uppercase text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
+        >
+          {lang}
+          <svg
+            class="w-3 h-3"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            aria-hidden="true"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+
+        <ul
+          id="lang-list"
+          role="listbox"
+          aria-label="Select language"
+          inert
+          class="absolute right-0 top-full mt-2 bg-white rounded-lg py-1.5 min-w-16 shadow-lg ring-1 ring-black/5
+                 opacity-0 scale-95 pointer-events-none transition-all origin-top
+                 data-open:opacity-100 data-open:scale-100 data-open:pointer-events-auto"
+        >
+          {LOCALES.map((l) => (
+            <li role="option" aria-selected={l === lang}>
+              <a
+                href={localeHref(l)}
+                hreflang={l}
+                tabindex={l === lang ? -1 : 0}
+                class:list={[
+                  "block px-3 py-1 text-sm uppercase transition-colors",
+                  l === lang ? "text-gray-900 font-medium" : "text-gray-400 hover:text-gray-900",
+                ]}
+              >
+                {l}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- Language switcher mobile -->
+      <div class="flex gap-4 mt-auto md:hidden" role="list" aria-label="Select language">
+        {LOCALES.map((l) => (
+          <a
+            href={localeHref(l)}
+            hreflang={l}
+            role="listitem"
+            aria-current={l === lang ? "page" : undefined}
+            class:list={[
+              "text-sm uppercase font-semibold transition-colors",
+              l === lang ? "text-gray-900" : "text-gray-400 hover:text-gray-900",
+            ]}
+          >
+            {l}
+          </a>
+        ))}
+      </div>
+    </nav>
+
+    <!-- Burger -->
+    <button
+      id="burger-btn"
+      aria-expanded="false"
+      aria-controls="site-nav"
+      aria-label="Open navigation"
+      class="group relative z-50 flex items-center justify-center w-10 h-10 cursor-pointer md:hidden"
+    >
+      <span
+        class="relative block w-5 h-0.5 rounded-full bg-gray-900 transition-colors duration-300
+               group-aria-expanded:bg-transparent
+               before:content-[''] before:absolute before:left-0 before:w-full before:h-full before:bg-gray-900 before:rounded-full before:-top-1.5 before:transition-all before:duration-300
+               group-aria-expanded:before:top-0 group-aria-expanded:before:rotate-45
+               after:content-[''] after:absolute after:left-0 after:w-full after:h-full after:bg-gray-900 after:rounded-full after:top-1.5 after:transition-all after:duration-300
+               group-aria-expanded:after:top-0 group-aria-expanded:after:-rotate-45"
+      ></span>
+    </button>
+
+  </div>
+</header>
+
+<script>
+  function initHeader() {
+    const burger = document.getElementById("burger-btn") as HTMLButtonElement;
+    const nav = document.getElementById("site-nav") as HTMLElement;
+    const langBtn = document.getElementById("lang-btn") as HTMLButtonElement | null;
+    const langList = document.getElementById("lang-list") as HTMLUListElement | null;
+
+    if (!burger || !nav) return;
+
+    if (window.innerWidth < 768) nav.setAttribute("inert", "");
+
+    let menuOpen = false;
+
+    function openMenu() {
+      menuOpen = true;
+      burger.setAttribute("aria-expanded", "true");
+      burger.setAttribute("aria-label", "Close navigation");
+      nav.removeAttribute("inert");
+      nav.dataset.open = "";
+      document.body.style.overflow = "hidden";
+      setTimeout(() => (nav.querySelector("a") as HTMLElement | null)?.focus(), 50);
+    }
+
+    function closeMenu() {
+      menuOpen = false;
+      burger.setAttribute("aria-expanded", "false");
+      burger.setAttribute("aria-label", "Open navigation");
+      nav.setAttribute("inert", "");
+      delete nav.dataset.open;
+      document.body.style.overflow = "";
+    }
+
+    burger.addEventListener("click", () => (menuOpen ? closeMenu() : openMenu()));
+    nav.querySelectorAll("a").forEach((a) =>
+      a.addEventListener("click", () => { if (menuOpen) closeMenu(); }),
+    );
+
+    if (langBtn && langList) {
+      let dropdownOpen = false;
+
+      function openDropdown() {
+        dropdownOpen = true;
+        langBtn!.setAttribute("aria-expanded", "true");
+        langList!.removeAttribute("inert");
+        langList!.dataset.open = "";
+        setTimeout(() => (langList!.querySelector("a") as HTMLElement | null)?.focus(), 50);
+      }
+
+      function closeDropdown() {
+        dropdownOpen = false;
+        langBtn!.setAttribute("aria-expanded", "false");
+        langList!.setAttribute("inert", "");
+        delete langList!.dataset.open;
+      }
+
+      langBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dropdownOpen ? closeDropdown() : openDropdown();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        if (dropdownOpen) { closeDropdown(); langBtn!.focus(); }
+        else if (menuOpen) { closeMenu(); burger.focus(); }
+      });
+
+      document.addEventListener("click", (e) => {
+        if (dropdownOpen && !document.getElementById("lang-dropdown")?.contains(e.target as Node))
+          closeDropdown();
+      });
+    }
+
+    window.matchMedia("(min-width: 768px)").addEventListener("change", (e) => {
+      if (e.matches) {
+        nav.removeAttribute("inert");
+        if (menuOpen) {
+          menuOpen = false;
+          burger.setAttribute("aria-expanded", "false");
+          delete nav.dataset.open;
+          document.body.style.overflow = "";
+        }
+      } else {
+        if (!menuOpen) nav.setAttribute("inert", "");
+      }
+    });
+  }
+
+  initHeader();
+</script>

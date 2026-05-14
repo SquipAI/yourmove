@@ -1,0 +1,13 @@
+---
+import BlogHub from "@components/blog/pages/BlogPage.astro";
+import { getBlogHub, getLatestPosts, getFeaturedPosts, getTagsWithPostPreview, BLOG_LATEST_COUNT, BLOG_FEATURED_COUNT } from "@lib/queries";
+
+const [hub, latest, featured, tagSections] = await Promise.all([
+  getBlogHub(),
+  getLatestPosts(BLOG_LATEST_COUNT),
+  getFeaturedPosts(BLOG_FEATURED_COUNT),
+  getTagsWithPostPreview(),
+]);
+---
+
+<BlogHub {hub} {latest} {featured} {tagSections} />

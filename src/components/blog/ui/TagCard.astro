@@ -1,0 +1,21 @@
+---
+import { getRelativeLocaleUrl } from "astro:i18n";
+import type { TagWithCount } from "@lib/types";
+import type { Locale } from "@i18n/config";
+
+interface Props {
+  tag: TagWithCount;
+  lang?: Locale;
+}
+
+const { tag, lang = "en" } = Astro.props;
+const href = getRelativeLocaleUrl(lang, `blog/tags/${tag.slug}`);
+---
+
+<a
+  href={href}
+  class="flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-white hover:shadow-md transition-shadow"
+>
+  <span class="font-medium text-gray-900">{tag.title}</span>
+  <span class="text-sm text-gray-400">{tag.postCount}</span>
+</a>

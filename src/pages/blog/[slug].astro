@@ -1,0 +1,15 @@
+---
+import PostPage from "@components/blog/pages/PostPage.astro";
+import { getPostBySlug, getRelatedPosts, getAllPostSlugs } from "@lib/queries";
+
+export async function getStaticPaths() {
+  const slugs = await getAllPostSlugs();
+  return slugs.map((slug) => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+const post = await getPostBySlug(slug!);
+const related = await getRelatedPosts(post!._id, post!.tagIds);
+---
+
+<PostPage post={post!} {related} />

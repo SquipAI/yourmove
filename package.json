@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "yourmove",
   "type": "module",
   "version": "0.0.1",
   "engines": {
@@ -12,6 +12,28 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^6.3.0"
+    "@astrojs/cloudflare": "13.1.10",
+    "@astrojs/react": "^5.0.4",
+    "@astrojs/sitemap": "^3.7.2",
+    "@portabletext/to-html": "^5.0.2",
+    "@sanity/astro": "^3.4.0",
+    "@sanity/document-internationalization": "^6.1.1",
+    "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/vite": "^4.2.4",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "astro": "^6.3.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "sanity": "^5.24.0",
+    "styled-components": "^6.4.1",
+    "tailwindcss": "^4.2.4"
+  },
+  "overrides": {
+    "vite": "^7"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "typescript": "^5.9.3"
   }
 }

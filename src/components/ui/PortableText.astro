@@ -1,0 +1,323 @@
+---
+import { Image } from "astro:assets";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type InternalLink = {
+  _type: "post" | "tool" | "home" | "blog" | "tag";
+  _id: string;
+  slug: string | null;
+} | null;
+
+type SiteLink = {
+  url: string;
+  openInNewTab?: boolean;
+  kind?: string;
+} | null;
+
+type PTLink = {
+  _key: string;
+  _type: "link";
+  href?: string;
+  internalLink?: InternalLink;
+  siteLink?: SiteLink;
+};
+type PTSpan = { _key: string; _type: "span"; text: string; marks: string[] };
+
+type TextBlock = {
+  _key: string;
+  _type: "block";
+  style: "normal" | "h2" | "h3" | "h4" | "h5" | "blockquote";
+  listItem?: "bullet" | "number";
+  level?: number;
+  children: PTSpan[];
+  markDefs: PTLink[];
+};
+
+type ImageBlock = {
+  _key: string;
+  _type: "image";
+  url?: string;
+  width?: number;
+  height?: number;
+  alt?: string;
+  fullWidth?: boolean;
+};
+
+type EmbedBlock = {
+  _key: string;
+  _type: "embed";
+  kind: "youtube" | "mixcloud" | "googleSlides" | "document";
+  source?: string;
+  doc?: { _type: string; title?: string; slug?: string | null } | null;
+};
+
+type HtmlEmbedBlock = {
+  _key: string;
+  _type: "htmlEmbed";
+  code: string;
+};
+
+type FaqSectionBlock = {
+  _key: string;
+  _type: "faqSection";
+  heading?: string;
+};
+
+type Block =
+  | TextBlock
+  | ImageBlock
+  | EmbedBlock
+  | HtmlEmbedBlock
+  | FaqSectionBlock;
+
+type Chunk =
+  | { kind: "block"; block: TextBlock }
+  | { kind: "list"; listItem: "bullet" | "number"; items: TextBlock[] }
+  | { kind: "image"; block: ImageBlock }
+  | { kind: "embed"; block: EmbedBlock }
+  | { kind: "htmlEmbed"; block: HtmlEmbedBlock }
+  | { kind: "faqSection"; block: FaqSectionBlock };
+
+type FaqItem = {
+  _key: string;
+  question: string;
+  answer: unknown[];
+};
+
+interface Props {
+  body: unknown[];
+  faq?: FaqItem[] | null;
+}
+
+const { body, faq } = Astro.props;
+
+// ── Inline HTML builder ────────────────────────────────────────────────────────
+
+function escape(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function resolveHref(link: PTLink): { href: string; newTab: boolean } {
+  if (link.siteLink?.url) {
+    return {
+      href: link.siteLink.url,
+      newTab: !!link.siteLink.openInNewTab,
+    };
+  }
+  const ref = link.internalLink;
+  if (ref) {
+    if (ref._type === "home") return { href: "/", newTab: false };
+    if (ref._type === "blog") return { href: "/blog", newTab: false };
+    if (ref._type === "post")
+      return { href: `/blog/${ref.slug ?? ""}`, newTab: false };
+    if (ref._type === "tool")
+      return { href: `/${ref.slug ?? ""}`, newTab: false };
+    if (ref._type === "tag")
+      return { href: `/tags/${ref.slug ?? ""}`, newTab: false };
+  }
+  return { href: link.href ?? "#", newTab: !!link.href };
+}
+
+function inlineHTML(children: PTSpan[], markDefs: PTLink[]): string {
+  return children
+    .map((span) => {
+      let html = escape(span.text);
+
+      for (const mark of span.marks) {
+        const link = markDefs.find((m) => m._key === mark);
+        if (link) {
+          const { href, newTab } = resolveHref(link);
+          const extras = newTab
+            ? ' target="_blank" rel="noopener noreferrer"'
+            : "";
+          html = `<a href="${escape(href)}"${extras}>${html}</a>`;
+        } else if (mark === "strong") html = `<strong>${html}</strong>`;
+        else if (mark === "em") html = `<em>${html}</em>`;
+        else if (mark === "underline") html = `<u>${html}</u>`;
+        else if (mark === "strike-through") html = `<s>${html}</s>`;
+      }
+
+      return html;
+    })
+    .join("");
+}
+
+// ── Embed helpers ─────────────────────────────────────────────────────────────
+
+function youtubeId(source: string): string | null {
+  const m = source.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:embed\/|watch\?v=|v\/|shorts\/))([\w-]{11})/,
+  );
+  if (m) return m[1];
+  if (/^[\w-]{11}$/.test(source)) return source;
+  return null;
+}
+
+// ── Group consecutive list items ───────────────────────────────────────────────
+
+const chunks: Chunk[] = [];
+for (const raw of body as Block[]) {
+  if (raw._type === "image") {
+    chunks.push({ kind: "image", block: raw });
+  } else if (raw._type === "embed") {
+    chunks.push({ kind: "embed", block: raw });
+  } else if (raw._type === "htmlEmbed") {
+    chunks.push({ kind: "htmlEmbed", block: raw });
+  } else if (raw._type === "faqSection") {
+    chunks.push({ kind: "faqSection", block: raw });
+  } else if (raw._type === "block" && raw.listItem) {
+    const last = chunks.at(-1);
+    if (last?.kind === "list" && last.listItem === raw.listItem) {
+      last.items.push(raw);
+    } else {
+      chunks.push({ kind: "list", listItem: raw.listItem, items: [raw] });
+    }
+  } else if (raw._type === "block") {
+    chunks.push({ kind: "block", block: raw });
+  }
+}
+---
+
+{
+  chunks.map((chunk) => {
+    if (chunk.kind === "image") {
+      const { block } = chunk;
+      if (!block.url || !block.width || !block.height) return null;
+      return (
+        <Image
+          src={block.url}
+          alt={block.alt ?? ""}
+          width={block.width}
+          height={block.height}
+          loading="lazy"
+          class="h-auto rounded-lg"
+        />
+      );
+    }
+
+    if (chunk.kind === "embed") {
+      const { block } = chunk;
+      if (block.kind === "youtube" && block.source) {
+        const id = youtubeId(block.source);
+        if (!id) return null;
+        return (
+          <div class="not-prose aspect-video my-6">
+            <iframe
+              src={`https://www.youtube.com/embed/${id}`}
+              title="YouTube video"
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              class="w-full h-full rounded-lg"
+            />
+          </div>
+        );
+      }
+      if (block.kind === "mixcloud" && block.source) {
+        return (
+          <div class="not-prose my-6">
+            <iframe
+              src={`https://www.mixcloud.com/widget/iframe/?feed=${encodeURIComponent(block.source)}`}
+              title="Mixcloud"
+              loading="lazy"
+              class="w-full h-32"
+            />
+          </div>
+        );
+      }
+      if (block.kind === "googleSlides" && block.source) {
+        return (
+          <div class="not-prose aspect-video my-6">
+            <iframe
+              src={block.source}
+              title="Google Slides"
+              loading="lazy"
+              class="w-full h-full rounded-lg"
+              allowfullscreen
+            />
+          </div>
+        );
+      }
+      if (block.kind === "document" && block.doc?.slug) {
+        const href =
+          block.doc._type === "post"
+            ? `/blog/${block.doc.slug}`
+            : `/${block.doc.slug}`;
+        return (
+          <a
+            href={href}
+            class="not-prose block my-6 p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+          >
+            <span class="text-sm text-gray-500 uppercase tracking-wide">
+              {block.doc._type}
+            </span>
+            <div class="font-medium">{block.doc.title}</div>
+          </a>
+        );
+      }
+      return null;
+    }
+
+    if (chunk.kind === "htmlEmbed") {
+      return (
+        <div class="not-prose my-6" set:html={chunk.block.code} />
+      );
+    }
+
+    if (chunk.kind === "faqSection") {
+      // Marker block — pulls the document's faq[] items in here so the
+      // heading sits directly above its list (same place the original
+      // Webflow source had them). Answer field uses inlineRichTextField
+      // (paragraphs only, no nested blocks), so we render answer blocks
+      // inline directly without recursing into the component.
+      if (!faq?.length) {
+        return chunk.block.heading ? <h2>{chunk.block.heading}</h2> : null;
+      }
+      return (
+        <section>
+          {chunk.block.heading && <h2>{chunk.block.heading}</h2>}
+          <dl>
+            {faq.map((item) => (
+              <div class="mb-6">
+                <dt class="font-semibold text-lg mb-2">{item.question}</dt>
+                <dd class="ml-0">
+                  {(item.answer ?? []).map((ans) => {
+                    const b = ans as TextBlock;
+                    if (b._type !== "block") return null;
+                    return (
+                      <p set:html={inlineHTML(b.children, b.markDefs)} />
+                    );
+                  })}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      );
+    }
+
+    if (chunk.kind === "list") {
+      const Tag = chunk.listItem === "bullet" ? "ul" : "ol";
+      return (
+        <Tag>
+          {chunk.items.map((item) => (
+            <li set:html={inlineHTML(item.children, item.markDefs)} />
+          ))}
+        </Tag>
+      );
+    }
+
+    const { block } = chunk;
+    const html = inlineHTML(block.children, block.markDefs);
+    if (block.style === "h2") return <h2 set:html={html} />;
+    if (block.style === "h3") return <h3 set:html={html} />;
+    if (block.style === "h4") return <h4 set:html={html} />;
+    if (block.style === "h5") return <h5 set:html={html} />;
+    if (block.style === "blockquote") return <blockquote set:html={html} />;
+    return <p set:html={html} />;
+  })
+}

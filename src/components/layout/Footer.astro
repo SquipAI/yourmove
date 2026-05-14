@@ -1,0 +1,37 @@
+---
+import { DEFAULT_LOCALE } from "@i18n/config";
+import type { Locale } from "@i18n/config";
+import type { NavItem } from "@lib/types";
+import { t } from "@i18n/ui";
+
+interface Props {
+  lang?: Locale;
+  navItems?: NavItem[];
+}
+
+const { lang = DEFAULT_LOCALE, navItems = [] } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<footer id="footer" class="border-t border-gray-100 py-8 text-sm text-gray-400">
+  <div class="mx-auto max-w-6xl px-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+    <p>© {year} YourMove AI — {t(lang, "common.rights")}</p>
+    {navItems.length > 0 && (
+      <nav aria-label="Footer">
+        <ul class="flex gap-4">
+          {navItems.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                class="hover:text-gray-700 transition-colors"
+                {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )}
+  </div>
+</footer>

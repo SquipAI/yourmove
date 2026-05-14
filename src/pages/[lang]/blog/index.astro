@@ -1,0 +1,21 @@
+---
+import BlogHub from "@components/blog/pages/BlogPage.astro";
+import { getBlogHub, getLatestPosts, getFeaturedPosts, getTagsWithPostPreview, BLOG_LATEST_COUNT, BLOG_FEATURED_COUNT } from "@lib/queries";
+import { getNonDefaultLocalePaths } from "@i18n/utils";
+import type { Locale } from "@i18n/config";
+
+export function getStaticPaths() {
+  return getNonDefaultLocalePaths();
+}
+
+const lang = Astro.params.lang as Locale;
+
+const [hub, latest, featured, tagSections] = await Promise.all([
+  getBlogHub(lang),
+  getLatestPosts(BLOG_LATEST_COUNT, lang),
+  getFeaturedPosts(BLOG_FEATURED_COUNT, lang),
+  getTagsWithPostPreview(lang),
+]);
+---
+
+<BlogHub {hub} {latest} {featured} {tagSections} {lang} />

@@ -1,0 +1,71 @@
+---
+import { LOCALES, HREFLANG, OGLOCALE, DEFAULT_LOCALE } from "@i18n/config";
+import type { Locale } from "@i18n/config";
+
+interface Props {
+  title: string;
+  description: string;
+  lang?: Locale;
+  canonical?: string;
+  alternateUrls?: Partial<Record<Locale, string>>;
+  ogImage?: string;
+  ogType?: "website" | "article";
+}
+
+const {
+  title,
+  description,
+  lang = DEFAULT_LOCALE,
+  alternateUrls = {},
+  ogImage,
+  ogType = "website",
+} = Astro.props;
+
+const origin = Astro.url.origin;
+const rawUrl = Astro.url.toString();
+const canonical =
+  Astro.props.canonical ??
+  rawUrl.replace(/index\.html$/, "").replace(/\.html$/, "");
+const ogImageUrl = ogImage ?? `${origin}/og.png`;
+
+function localePath(l: Locale) {
+  if (alternateUrls[l]) return alternateUrls[l]!;
+  if (l === DEFAULT_LOCALE) return `${origin}/`;
+  return `${origin}/${l}`;
+}
+---
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="generator" content={Astro.generator} />
+<!-- <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" /> -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<!-- <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" /> -->
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+
+<meta property="og:type" content={ogType} />
+<meta property="og:url" content={canonical} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={ogImageUrl} />
+<meta property="og:locale" content={OGLOCALE[lang]} />
+{
+  LOCALES.filter((l) => l !== lang).map((l) => (
+    <meta property="og:locale:alternate" content={OGLOCALE[l]} />
+  ))
+}
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImageUrl} />
+
+{
+  LOCALES.map((l) => (
+    <link rel="alternate" hreflang={HREFLANG[l]} href={localePath(l)} />
+  ))
+}
+<link rel="alternate" hreflang="x-default" href={localePath(DEFAULT_LOCALE)} />

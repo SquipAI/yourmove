@@ -1,0 +1,248 @@
+import { defineArrayMember, defineField, defineType } from "sanity";
+import { ComposeIcon } from "@sanity/icons";
+import {
+  inlineRichTextField,
+  linkAnnotation,
+  metaFields,
+  seoFields,
+  standardGroups,
+} from "../shared";
+
+export const post = defineType({
+  name: "post",
+  title: "Post",
+  icon: ComposeIcon,
+  type: "document",
+  groups: standardGroups,
+  fields: [
+    defineField({
+      name: "title",
+      type: "string",
+      group: "content",
+      options: { search: { weight: 100 } },
+      validation: (r) => r.required(),
+    }),
+    defineField({
+      name: "summary",
+      type: "text",
+      rows: 3,
+      group: "content",
+      options: { search: { weight: 20 } },
+      validation: (r) => r.required(),
+    }),
+    defineField({
+      name: "mainImage",
+      type: "image",
+      group: "content",
+    }),
+    defineField({
+      name: "body",
+      type: "array",
+      group: "content",
+      of: [
+        defineArrayMember({
+          type: "block",
+          styles: [
+            { title: "Normal", value: "normal" },
+            { title: "H2", value: "h2" },
+            { title: "H3", value: "h3" },
+            { title: "H4", value: "h4" },
+            { title: "H5", value: "h5" },
+            { title: "Quote", value: "blockquote" },
+          ],
+          lists: [
+            { title: "Bullet", value: "bullet" },
+            { title: "Numbered", value: "number" },
+          ],
+          marks: {
+            decorators: [
+              { title: "Bold", value: "strong" },
+              { title: "Italic", value: "em" },
+              { title: "Underline", value: "underline" },
+              { title: "Strike", value: "strike-through" },
+            ],
+            annotations: [linkAnnotation()],
+          },
+        }),
+        defineArrayMember({
+          type: "image",
+          fields: [
+            defineField({ name: "alt", type: "string", title: "Alt text" }),
+            defineField({
+              name: "fullWidth",
+              type: "boolean",
+              title: "Full-width",
+              description:
+                "Render edge-to-edge instead of constrained to article width",
+              initialValue: false,
+            }),
+          ],
+        }),
+        defineArrayMember({
+          type: "object",
+          name: "faqSection",
+          title: "FAQ section",
+          fields: [
+            defineField({
+              name: "heading",
+              type: "string",
+              description:
+                "Optional heading shown above FAQ items (e.g. 'Common Questions')",
+            }),
+          ],
+          preview: {
+            select: { heading: "heading" },
+            prepare: ({ heading }) => ({
+              title: heading ?? "FAQ section",
+              subtitle: "Renders document FAQ field at this position",
+            }),
+          },
+        }),
+        defineArrayMember({
+          type: "object",
+          name: "embed",
+          title: "Embed",
+          fields: [
+            defineField({
+              name: "kind",
+              type: "string",
+              title: "Type",
+              validation: (r) => r.required(),
+              options: {
+                list: [
+                  { title: "YouTube", value: "youtube" },
+                  { title: "Mixcloud", value: "mixcloud" },
+                  { title: "Google Slides", value: "googleSlides" },
+                  { title: "Internal document", value: "document" },
+                ],
+                layout: "radio",
+              },
+            }),
+            defineField({
+              name: "source",
+              type: "string",
+              title: "URL or ID",
+              description:
+                "YouTube: full URL or video ID. Mixcloud: feed URL. Google Slides: published embed URL.",
+              hidden: ({ parent }) =>
+                !parent?.kind || parent.kind === "document",
+              validation: (r) =>
+                r.custom((value, ctx) => {
+                  const kind = (ctx.parent as { kind?: string } | undefined)
+                    ?.kind;
+                  if (kind && kind !== "document" && !value)
+                    return "Required for media embeds";
+                  return true;
+                }),
+            }),
+            defineField({
+              name: "doc",
+              type: "reference",
+              title: "Document",
+              to: [
+                { type: "howToUse" },
+                { type: "post" },
+                { type: "tool" },
+              ],
+              hidden: ({ parent }) => parent?.kind !== "document",
+              validation: (r) =>
+                r.custom((value, ctx) => {
+                  const kind = (ctx.parent as { kind?: string } | undefined)
+                    ?.kind;
+                  if (kind === "document" && !value) return "Required";
+                  return true;
+                }),
+            }),
+          ],
+          preview: {
+            select: {
+              kind: "kind",
+              source: "source",
+              docTitle: "doc.title",
+            },
+            prepare: ({ kind, source, docTitle }) => ({
+              title:
+                kind === "document"
+                  ? `Document: ${docTitle ?? "(unset)"}`
+                  : `${kind ?? "Embed"}${source ? `: ${source}` : ""}`,
+            }),
+          },
+        }),
+        defineArrayMember({
+          type: "object",
+          name: "htmlEmbed",
+          title: "Embed code",
+          description:
+            "Advanced: paste a third-party embed snippet. Renders the HTML as-is. Use embed types above when possible.",
+          fields: [
+            defineField({
+              name: "code",
+              type: "text",
+              title: "HTML",
+              rows: 6,
+              validation: (r) => r.required(),
+            }),
+          ],
+          preview: {
+            select: { code: "code" },
+            prepare: ({ code }) => {
+              const trimmed = (code || "").trim();
+              const tag = trimmed.match(/<(\w+)/)?.[1] ?? "embed";
+              return {
+                title: `Embed code: <${tag}>`,
+                subtitle: trimmed.slice(0, 80).replace(/\s+/g, " "),
+              };
+            },
+          },
+        }),
+      ],
+    }),
+    defineField({
+      name: "faq",
+      type: "array",
+      group: "content",
+      of: [
+        defineArrayMember({
+          type: "object",
+          name: "faqItem",
+          fields: [
+            defineField({
+              name: "question",
+              type: "string",
+              validation: (r) => r.required(),
+            }),
+            inlineRichTextField("answer", "Answer"),
+          ],
+          preview: { select: { title: "question" } },
+        }),
+      ],
+    }),
+    ...seoFields,
+    ...metaFields,
+    defineField({
+      name: "readingTime",
+      type: "number",
+      group: "meta",
+    }),
+    defineField({
+      name: "featured",
+      type: "boolean",
+      group: "meta",
+      initialValue: false,
+    }),
+    defineField({
+      name: "tags",
+      type: "array",
+      group: "meta",
+      of: [defineArrayMember({ type: "reference", to: [{ type: "tag" }] })],
+    }),
+  ],
+  preview: {
+    select: { title: "title", subtitle: "language", media: "mainImage" },
+    prepare: ({ title, subtitle, media }) => ({
+      title,
+      subtitle: subtitle?.toUpperCase(),
+      media,
+    }),
+  },
+});

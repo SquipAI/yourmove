@@ -1,0 +1,22 @@
+export type PostCard = {
+  _id: string;
+  title: string;
+  summary: string;
+  slug: string;
+  mainImage: { url: string; alt: string | null } | null;
+  readingTime: number | null;
+  tags: { slug: string; title: string }[] | null;
+};
+
+export type Post = {
+  _id: string;
+  title: string;
+  summary: string;
+  metaTitle: string;
+  metaDescription: string;
+  language: string | null;
+  mainImage: { url: string; alt: string | null } | null;
+  body: unknown[] | null;
+  faq: { _key: string; question: string; answer: unknown[] }[] | null;
+  tagIds: string[];
+};

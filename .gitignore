@@ -22,3 +22,18 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# webflow source export — local-only, used by import scripts
+ym/
+
+# local migration scripts (one-off, not part of build)
+scripts/
+
+# Cloudflare Workers local cache
+.wrangler/
+
+# Claude Code local settings
+.claude/
+
+# Claude auto-memory (local notes, not for sharing)
+memory/

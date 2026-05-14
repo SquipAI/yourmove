@@ -1,0 +1,17 @@
+---
+import TagPostsPage from "@components/blog/pages/TagPostsPage.astro";
+import { getAllTagsWithCount, getTagBySlug, getTagPosts } from "@lib/queries";
+
+export async function getStaticPaths() {
+  const tags = await getAllTagsWithCount();
+  return tags.map((tag) => ({ params: { tag: tag.slug } }));
+}
+
+const { tag: slug } = Astro.params;
+const [tag, posts] = await Promise.all([
+  getTagBySlug(slug),
+  getTagPosts(slug),
+]);
+---
+
+<TagPostsPage {posts} tag={tag} />

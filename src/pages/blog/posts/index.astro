@@ -1,0 +1,11 @@
+---
+import PostListPage from "@components/blog/pages/PostListPage.astro";
+import { getAllPublishedPosts, getBlogPostsPage } from "@lib/queries";
+
+const [posts, page] = await Promise.all([
+  getAllPublishedPosts(),
+  getBlogPostsPage(),
+]);
+---
+
+<PostListPage {posts} {page} />
