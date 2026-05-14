@@ -13,7 +13,7 @@ export function DeployTool() {
     setErrorMsg("");
 
     try {
-      const res = await fetch("https://yourmove.ai/api/deploy", { method: "POST" });
+      const res = await fetch("https://yourmove.damirakyan.workers.dev/api/deploy", { method: "POST" });
       const json = await res.json() as { ok: boolean; error?: string };
       if (!json.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
       setStatus("success");
