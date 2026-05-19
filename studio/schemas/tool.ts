@@ -4,7 +4,7 @@ import { metaFields, seoFields, standardGroups } from "./shared";
 
 export const tool = defineType({
   name: "tool",
-  title: "Tool",
+  title: "Tools",
   icon: ControlsIcon,
   type: "document",
   groups: standardGroups,
@@ -25,8 +25,14 @@ export const tool = defineType({
     }),
     defineField({
       name: "link",
-      type: "url",
+      type: "string",
       group: "content",
+      validation: (r) =>
+        r.custom((val) => {
+          if (!val) return true;
+          if (val.startsWith("/")) return true;
+          try { new URL(val); return true; } catch { return "Enter a relative path (/page) or full URL"; }
+        }),
     }),
     ...seoFields,
     ...metaFields,

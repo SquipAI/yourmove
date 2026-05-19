@@ -1,6 +1,7 @@
 ---
 import Base from "@layouts/Base.astro";
 import PortableText from "@components/ui/PortableText.astro";
+import PageHeading from "@components/ui/PageHeading.astro";
 import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
 import type { LegalPageData } from "@lib/types";
@@ -11,14 +12,14 @@ interface Props {
 }
 
 const { page, lang = DEFAULT_LOCALE } = Astro.props;
-
 ---
 
 <Base title={page.metaTitle} description={page.metaDescription} {lang}>
-  <article class="mx-auto max-w-3xl px-4 py-16 prose prose-lg">
-    <h1 class="text-4xl font-bold tracking-tight not-prose mb-10">
-      {page?.h1}
-    </h1>
-    {page?.body && <PortableText body={page.body} />}
+  <article class="section *:max-w-200 lg:pt-section-sm">
+    <PageHeading title={page.title} />
+
+    <div class="prose">
+      {page?.body && <PortableText body={page.body} />}
+    </div>
   </article>
 </Base>

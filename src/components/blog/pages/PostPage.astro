@@ -1,40 +1,141 @@
 ---
-import { Image } from "astro:assets";
 import Base from "@layouts/Base.astro";
 import PortableText from "@components/ui/PortableText.astro";
+import Breadcrumbs from "@components/blog/ui/Breadcrumbs.astro";
+import PageHeading from "@components/ui/PageHeading.astro";
+import ShareButtons from "@components/ui/ShareButtons.astro";
+import SchemaOrg from "@components/seo/SchemaOrg.astro";
+import PostList from "@components/blog/ui/PostList.astro";
+import SectionHeading from "@components/ui/SectionHeading.astro";
+import ShortLogo from "@assets/svg/ShortLogoSvg.svg";
+import { articleSchema } from "@lib/schema";
 import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
-import type { Post, PostCard } from "@lib/types";
+import { t } from "@i18n/ui";
+import { localePathFor } from "@i18n/utils";
+import type { Post, PostCard as PostCardType } from "@lib/types";
 
 interface Props {
   post: Post;
-  related: PostCard[];
+  related: PostCardType[];
+  homeTitle: string;
+  blogTitle: string;
   lang?: Locale;
 }
 
-const { post, related, lang = DEFAULT_LOCALE } = Astro.props;
+const {
+  post,
+  related,
+  homeTitle,
+  blogTitle,
+  lang = DEFAULT_LOCALE,
+} = Astro.props;
+
+const origin = Astro.url.origin;
+const pageUrl = String(Astro.url);
+const localePath = localePathFor(lang);
+const blogUrl = `${origin}${localePath("blog")}`;
+const firstTag = post.tags![0];
+const tagUrl = `${origin}${localePath(`blog/topics/${firstTag.slug}`)}`;
+
+const breadcrumbsNav = [
+  { name: blogTitle, url: blogUrl },
+  { name: firstTag.title, url: tagUrl },
+];
+
+const breadcrumbsSchema = [
+  { name: homeTitle, url: `${origin}${localePath("")}` },
+  { name: blogTitle, url: blogUrl },
+  { name: firstTag.title, url: tagUrl },
+  { name: post.title, url: pageUrl },
+];
+
+const published = new Date(post.createdAt);
+const updated = new Date(post._updatedAt);
+const isUpdated = updated.getTime() - published.getTime() > 24 * 60 * 60 * 1000;
+const displayDate = isUpdated ? updated : published;
+const dateFormatted = new Intl.DateTimeFormat(lang, {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+}).format(displayDate);
 ---
 
-<Base title={post.metaTitle} description={post.metaDescription} {lang}>
-  <article class="mx-auto max-w-3xl px-4 py-12">
-    <header class="mb-8">
-      <h1 class="text-4xl font-bold tracking-tight mb-3">{post.title}</h1>
-      {post.summary && <p class="text-lg text-gray-600">{post.summary}</p>}
+<Base
+  title={post.metaTitle}
+  description={post.metaDescription}
+  {lang}
+  ogType="article"
+  ogImage={post.mainImage?.url}
+>
+  <SchemaOrg
+    slot="head"
+    schema={articleSchema(post, pageUrl, lang, breadcrumbsSchema)}
+  />
+
+  <article class="section *:max-w-[84ch] lg:pt-section-sm">
+    <header class="max-w-prose pb-10">
+      <Breadcrumbs items={breadcrumbsNav} />
+      <PageHeading title={post.title} subtitle={post.summary} size="big" />
+
+      <div
+        class="mt-10 pt-6 border-t border-subtle-lighter flex flex-wrap items-center gap-x-6 gap-y-4 text-sm"
+      >
+        <div class="flex items-center gap-3">
+          <span class="w-9 aspect-square [&>svg]:fill-brand">
+            <ShortLogo class="w-full aspect-square" />
+          </span>
+          <span class="flex flex-col leading-tight">
+            <span class="text-[0.7rem] uppercase tracking-eyebrow text-subtle">
+              {t(lang, "blog.writtenBy")}
+            </span>
+            <span class="font-medium text-subtle">YourMove Team</span>
+          </span>
+        </div>
+
+        <span class="hidden sm:inline text-subtle-lighter" aria-hidden="true"
+          >•</span
+        >
+
+        <time datetime={displayDate.toISOString()} class="text-subtle">
+          {isUpdated && <span>{t(lang, "blog.updated")} </span>}{dateFormatted}
+        </time>
+
+        {
+          post.readingTime != null && (
+            <>
+              <span
+                class="hidden sm:inline text-subtle-lighter"
+                aria-hidden="true"
+              >
+                •
+              </span>
+              <span class="text-subtle">
+                {post.readingTime} {t(lang, "blog.minRead")}
+              </span>
+            </>
+          )
+        }
+
+        <ShareButtons url={pageUrl} title={post.title} {lang} class="ml-auto" />
+      </div>
     </header>
 
-    {post.mainImage?.url && (
-      <Image
-        src={post.mainImage.url}
-        alt={post.mainImage.alt ?? post.title}
-        width={900}
-        height={500}
-        loading="eager"
-        class="w-full h-auto rounded-xl mb-10"
-      />
-    )}
-
-    <div class="prose prose-lg max-w-none">
+    <div class="prose">
       <PortableText body={post.body ?? []} faq={post.faq} />
     </div>
   </article>
+
+  {
+    related.length > 0 && (
+      <section class="section lg:pt-section-sm">
+        <SectionHeading
+          eyebrow={t(lang, "blog.keepReading")}
+          title={t(lang, "blog.relatedPosts")}
+          class="mb-8"
+        />
+        <PostList posts={related} {lang} level={3} imageMode="none" />
+      </section>
+    )
+  }
 </Base>

@@ -6,8 +6,8 @@ import Footer from "@components/layout/Footer.astro";
 import { getRelativeLocaleUrl } from "astro:i18n";
 import { LOCALES, DEFAULT_LOCALE, HREFLANG } from "@i18n/config";
 import type { Locale } from "@i18n/config";
-import { getNavigation } from "@lib/queries";
-import type { NavItem, NavItemRaw } from "@lib/types";
+import { getHeaderNav, getFooterNav } from "@lib/queries";
+import type { NavItem, NavItemRaw, FooterNavData } from "@lib/types";
 
 interface Props {
   title: string;
@@ -19,20 +19,32 @@ interface Props {
   ogType?: "website" | "article";
 }
 
-const { title, description, lang = DEFAULT_LOCALE, canonical, ogImage, ogType } = Astro.props;
+const {
+  title,
+  description,
+  lang = DEFAULT_LOCALE,
+  canonical,
+  ogImage,
+  ogType,
+} = Astro.props;
 
 // Derive alternateUrls from the current path if not passed explicitly.
 // Strips locale prefix (/es/privacy → privacy) and builds per-locale URLs.
 // Adding a new locale only requires updating LOCALES in config.
-const alternateUrls: Record<Locale, string> = Astro.props.alternateUrls ?? (() => {
-  const nonDefault = LOCALES.filter((l) => l !== DEFAULT_LOCALE);
-  const slug = Astro.url.pathname
-    .replace(new RegExp(`^/(${nonDefault.join("|")})(\/|$)`), "")
-    .replace(/^\//, "");
-  return Object.fromEntries(
-    LOCALES.map((l) => [l, `${Astro.url.origin}${slug ? getRelativeLocaleUrl(l, slug) : getRelativeLocaleUrl(l)}`]),
-  ) as Record<Locale, string>;
-})();
+const alternateUrls: Record<Locale, string> =
+  Astro.props.alternateUrls ??
+  (() => {
+    const nonDefault = LOCALES.filter((l) => l !== DEFAULT_LOCALE);
+    const slug = Astro.url.pathname
+      .replace(new RegExp(`^/(${nonDefault.join("|")})(\/|$)`), "")
+      .replace(/^\//, "");
+    return Object.fromEntries(
+      LOCALES.map((l) => [
+        l,
+        `${Astro.url.origin}${slug ? getRelativeLocaleUrl(l, slug) : getRelativeLocaleUrl(l)}`,
+      ]),
+    ) as Record<Locale, string>;
+  })();
 
 const PAGE_PATHS: Partial<Record<NavItemRaw["targetType"], string>> = {
   home: "",
@@ -44,20 +56,36 @@ const PAGE_PATHS: Partial<Record<NavItemRaw["targetType"], string>> = {
 function resolveNavItems(raw: NavItemRaw[] | null): NavItem[] {
   if (!raw) return [];
   return raw.flatMap(({ label, targetType, externalUrl }) => {
-    if (externalUrl) return [{ label, href: externalUrl, external: true }];
+    if (externalUrl) {
+      const isExternal = externalUrl.startsWith("http://") || externalUrl.startsWith("https://");
+      return [{ label, href: externalUrl, external: isExternal }];
+    }
     if (!(targetType in PAGE_PATHS)) return [];
     const path = PAGE_PATHS[targetType]!;
-    const href = path ? getRelativeLocaleUrl(lang, path) : getRelativeLocaleUrl(lang);
+    const href = path
+      ? getRelativeLocaleUrl(lang, path)
+      : getRelativeLocaleUrl(lang);
     return [{ label, href }];
   });
 }
 
-const [headerRaw, footerRaw] = await Promise.all([
-  getNavigation("nav-header"),
-  getNavigation("nav-footer"),
+const [headerNav, footerNav] = await Promise.all([
+  getHeaderNav(),
+  getFooterNav(),
 ]);
-const headerNavItems = resolveNavItems(headerRaw);
-const footerNavItems = resolveNavItems(footerRaw);
+const headerNavItems = resolveNavItems(headerNav);
+
+function resolveFooterColumns(data: FooterNavData | null) {
+  if (!data) return { tagline: null, columns: [] };
+  return {
+    tagline: data.tagline ?? null,
+    columns: data.columns.map((col) => ({
+      title: col.title,
+      items: resolveNavItems(col.items),
+    })),
+  };
+}
+const footer = resolveFooterColumns(footerNav);
 ---
 
 <!doctype html>
@@ -74,11 +102,15 @@ const footerNavItems = resolveNavItems(footerRaw);
     />
     <slot name="head" />
   </head>
-  <body class="bg-white text-gray-900 antialiased">
-    <Header lang={lang} alternateUrls={alternateUrls} navItems={headerNavItems} />
-    <main id="main">
+  <body>
+    <Header
+      lang={lang}
+      alternateUrls={alternateUrls}
+      navItems={headerNavItems}
+    />
+    <main id="main" class="flex-1">
       <slot />
     </main>
-    <Footer lang={lang} navItems={footerNavItems} />
+    <Footer lang={lang} tagline={footer.tagline} columns={footer.columns} />
   </body>
 </html>

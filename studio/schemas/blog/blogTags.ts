@@ -14,7 +14,7 @@ export const blogTags = defineType({
       name: "title",
       type: "string",
       group: "content",
-      description: "H1 shown on the /blog/tags listing page",
+      description: "H1 shown on the /blog/topics listing page",
       initialValue: "Topics",
     }),
     ...seoMetaFields,

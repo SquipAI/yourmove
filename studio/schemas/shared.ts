@@ -149,3 +149,49 @@ export const metaFields = [
     initialValue: () => new Date().toISOString(),
   }),
 ];
+
+export const navItemMember = defineArrayMember({
+  type: "object",
+  fields: [
+    defineField({
+      name: "label",
+      type: "string",
+      description: "Leave empty to use the document title",
+    }),
+    defineField({
+      name: "target",
+      type: "reference",
+      to: [
+        { type: "home" },
+        { type: "blog" },
+        { type: "privacy" },
+        { type: "terms" },
+        { type: "tool" },
+        { type: "siteLink" },
+      ],
+      options: { disableNew: true },
+      validation: (r) => r.required(),
+    }),
+  ],
+  preview: {
+    select: {
+      label: "label",
+      targetTitle: "target.title",
+      type: "target._type",
+      url: "target.url",
+      link: "target.link",
+    },
+    prepare: ({ label, targetTitle, type, url, link }) => {
+      const PAGE_URLS: Record<string, string> = {
+        home: "/",
+        blog: "/blog",
+        privacy: "/privacy",
+        terms: "/terms",
+      };
+      return {
+        title: label || targetTitle,
+        subtitle: url || link || PAGE_URLS[type] || type,
+      };
+    },
+  },
+});

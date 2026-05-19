@@ -11,7 +11,7 @@ export const siteLink = defineType({
     "Reusable destination URL (own subdomain, app stores, partner sites). Pick from the link picker in body content instead of typing the URL each time.",
   fields: [
     defineField({
-      name: "label",
+      name: "title",
       type: "string",
       description: "Shown only in Studio for picking — not rendered on the site",
       validation: (r) => r.required(),
@@ -24,6 +24,6 @@ export const siteLink = defineType({
     }),
   ],
   preview: {
-    select: { title: "label", subtitle: "url" },
+    select: { title: "title", subtitle: "url" },
   },
 });

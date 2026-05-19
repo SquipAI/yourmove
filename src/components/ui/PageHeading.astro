@@ -1,0 +1,41 @@
+---
+interface Props {
+  title: string;
+  subtitle?: string | null;
+  level?: 1 | 2;
+  size?: "default" | "big";
+  class?: string;
+}
+
+const {
+  title,
+  subtitle,
+  level = 1,
+  size = "default",
+  class: cls,
+} = Astro.props;
+
+const Tag = `h${level}` as "h1" | "h2";
+const isBig = size === "big";
+---
+
+{
+  subtitle ? (
+    <hgroup class:list={["not-last:mb-section-xs", cls]}>
+      <Tag class:list={[isBig ? "text-title-big" : "text-title"]}>{title}</Tag>
+      <p class:list={["max-w-[45ch]", isBig ? "text-subtitle" : "text-xl"]}>
+        {subtitle}
+      </p>
+    </hgroup>
+  ) : (
+    <Tag
+      class:list={[
+        isBig ? "text-title-big" : "text-title",
+        "mb-section-xs",
+        cls,
+      ]}
+    >
+      {title}
+    </Tag>
+  )
+}

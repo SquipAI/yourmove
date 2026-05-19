@@ -13,7 +13,7 @@ function makeLegalPage(name: string, title: string, icon: ComponentType) {
     groups: standardGroups,
     fields: [
       defineField({
-        name: "h1",
+        name: "title",
         type: "string",
         title: "Page heading (H1)",
         group: "content",
@@ -49,7 +49,7 @@ function makeLegalPage(name: string, title: string, icon: ComponentType) {
       ...seoMetaFields,
     ],
     preview: {
-      select: { title: "h1" },
+      select: { title: "title" },
       prepare: ({ title }) => ({ title: title ?? name }),
     },
   });

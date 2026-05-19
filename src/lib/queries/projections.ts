@@ -22,5 +22,6 @@ export const POST_CARD = /* groq */ `{
   _id, title, summary, "slug": slug.current,
   "mainImage": mainImage{ "url": asset->url, alt },
   readingTime,
+  "createdAt": coalesce(createdAt, _createdAt),
   "tags": tags[]->{ "slug": slug.current, title }
 }`;

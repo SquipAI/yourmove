@@ -2,36 +2,61 @@
 import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
 import type { NavItem } from "@lib/types";
-import { t } from "@i18n/ui";
+import LogoSvg from "@assets/svg/LogoSvg.astro";
 
 interface Props {
   lang?: Locale;
-  navItems?: NavItem[];
+  tagline?: string | null;
+  columns?: { title: string; items: NavItem[] }[];
 }
 
-const { lang = DEFAULT_LOCALE, navItems = [] } = Astro.props;
+const { lang = DEFAULT_LOCALE, tagline, columns = [] } = Astro.props;
 const year = new Date().getFullYear();
 ---
 
-<footer id="footer" class="border-t border-gray-100 py-8 text-sm text-gray-400">
-  <div class="mx-auto max-w-6xl px-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
-    <p>© {year} YourMove AI — {t(lang, "common.rights")}</p>
-    {navItems.length > 0 && (
-      <nav aria-label="Footer">
-        <ul class="flex gap-4">
-          {navItems.map((item) => (
-            <li>
-              <a
-                href={item.href}
-                class="hover:text-gray-700 transition-colors"
-                {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-              >
-                {item.label}
-              </a>
-            </li>
+<footer id="footer" class="bg-brand/9">
+  <div class="grid grid-cols-1 gap-10 py-12 sm:grid-cols-[auto_1fr] sm:gap-16">
+    <!-- Brand -->
+    <div class="flex flex-col gap-3">
+      <a
+        href={lang === DEFAULT_LOCALE ? "/" : `/${lang}`}
+        aria-label="YourMove AI home"
+        class="logo"
+      >
+        <LogoSvg />
+      </a>
+      {tagline && <p class="text-sm">{tagline}</p>}
+      <p class="text-sm opacity-40">© {year} YourMove AI</p>
+    </div>
+
+    <!-- Columns -->
+    {
+      columns.length > 0 && (
+        <div class="flex flex-wrap gap-x-12 gap-y-8">
+          {columns.map((col) => (
+            <nav aria-label={col.title}>
+              <p class="text-xs font-semibold uppercase tracking-widest opacity-50 mb-3">
+                {col.title}
+              </p>
+              <ul class="flex flex-col gap-2">
+                {col.items.map((item) => (
+                  <li>
+                    <a
+                      href={item.href}
+                      class="text-sm opacity-75 hover:opacity-100 transition-opacity"
+                      {...(item.external
+                        ? { target: "_blank", rel: "noopener noreferrer" }
+                        : {})}
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           ))}
-        </ul>
-      </nav>
-    )}
+        </div>
+      )
+    }
   </div>
 </footer>

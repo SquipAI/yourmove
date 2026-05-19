@@ -11,6 +11,9 @@ export type TagPageData = Tag & {
   metaDescription: string;
 };
 
-export type TagWithCount = Tag & { postCount: number };
+export type TagWithCount = Tag & {
+  description: string | null;
+  postCount: number;
+};
 
 export type TagWithPosts = TagWithCount & { posts: PostCard[] };

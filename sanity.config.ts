@@ -11,7 +11,6 @@ import {
   schemaTypes,
   translatedSchemaTypes,
   SINGLETON_TYPES,
-  NAV_SINGLETONS,
 } from "@studio/schemas";
 import { DeployTool } from "@studio/plugins/DeployTool";
 
@@ -90,13 +89,8 @@ export default defineConfig({
                     S.listItem().title("Privacy").id("privacy").icon(LockIcon).child(S.document().schemaType("privacy").documentId("privacy")),
                     S.listItem().title("Terms").id("terms").icon(DocumentTextIcon).child(S.document().schemaType("terms").documentId("terms")),
                     S.divider(),
-                    ...NAV_SINGLETONS.map(({ id, title }) =>
-                      S.listItem()
-                        .title(title)
-                        .id(id)
-                        .icon(MenuIcon)
-                        .child(S.document().schemaType("navigation").documentId(id)),
-                    ),
+                    S.listItem().title("Header Nav").id("header-nav").icon(MenuIcon).child(S.document().schemaType("headerNav").documentId("header-nav")),
+                    S.listItem().title("Footer Nav").id("footer-nav").icon(MenuIcon).child(S.document().schemaType("footerNav").documentId("footer-nav")),
                     S.divider(),
                     S.documentTypeListItem("siteLink").title("External Links").icon(LinkIcon),
                   ]),
@@ -112,7 +106,7 @@ export default defineConfig({
   schema: {
     types: schemaTypes,
     templates: (prev) =>
-      prev.filter((t) => !SINGLETON_TYPES.includes(t.schemaType) && t.schemaType !== "navigation"),
+      prev.filter((t) => !SINGLETON_TYPES.includes(t.schemaType)),
   },
 
   tools: [

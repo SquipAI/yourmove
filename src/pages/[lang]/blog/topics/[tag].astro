@@ -8,16 +8,18 @@ export async function getStaticPaths() {
   const locales = getNonDefaultLocalePaths().map((p) => p.params.lang as Locale);
   const tags = await getAllTagsWithCount();
   return locales.flatMap((lang) =>
-    tags.map((tag) => ({ params: { lang, tag: tag.slug } }))
+    tags.map((tag) => ({ params: { lang, tag: tag.slug } })),
   );
 }
 
 const lang = Astro.params.lang as Locale;
 const { tag: slug } = Astro.params;
-const [tag, posts] = await Promise.all([
+const [tag, posts, allTags] = await Promise.all([
   getTagBySlug(slug, lang),
   getTagPosts(slug, lang),
+  getAllTagsWithCount(lang),
 ]);
+const otherTags = allTags.filter((t) => t.slug !== slug);
 ---
 
-<TagPostsPage {posts} {tag} {lang} />
+<TagPostsPage {posts} {tag} {otherTags} {lang} />

@@ -1,0 +1,26 @@
+---
+interface Props {
+  href?: string;
+  variant?: "solid" | "outline" | "ghost";
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { href, variant = "solid", class: cls, ...rest } = Astro.props;
+
+const Tag = href ? "a" : "button";
+---
+
+<Tag
+  href={href}
+  class:list={[
+    "btn",
+    variant === "solid" && "btn-solid",
+    variant === "outline" && "btn-outline",
+    variant === "ghost" && "border-white/70 hover:bg-white/10",
+    cls,
+  ]}
+  {...rest}
+>
+  <slot />
+</Tag>

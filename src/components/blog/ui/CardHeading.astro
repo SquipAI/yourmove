@@ -1,0 +1,47 @@
+---
+interface Props {
+  title: string;
+  description?: string | null;
+  href: string;
+  level?: 2 | 3 | 4;
+  size?: "sm" | "md" | "lg";
+  class?: string;
+}
+
+const {
+  title,
+  description,
+  href,
+  level = 2,
+  size = "md",
+  class: cls,
+} = Astro.props;
+const HeadingTag = `h${level}` as "h2" | "h3" | "h4";
+
+const sizeClass = {
+  sm: "text-title-xxs",
+  md: "text-title-xs",
+  lg: "text-title-sm",
+}[size];
+
+const headingClasses = [
+  sizeClass,
+  "text-pretty transition-colors group-hover:text-brand [&_a]:after:absolute [&_a]:after:inset-0 [&_a]:after:z-2",
+  cls,
+];
+---
+
+{
+  description ? (
+    <hgroup>
+      <HeadingTag class:list={headingClasses}>
+        <a href={href}>{title}</a>
+      </HeadingTag>
+      <p class="leading-relaxed">{description}</p>
+    </hgroup>
+  ) : (
+    <HeadingTag class:list={headingClasses}>
+      <a href={href}>{title}</a>
+    </HeadingTag>
+  )
+}

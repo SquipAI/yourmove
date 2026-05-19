@@ -5,6 +5,7 @@ export type PostCard = {
   slug: string;
   mainImage: { url: string; alt: string | null } | null;
   readingTime: number | null;
+  createdAt: string;
   tags: { slug: string; title: string }[] | null;
 };
 
@@ -15,8 +16,12 @@ export type Post = {
   metaTitle: string;
   metaDescription: string;
   language: string | null;
+  createdAt: string;
+  _updatedAt: string;
+  readingTime: number | null;
   mainImage: { url: string; alt: string | null } | null;
   body: unknown[] | null;
   faq: { _key: string; question: string; answer: unknown[] }[] | null;
   tagIds: string[];
+  tags: { slug: string; title: string }[] | null;
 };

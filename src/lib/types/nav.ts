@@ -9,3 +9,13 @@ export type NavItem = {
   href: string;
   external?: boolean;
 };
+
+export type FooterColumn = {
+  title: string;
+  items: NavItemRaw[];
+};
+
+export type FooterNavData = {
+  tagline: string | null;
+  columns: FooterColumn[];
+};

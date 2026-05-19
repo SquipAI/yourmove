@@ -1,0 +1,16 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: cls } = Astro.props;
+---
+
+<p
+  class:list={[
+    "text-xs uppercase tracking-eyebrow font-medium text-subtle [&:not(:last-child)]:mb-3",
+    cls,
+  ]}
+>
+  <slot />
+</p>

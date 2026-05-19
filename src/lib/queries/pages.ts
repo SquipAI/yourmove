@@ -1,5 +1,5 @@
 import { sanityClient } from "@lib/sanity";
-import type { HomeData, LegalPageData, BlogHubData, BlogSubPageData, NavItemRaw } from "@lib/types";
+import type { HomeData, LegalPageData, BlogPageData, BlogSubPageData, NavItemRaw, FooterNavData } from "@lib/types";
 import { BODY } from "./projections";
 import { cached } from "./cache";
 import { DEFAULT_LOCALE } from "@i18n/config";
@@ -10,7 +10,7 @@ export function getHome(lang = DEFAULT_LOCALE) {
       `coalesce(
         *[_type == "home" && language == $lang][0],
         *[_type == "home" && (language == "en" || !defined(language))][0]
-      ){ metaTitle, metaDescription }`,
+      ){ title, metaTitle, metaDescription }`,
       { lang },
     ),
   );
@@ -22,15 +22,15 @@ export function getLegalPage(type: "privacy" | "terms", lang = DEFAULT_LOCALE) {
       `coalesce(
         *[_type == $type && language == $lang][0],
         *[_type == $type && (language == "en" || !defined(language))][0]
-      ){ h1, metaTitle, metaDescription, ${BODY} }`,
+      ){ title, metaTitle, metaDescription, ${BODY} }`,
       { type, lang },
     ),
   );
 }
 
-export function getBlogHub(lang = DEFAULT_LOCALE) {
-  return cached(`getBlogHub:${lang}`, () =>
-    sanityClient.fetch<BlogHubData>(
+export function getBlogPage(lang = DEFAULT_LOCALE) {
+  return cached(`getBlogPage:${lang}`, () =>
+    sanityClient.fetch<BlogPageData>(
       `coalesce(
         *[_type == "blog" && language == $lang][0],
         *[_type == "blog" && (language == "en" || !defined(language))][0]
@@ -64,18 +64,33 @@ export function getBlogTagsPage(lang = DEFAULT_LOCALE) {
   );
 }
 
-export function getNavigation(navId: string) {
-  return cached(`getNavigation:${navId}`, () =>
+const NAV_ITEM_PROJECTION = `{
+  "label": coalesce(label, target->title),
+  "targetType": target->_type,
+  "externalUrl": select(
+    target->_type == "tool" => target->link,
+    target->_type == "siteLink" => target->url,
+  )
+}`;
+
+export function getHeaderNav() {
+  return cached("getHeaderNav", () =>
     sanityClient.fetch<NavItemRaw[] | null>(
-      `*[_type == "navigation" && navId.current == $navId][0].items[] {
-        label,
-        "targetType": target->_type,
-        "externalUrl": select(
-          target->_type == "tool" => target->link,
-          target->_type == "siteLink" => target->url,
-        )
+      `*[_type == "headerNav" && _id == "header-nav"][0].items[] ${NAV_ITEM_PROJECTION}`,
+    ),
+  );
+}
+
+export function getFooterNav() {
+  return cached("getFooterNav", () =>
+    sanityClient.fetch<FooterNavData | null>(
+      `*[_type == "footerNav" && _id == "footer-nav"][0]{
+        tagline,
+        "columns": columns[]{
+          title,
+          "items": items[] ${NAV_ITEM_PROJECTION}
+        }
       }`,
-      { navId },
     ),
   );
 }

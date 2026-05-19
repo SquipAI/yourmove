@@ -2,8 +2,8 @@ import { defineArrayMember, defineField, defineType } from "sanity";
 import { ComposeIcon } from "@sanity/icons";
 import {
   inlineRichTextField,
+  languageField,
   linkAnnotation,
-  metaFields,
   seoFields,
   standardGroups,
 } from "../shared";
@@ -218,11 +218,14 @@ export const post = defineType({
       ],
     }),
     ...seoFields,
-    ...metaFields,
+    { ...languageField, group: "meta" },
     defineField({
-      name: "readingTime",
-      type: "number",
+      name: "hidden",
+      title: "Hide from site",
+      description: "If checked, this post will not appear on the website",
+      type: "boolean",
       group: "meta",
+      initialValue: false,
     }),
     defineField({
       name: "featured",
@@ -235,6 +238,19 @@ export const post = defineType({
       type: "array",
       group: "meta",
       of: [defineArrayMember({ type: "reference", to: [{ type: "tag" }] })],
+    }),
+    defineField({
+      name: "readingTime",
+      type: "number",
+      group: "meta",
+    }),
+    defineField({
+      name: "createdAt",
+      type: "datetime",
+      group: "meta",
+      description:
+        "Content creation date (auto-filled for new docs, imported from Webflow for migrated ones)",
+      initialValue: () => new Date().toISOString(),
     }),
   ],
   preview: {

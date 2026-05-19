@@ -1,0 +1,13 @@
+Source URL,Target URL,Status,Preserve query string,Subpath matching,Preserve path suffix,Include subdomains
+https://yourmove.ai/blog/tags/raya,https://yourmove.ai/blog/topics/other,301,Yes,No,No,No
+https://yourmove.ai/blog/tags/coffee-meets-bagel,https://yourmove.ai/blog/topics/other,301,Yes,No,No,No
+https://yourmove.ai/blog/tags/plenty-of-fish,https://yourmove.ai/blog/topics/other,301,Yes,No,No,No
+https://yourmove.ai/es/blog/tags/raya,https://yourmove.ai/es/blog/topics/other,301,Yes,No,No,No
+https://yourmove.ai/es/blog/tags/coffee-meets-bagel,https://yourmove.ai/es/blog/topics/other,301,Yes,No,No,No
+https://yourmove.ai/es/blog/tags/plenty-of-fish,https://yourmove.ai/es/blog/topics/other,301,Yes,No,No,No
+https://yourmove.ai/de/blog/tags/raya,https://yourmove.ai/de/blog/topics/other,301,Yes,No,No,No
+https://yourmove.ai/de/blog/tags/coffee-meets-bagel,https://yourmove.ai/de/blog/topics/other,301,Yes,No,No,No
+https://yourmove.ai/de/blog/tags/plenty-of-fish,https://yourmove.ai/de/blog/topics/other,301,Yes,No,No,No
+https://yourmove.ai/blog/tags,https://yourmove.ai/blog/topics,301,Yes,Yes,Yes,No
+https://yourmove.ai/es/blog/tags,https://yourmove.ai/es/blog/topics,301,Yes,Yes,Yes,No
+https://yourmove.ai/de/blog/tags,https://yourmove.ai/de/blog/topics,301,Yes,Yes,Yes,No

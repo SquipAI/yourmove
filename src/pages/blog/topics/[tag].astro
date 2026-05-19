@@ -8,10 +8,12 @@ export async function getStaticPaths() {
 }
 
 const { tag: slug } = Astro.params;
-const [tag, posts] = await Promise.all([
+const [tag, posts, allTags] = await Promise.all([
   getTagBySlug(slug),
   getTagPosts(slug),
+  getAllTagsWithCount(),
 ]);
+const otherTags = allTags.filter((t) => t.slug !== slug);
 ---
 
-<TagPostsPage {posts} tag={tag} />
+<TagPostsPage {posts} {tag} {otherTags} />

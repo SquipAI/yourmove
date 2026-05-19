@@ -1,2 +1,117 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+
+@theme {
+  --color-brand: oklch(0.6 0.2 27);
+  --color-brand-lighter: oklch(from var(--color-brand) 84% c h);
+  --color-brand-darker: oklch(from var(--color-brand) 66% c h);
+  --color-subtle: var(--color-mist-700);
+  --color-subtle-lighter: oklch(from var(--color-subtle) 96% c h);
+
+  --text-title: clamp(2rem, 1.5rem + 2.5svw, 3rem);
+  --text-title-xxs: clamp(1.125rem, 1.07rem + 0.27svw, 1.3125rem);
+  --text-title-xs: clamp(1.25rem, 1.178rem + 0.36svw, 1.5rem);
+  --text-title-sm: clamp(1.5rem, 1.25rem + 1.2svw, 2rem);
+  --text-title-big: clamp(2.375rem, 1.75rem + 3.125svw, 3.75rem);
+
+  --text-subtitle: clamp(1.25rem, 1.14rem + 0.55svw, 1.5rem);
+  --text-subtitle-sm: clamp(1rem, 0.96rem + 0.21svw, 1.125rem);
+
+  --tracking-eyebrow: 0.18em;
+
+  --spacing-svw: min(3svw, 48px);
+  --spacing-section: max(90px, calc(var(--spacing-svw) * 4));
+  --spacing-section-sm: calc(var(--spacing-section) / 2);
+  --spacing-section-xs: calc(var(--spacing-section) / 3);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    @apply bg-brand/3 text-mist-800 font-sans antialiased min-h-lvh flex flex-col;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-medium leading-[1.1] mb-[.36em] text-balance;
+  }
+
+  :is(h1, h2, h3) + p {
+    @apply text-subtle text-pretty;
+  }
+
+  ul,
+  ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  address {
+    font-style: normal;
+  }
+
+  button {
+    background-color: none;
+  }
+
+  hgroup {
+    @apply text-balance;
+  }
+
+  .section,
+  #header,
+  #footer {
+    @apply flex flex-col items-center;
+
+    & > * {
+      @apply w-full px-svw 2xl:container;
+    }
+  }
+
+  .section {
+    @apply py-section;
+  }
+
+  .logo {
+    @apply relative pb-1 pt-1.25 [&>svg]:h-5 [&>svg]:aspect-[5.5];
+  }
+
+  ::selection {
+    background-color: var(--color-brand);
+    color: #000;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 3px;
+  }
+}
+
+@utility card {
+  @apply relative flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white transition-colors hover:border-gray-300 md:rounded-xl;
+}
+
+@utility btn {
+  @apply flex justify-center w-fit px-6 py-2.5 text-center rounded-md border border-brand transition-colors cursor-pointer md:border-2;
+}
+
+@utility btn-solid {
+  @apply bg-brand text-white border-transparent hover:bg-brand-darker;
+}
+
+@utility btn-outline {
+  @apply hover:bg-brand hover:text-white;
+}
+
+@utility btn-big {
+  @apply w-full py-3.5 tracking-[0.25em] uppercase max-w-80 md:py-4;
+}

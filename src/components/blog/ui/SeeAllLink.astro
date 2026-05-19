@@ -1,0 +1,25 @@
+---
+import { DEFAULT_LOCALE } from "@i18n/config";
+import type { Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+
+interface Props {
+  href: string;
+  lang?: Locale;
+  size?: "sm" | "lg";
+  class?: string;
+}
+
+const { href, lang = DEFAULT_LOCALE, size = "lg", class: cls } = Astro.props;
+---
+
+<a
+  {href}
+  class:list={[
+    "font-medium text-subtle uppercase underline underline-offset-6 transition-colors hover:text-brand",
+    size === "sm" ? "text-subtitle-sm" : "text-subtitle",
+    cls,
+  ]}
+>
+  {t(lang, "blog.seeAll")}
+</a>

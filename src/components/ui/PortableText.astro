@@ -117,7 +117,7 @@ function resolveHref(link: PTLink): { href: string; newTab: boolean } {
     if (ref._type === "tool")
       return { href: `/${ref.slug ?? ""}`, newTab: false };
     if (ref._type === "tag")
-      return { href: `/tags/${ref.slug ?? ""}`, newTab: false };
+      return { href: `/blog/topics/${ref.slug ?? ""}`, newTab: false };
   }
   return { href: link.href ?? "#", newTab: !!link.href };
 }
@@ -194,7 +194,10 @@ for (const raw of body as Block[]) {
           width={block.width}
           height={block.height}
           loading="lazy"
-          class="h-auto rounded-lg"
+          class:list={[
+            "h-auto rounded-lg",
+            !block.fullWidth && "max-w-[400px]",
+          ]}
         />
       );
     }

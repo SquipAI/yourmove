@@ -1,0 +1,38 @@
+---
+import { DEFAULT_LOCALE } from "@i18n/config";
+import type { Locale } from "@i18n/config";
+import type { PostCard as PostCardType } from "@lib/types";
+import PostCard from "@components/blog/ui/PostCard.astro";
+
+interface Props {
+  posts: PostCardType[];
+  lang?: Locale;
+}
+
+const { posts, lang = DEFAULT_LOCALE } = Astro.props;
+---
+
+<ul
+  class="grid grid-cols-1 gap-y-6 md:grid-cols-2 md:grid-rows-[repeat(4,auto)] md:items-start md:gap-y-4 md:gap-x-6 xl:*:w-full xl:*:not-first:max-w-156 xl:*:not-first:justify-self-end"
+>
+  {
+    posts.map((post, i) => {
+      const isLead = i === 0;
+      return (
+        <li class:list={[isLead && "md:row-span-4"]}>
+          <PostCard
+            {post}
+            {lang}
+            level={3}
+            imageMode={isLead ? "top" : "right"}
+            noDescription={!isLead}
+            meta={isLead ? "readingTime" : "none"}
+            priority={isLead}
+            size={isLead ? "lg" : "md"}
+            headingClass={isLead ? undefined : "mb-0 lg:max-w-[24ch]"}
+          />
+        </li>
+      );
+    })
+  }
+</ul>

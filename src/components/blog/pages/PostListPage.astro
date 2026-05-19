@@ -1,6 +1,7 @@
 ---
 import Base from "@layouts/Base.astro";
-import PostCard from "@components/blog/ui/PostCard.astro";
+import PostList from "@components/blog/ui/PostList.astro";
+import PageHeading from "@components/ui/PageHeading.astro";
 import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
@@ -13,20 +14,17 @@ interface Props {
 }
 
 const { posts, page, lang = DEFAULT_LOCALE } = Astro.props;
-const count = posts.length === 1 ? t(lang, "blog.article") : t(lang, "blog.articles");
+const count =
+  posts.length === 1 ? t(lang, "blog.article") : t(lang, "blog.articles");
 ---
 
 <Base title={page.metaTitle} description={page.metaDescription} {lang}>
-  <section class="mx-auto max-w-6xl px-4 py-12">
-    <h1 class="text-3xl font-bold mb-2">{page?.title ?? t(lang, "blog.allPosts")}</h1>
-    <p class="text-sm text-gray-500 mb-8">{posts.length} {count}</p>
+  <section class="section lg:pt-section-sm">
+    <PageHeading
+      title={page?.title ?? t(lang, "blog.allPosts")}
+      subtitle={`${posts.length} ${count}`}
+    />
 
-    {posts.length > 0 ? (
-      <ul class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {posts.map((post) => <li><PostCard {post} {lang} /></li>)}
-      </ul>
-    ) : (
-      <p class="text-gray-500">{t(lang, "blog.noPosts")}</p>
-    )}
+    <PostList {posts} {lang} priorityCount={2} />
   </section>
 </Base>

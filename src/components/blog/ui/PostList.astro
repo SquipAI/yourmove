@@ -1,0 +1,52 @@
+---
+import { DEFAULT_LOCALE } from "@i18n/config";
+import type { Locale } from "@i18n/config";
+import type { PostCard as PostCardType } from "@lib/types";
+import PostCard from "./PostCard.astro";
+
+interface Props {
+  posts: PostCardType[];
+  lang?: Locale;
+  /** Heading level for PostCard. Default: 2 */
+  level?: 2 | 3;
+  /** Image position on cards. Default: "top" */
+  imageMode?: "top" | "right" | "none";
+  noDescription?: boolean;
+  /** Number of first cards to eager-load (priority). Default: 0 */
+  priorityCount?: number;
+  class?: string;
+}
+
+const {
+  posts,
+  lang = DEFAULT_LOCALE,
+  level = 2,
+  imageMode = "top",
+  noDescription = false,
+  priorityCount = 0,
+  class: cls,
+} = Astro.props;
+---
+
+<ul
+  class:list={[
+    "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+    imageMode === "none" ? "gap-4" : "gap-6",
+    cls,
+  ]}
+>
+  {
+    posts.map((post, i) => (
+      <li>
+        <PostCard
+          {post}
+          {lang}
+          {level}
+          {imageMode}
+          {noDescription}
+          priority={i < priorityCount}
+        />
+      </li>
+    ))
+  }
+</ul>

@@ -1,6 +1,12 @@
 ---
 import PostPage from "@components/blog/pages/PostPage.astro";
-import { getPostBySlug, getRelatedPosts, getAllPostSlugs } from "@lib/queries";
+import {
+  getPostBySlug,
+  getRelatedPosts,
+  getAllPostSlugs,
+  getHome,
+  getBlogPage,
+} from "@lib/queries";
 
 export async function getStaticPaths() {
   const slugs = await getAllPostSlugs();
@@ -8,8 +14,17 @@ export async function getStaticPaths() {
 }
 
 const { slug } = Astro.params;
-const post = await getPostBySlug(slug!);
+const [post, home, blog] = await Promise.all([
+  getPostBySlug(slug!),
+  getHome(),
+  getBlogPage(),
+]);
 const related = await getRelatedPosts(post!._id, post!.tagIds);
 ---
 
-<PostPage post={post!} {related} />
+<PostPage
+  post={post!}
+  {related}
+  homeTitle={home.title}
+  blogTitle={blog.title}
+/>

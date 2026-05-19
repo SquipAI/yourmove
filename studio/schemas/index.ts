@@ -8,7 +8,8 @@ import { blog } from "./blog/blog";
 import { blogPosts } from "./blog/blogPosts";
 import { blogTags } from "./blog/blogTags";
 import { privacy, terms } from "./config/legalPage";
-import { navigation } from "./config/navigation";
+import { headerNav } from "./config/headerNav";
+import { footerNav } from "./config/footerNav";
 
 export const schemaTypes = [
   home,
@@ -17,7 +18,8 @@ export const schemaTypes = [
   blogTags,
   privacy,
   terms,
-  navigation,
+  headerNav,
+  footerNav,
   post,
   tool,
   tag,
@@ -38,9 +40,13 @@ export const translatedSchemaTypes = [
   "blog-tags",
 ];
 
-export const SINGLETON_TYPES = ["home", "blog", "blog-posts", "blog-tags", "privacy", "terms"];
-
-export const NAV_SINGLETONS = [
-  { id: "nav-header", title: "Header nav" },
-  { id: "nav-footer", title: "Footer nav" },
+export const SINGLETON_TYPES = [
+  "home",
+  "blog",
+  "blog-posts",
+  "blog-tags",
+  "privacy",
+  "terms",
+  "headerNav",
+  "footerNav",
 ];

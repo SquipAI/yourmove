@@ -1,21 +1,24 @@
 ---
 import { getRelativeLocaleUrl } from "astro:i18n";
-import type { TagWithCount } from "@lib/types";
+import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+import type { TagWithCount } from "@lib/types";
+import Eyebrow from "@components/ui/Eyebrow.astro";
+import CardHeading from "./CardHeading.astro";
 
 interface Props {
   tag: TagWithCount;
   lang?: Locale;
+  level?: 2 | 3;
 }
 
-const { tag, lang = "en" } = Astro.props;
-const href = getRelativeLocaleUrl(lang, `blog/tags/${tag.slug}`);
+const { tag, lang = DEFAULT_LOCALE, level = 2 } = Astro.props;
+const href = getRelativeLocaleUrl(lang, `blog/topics/${tag.slug}`);
+const countLabel = `${tag.postCount} ${t(lang, tag.postCount === 1 ? "blog.article" : "blog.articles")}`;
 ---
 
-<a
-  href={href}
-  class="flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-white hover:shadow-md transition-shadow"
->
-  <span class="font-medium text-gray-900">{tag.title}</span>
-  <span class="text-sm text-gray-400">{tag.postCount}</span>
-</a>
+<li class="card group justify-between gap-3 p-svw md:p-6">
+  <CardHeading title={tag.title} description={tag.description} {href} {level} />
+  <Eyebrow>{countLabel}</Eyebrow>
+</li>

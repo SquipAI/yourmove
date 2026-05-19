@@ -1,17 +1,18 @@
 export type HomeData = {
+  title: string;
   metaTitle: string;
   metaDescription: string;
 };
 
 export type LegalPageData = {
-  h1: string;
+  title: string;
   metaTitle: string;
   metaDescription: string;
   body: unknown[] | null;
 };
 
-export type BlogHubData = {
-  title: string | null;
+export type BlogPageData = {
+  title: string;
   intro: string | null;
   metaTitle: string;
   metaDescription: string;
