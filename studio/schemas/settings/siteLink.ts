@@ -13,7 +13,8 @@ export const siteLink = defineType({
     defineField({
       name: "title",
       type: "string",
-      description: "Shown only in Studio for picking — not rendered on the site",
+      description:
+        "Shown only in Studio for picking — not rendered on the site",
       validation: (r) => r.required(),
     }),
     defineField({

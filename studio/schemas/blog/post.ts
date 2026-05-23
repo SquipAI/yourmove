@@ -139,11 +139,7 @@ export const post = defineType({
               name: "doc",
               type: "reference",
               title: "Document",
-              to: [
-                { type: "howToUse" },
-                { type: "post" },
-                { type: "tool" },
-              ],
+              to: [{ type: "howToUse" }, { type: "post" }, { type: "tool" }],
               hidden: ({ parent }) => parent?.kind !== "document",
               validation: (r) =>
                 r.custom((value, ctx) => {

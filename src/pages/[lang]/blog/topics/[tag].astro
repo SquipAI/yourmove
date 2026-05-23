@@ -5,7 +5,9 @@ import { getNonDefaultLocalePaths } from "@i18n/utils";
 import type { Locale } from "@i18n/config";
 
 export async function getStaticPaths() {
-  const locales = getNonDefaultLocalePaths().map((p) => p.params.lang as Locale);
+  const locales = getNonDefaultLocalePaths().map(
+    (p) => p.params.lang as Locale,
+  );
   const tags = await getAllTagsWithCount();
   return locales.flatMap((lang) =>
     tags.map((tag) => ({ params: { lang, tag: tag.slug } })),

@@ -1,6 +1,7 @@
 import { defineField, defineArrayMember } from "sanity";
 import type { FieldGroupDefinition } from "sanity";
 import { EditIcon, SearchIcon, CogIcon } from "@sanity/icons";
+import { linkableTo } from "@lib/linkTypes";
 
 export const standardGroups: FieldGroupDefinition[] = [
   { name: "content", title: "Content", default: true, icon: EditIcon },
@@ -21,15 +22,7 @@ export const linkAnnotation = () =>
         name: "internalLink",
         type: "reference",
         title: "Internal page",
-        to: [
-          { type: "post" },
-          { type: "tool" },
-          { type: "home" },
-          { type: "blog" },
-          { type: "tag" },
-          { type: "privacy" },
-          { type: "terms" },
-        ],
+        to: linkableTo({ withSiteLink: false }),
         options: { disableNew: true },
       }),
       defineField({
@@ -161,14 +154,7 @@ export const navItemMember = defineArrayMember({
     defineField({
       name: "target",
       type: "reference",
-      to: [
-        { type: "home" },
-        { type: "blog" },
-        { type: "privacy" },
-        { type: "terms" },
-        { type: "tool" },
-        { type: "siteLink" },
-      ],
+      to: linkableTo({ exclude: ["post", "tag"] }),
       options: { disableNew: true },
       validation: (r) => r.required(),
     }),

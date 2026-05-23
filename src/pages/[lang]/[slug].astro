@@ -1,0 +1,22 @@
+---
+import ToolPage from "@components/tools/pages/ToolPage.astro";
+import { getToolPage, getAllToolSlugs } from "@lib/queries";
+import { getNonDefaultLocalePaths } from "@i18n/utils";
+import type { Locale } from "@i18n/config";
+
+export async function getStaticPaths() {
+  const locales = getNonDefaultLocalePaths().map(
+    (p) => p.params.lang as Locale,
+  );
+  const slugs = await getAllToolSlugs();
+  return locales.flatMap((lang) =>
+    slugs.map((slug) => ({ params: { lang, slug } })),
+  );
+}
+
+const lang = Astro.params.lang as Locale;
+const { slug } = Astro.params;
+const tool = await getToolPage(slug!, lang);
+---
+
+<ToolPage tool={tool!} {lang} />

@@ -7,19 +7,34 @@ interface Props {
   href: string;
   lang?: Locale;
   size?: "sm" | "lg";
+  count?: number | null;
   class?: string;
 }
 
-const { href, lang = DEFAULT_LOCALE, size = "lg", class: cls } = Astro.props;
+const {
+  href,
+  lang = DEFAULT_LOCALE,
+  size = "lg",
+  count,
+  class: cls,
+} = Astro.props;
+
+const word = count === 1 ? t(lang, "blog.article") : t(lang, "blog.articles");
+const label =
+  count != null
+    ? t(lang, "blog.seeAllCount")
+        .replace("{count}", String(count))
+        .replace("{word}", word)
+    : t(lang, "blog.seeAll");
 ---
 
 <a
   {href}
   class:list={[
-    "font-medium text-subtle uppercase underline underline-offset-6 transition-colors hover:text-brand",
+    "text-subtle hover:text-brand  underline underline-offset-6 transition-colors",
     size === "sm" ? "text-subtitle-sm" : "text-subtitle",
     cls,
   ]}
 >
-  {t(lang, "blog.seeAll")}
+  {label}
 </a>

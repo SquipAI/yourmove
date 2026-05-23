@@ -24,6 +24,7 @@ interface Props {
   featured: PostCardType[];
   tagSections: TagWithPosts[];
   allTags: TagWithCount[];
+  postCount: number;
   lang?: Locale;
 }
 
@@ -33,6 +34,7 @@ const {
   featured,
   tagSections,
   allTags,
+  postCount,
   lang = DEFAULT_LOCALE,
 } = Astro.props;
 
@@ -40,40 +42,42 @@ const localePath = localePathFor(lang);
 ---
 
 <Base title={page.metaTitle} description={page.metaDescription} {lang}>
-  <header class="section pb-section-sm lg:pt-section-sm">
-    <PageHeading title={page.title} subtitle={page.intro} size="big" />
+  <header class="section pb-section-sm">
+    <PageHeading title={page.title} subtitle={page.description} size="big" />
   </header>
 
-  <section class="section pt-0 xl:pb-section-sm">
+  <section class="section pt-0">
     <h2 class="sr-only">{t(lang, "blog.featured")}</h2>
     <FeaturedSection posts={featured} {lang} />
   </section>
 
-  <section class="section bg-subtle-lighter xl:py-section-sm">
-    <div class="grid md:grid-cols-[1fr_auto]">
+  <section class="section bg-subtle-lighter">
+    <div class="grid md:grid-cols-[1fr_auto] md:items-baseline">
       <SectionHeading title={t(lang, "blog.latest")} />
       <LatestSection posts={latest} {lang} />
       <SeeAllLink
         href={localePath("blog/posts")}
         {lang}
-        class="self-start md:pt-[.27lh] md:col-start-2 md:row-start-1 md:justify-self-end"
+        count={postCount}
+        size="sm"
+        class="md:col-start-2 md:row-start-1 md:justify-self-end"
       />
     </div>
+    <!-- class="self-start md:col-start-2 md:row-start-1 md:justify-self-end md:pt-[.27lh]" -->
   </section>
 
-  <section class="section xl:py-section-sm">
+  <section class="section">
     <SectionHeading title={t(lang, "blog.topics")} />
-    <TagList tags={allTags} {lang} class="mb-section-sm" />
+    <TagList tags={allTags} {lang} class="mb-section-xs" />
 
     <ul
-      class="grid grid-cols-1 gap-y-section-sm md:grid-cols-2 md:gap-x-10 xl:*:w-full xl:*:max-w-156"
+      class="gap-y-section-sm grid grid-cols-1 md:grid-cols-2 md:gap-x-10 xl:*:w-full xl:*:max-w-156"
     >
-      <!-- xl:*:not-first:justify-self-end -->
       {
         tagSections.map((section) => (
           <li>
             <h3 class="text-title-sm mb-[.66em]">{section.title}</h3>
-            <ul class="flex flex-col gap-4 mb-4 sm:max-md:flex-row">
+            <ul class="mb-4 flex flex-col gap-4 sm:max-md:flex-row">
               {section.posts.map((post) => (
                 <li>
                   <PostCard

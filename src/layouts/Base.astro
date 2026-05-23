@@ -8,6 +8,7 @@ import { LOCALES, DEFAULT_LOCALE, HREFLANG } from "@i18n/config";
 import type { Locale } from "@i18n/config";
 import { getHeaderNav, getFooterNav } from "@lib/queries";
 import type { NavItem, NavItemRaw, FooterNavData } from "@lib/types";
+import { resolveNavHref, isExternalHref } from "@lib/navHref";
 
 interface Props {
   title: string;
@@ -46,26 +47,12 @@ const alternateUrls: Record<Locale, string> =
     ) as Record<Locale, string>;
   })();
 
-const PAGE_PATHS: Partial<Record<NavItemRaw["targetType"], string>> = {
-  home: "",
-  blog: "blog",
-  privacy: "privacy",
-  terms: "terms",
-};
-
 function resolveNavItems(raw: NavItemRaw[] | null): NavItem[] {
   if (!raw) return [];
-  return raw.flatMap(({ label, targetType, externalUrl }) => {
-    if (externalUrl) {
-      const isExternal = externalUrl.startsWith("http://") || externalUrl.startsWith("https://");
-      return [{ label, href: externalUrl, external: isExternal }];
-    }
-    if (!(targetType in PAGE_PATHS)) return [];
-    const path = PAGE_PATHS[targetType]!;
-    const href = path
-      ? getRelativeLocaleUrl(lang, path)
-      : getRelativeLocaleUrl(lang);
-    return [{ label, href }];
+  return raw.flatMap(({ label, targetType, targetSlug, externalUrl }) => {
+    const href = resolveNavHref(targetType, targetSlug, externalUrl, lang);
+    if (!href) return [];
+    return [{ label, href, external: isExternalHref(href) }];
   });
 }
 

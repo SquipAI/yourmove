@@ -1,0 +1,71 @@
+---
+import { DEFAULT_LOCALE } from "@i18n/config";
+import type { Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+import type { ToolCategoryWithTools, AppWithTools } from "@lib/types";
+import Eyebrow from "@components/ui/Eyebrow.astro";
+import Pill from "@components/ui/Pill.astro";
+
+interface Props {
+  categories: ToolCategoryWithTools[];
+  apps: AppWithTools[];
+  totalTools: number;
+  lang?: Locale;
+}
+
+const { categories, apps, totalTools, lang = DEFAULT_LOCALE } = Astro.props;
+---
+
+<div
+  class="flex gap-x-6 overflow-x-auto scrollbar-none md:mx-0 md:flex-col md:gap-y-3 md:overflow-clip *:flex *:shrink-0 *:items-baseline *:gap-3"
+>
+  {
+    apps.length > 0 && (
+      <nav aria-label={t(lang, "tools.byApp")}>
+        <Eyebrow noMargin class="shrink-0">
+          {t(lang, "tools.byApp")}
+        </Eyebrow>
+        <ul class="flex flex-nowrap gap-2 md:flex-wrap">
+          {apps.map((app) => (
+            <li>
+              <Pill
+                href={`#app-${app.slug}`}
+                label={app.name}
+                dot={app.brandColor}
+                count={app.toolCount}
+              />
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )
+  }
+
+  {
+    categories.length > 0 && (
+      <nav aria-label={t(lang, "tools.byFunction")} class="md:-order-1">
+        <Eyebrow noMargin class="shrink-0">
+          {t(lang, "tools.byFunction")}
+        </Eyebrow>
+        <ul class="flex flex-nowrap gap-2">
+          <li>
+            <Pill
+              href="#tools-top"
+              label={t(lang, "tools.all")}
+              count={totalTools}
+            />
+          </li>
+          {categories.map((cat) => (
+            <li>
+              <Pill
+                href={`#category-${cat._id}`}
+                label={cat.title}
+                count={cat.tools.length}
+              />
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )
+  }
+</div>

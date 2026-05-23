@@ -1,8 +1,17 @@
 import { sanityClient } from "@lib/sanity";
-import type { HomeData, LegalPageData, BlogPageData, BlogSubPageData, NavItemRaw, FooterNavData } from "@lib/types";
+import type {
+  HomeData,
+  LegalPageData,
+  BlogPageData,
+  BlogSubPageData,
+  NavItemRaw,
+  FooterNavData,
+  SiteStats,
+} from "@lib/types";
 import { BODY } from "./projections";
 import { cached } from "./cache";
 import { DEFAULT_LOCALE } from "@i18n/config";
+import { linkTargetFields } from "@lib/linkTypes";
 
 export function getHome(lang = DEFAULT_LOCALE) {
   return cached(`getHome:${lang}`, () =>
@@ -34,7 +43,7 @@ export function getBlogPage(lang = DEFAULT_LOCALE) {
       `coalesce(
         *[_type == "blog" && language == $lang][0],
         *[_type == "blog" && (language == "en" || !defined(language))][0]
-      ){ title, intro, metaTitle, metaDescription }`,
+      ){ title, description, metaTitle, metaDescription }`,
       { lang },
     ),
   );
@@ -66,12 +75,16 @@ export function getBlogTagsPage(lang = DEFAULT_LOCALE) {
 
 const NAV_ITEM_PROJECTION = `{
   "label": coalesce(label, target->title),
-  "targetType": target->_type,
-  "externalUrl": select(
-    target->_type == "tool" => target->link,
-    target->_type == "siteLink" => target->url,
-  )
+  ${linkTargetFields("target")}
 }`;
+
+export function getSiteStats() {
+  return cached("getSiteStats", () =>
+    sanityClient.fetch<SiteStats | null>(
+      `*[_type == "siteStats" && _id == "site-stats"][0]{ userCount, userRating }`,
+    ),
+  );
+}
 
 export function getHeaderNav() {
   return cached("getHeaderNav", () =>

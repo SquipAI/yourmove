@@ -1,5 +1,5 @@
 import type { Locale } from "@i18n/config";
-import type { Post } from "./types";
+import type { FaqItem, Post, ToolPageData } from "./types";
 
 const SITE = "https://yourmove.ai";
 const ORG_ID = `${SITE}/#organization`;
@@ -42,6 +42,21 @@ export function buildBreadcrumb(items: BreadcrumbItem[], id: string) {
   };
 }
 
+export function faqPageSchema(items: FaqItem[], pageUrl: string) {
+  return {
+    "@type": "FAQPage",
+    "@id": `${pageUrl}#faq`,
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: portableTextToPlain(item.answer),
+      },
+    })),
+  };
+}
+
 export function articleSchema(
   post: Post,
   url: string,
@@ -76,19 +91,28 @@ export function articleSchema(
   ];
 
   if (post.faq?.length) {
-    graph.push({
-      "@type": "FAQPage",
-      "@id": `${url}#faq`,
-      mainEntity: post.faq.map((item) => ({
-        "@type": "Question",
-        name: item.question,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: portableTextToPlain(item.answer),
-        },
-      })),
-    });
+    graph.push(faqPageSchema(post.faq, url));
   }
+
+  return { "@context": "https://schema.org", "@graph": graph };
+}
+
+export function toolSchema(tool: ToolPageData, url: string, lang: Locale) {
+  const graph: unknown[] = [ORG, WEBSITE];
+
+  if (tool.faq?.length) {
+    graph.push(faqPageSchema(tool.faq, url));
+  }
+
+  graph.unshift({
+    "@type": "WebPage",
+    "@id": url,
+    url,
+    inLanguage: lang,
+    name: tool.metaTitle,
+    description: tool.metaDescription,
+    isPartOf: { "@id": SITE_ID },
+  });
 
   return { "@context": "https://schema.org", "@graph": graph };
 }

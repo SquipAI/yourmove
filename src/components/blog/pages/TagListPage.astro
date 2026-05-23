@@ -17,7 +17,7 @@ const { tags, page, lang = DEFAULT_LOCALE } = Astro.props;
 ---
 
 <Base title={page.metaTitle} description={page.metaDescription} {lang}>
-  <section class="section lg:pt-section-sm">
+  <section class="section">
     <PageHeading title={page?.title ?? t(lang, "blog.topics")} />
     <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {tags.map((tag) => <TagCard {tag} {lang} />)}

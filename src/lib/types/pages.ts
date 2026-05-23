@@ -13,7 +13,7 @@ export type LegalPageData = {
 
 export type BlogPageData = {
   title: string;
-  intro: string | null;
+  description: string | null;
   metaTitle: string;
   metaDescription: string;
 };
@@ -22,4 +22,9 @@ export type BlogSubPageData = {
   title: string | null;
   metaTitle: string;
   metaDescription: string;
+};
+
+export type SiteStats = {
+  userCount: string | null;
+  userRating: string | null;
 };

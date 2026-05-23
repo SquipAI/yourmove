@@ -21,7 +21,7 @@ export const blog = defineType({
       initialValue: "Blog",
     }),
     defineField({
-      name: "intro",
+      name: "description",
       type: "text",
       rows: 3,
       group: "content",

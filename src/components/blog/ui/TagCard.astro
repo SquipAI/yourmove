@@ -5,7 +5,7 @@ import type { Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 import type { TagWithCount } from "@lib/types";
 import Eyebrow from "@components/ui/Eyebrow.astro";
-import CardHeading from "./CardHeading.astro";
+import CardHeading from "@components/blog/ui/CardHeading.astro";
 
 interface Props {
   tag: TagWithCount;
@@ -18,7 +18,7 @@ const href = getRelativeLocaleUrl(lang, `blog/topics/${tag.slug}`);
 const countLabel = `${tag.postCount} ${t(lang, tag.postCount === 1 ? "blog.article" : "blog.articles")}`;
 ---
 
-<li class="card group justify-between gap-3 p-svw md:p-6">
+<li class="card group p-svw justify-between gap-3 md:p-6">
   <CardHeading title={tag.title} description={tag.description} {href} {level} />
   <Eyebrow>{countLabel}</Eyebrow>
 </li>

@@ -11,7 +11,9 @@ import { getNonDefaultLocalePaths } from "@i18n/utils";
 import type { Locale } from "@i18n/config";
 
 export async function getStaticPaths() {
-  const locales = getNonDefaultLocalePaths().map((p) => p.params.lang as Locale);
+  const locales = getNonDefaultLocalePaths().map(
+    (p) => p.params.lang as Locale,
+  );
   const slugs = await getAllPostSlugs();
   return locales.flatMap((lang) =>
     slugs.map((slug) => ({ params: { lang, slug } })),

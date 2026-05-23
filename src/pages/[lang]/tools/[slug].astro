@@ -1,0 +1,22 @@
+---
+import AppPage from "@components/tools/pages/AppPage.astro";
+import { getAppPage, getAllAppSlugs } from "@lib/queries";
+import { getNonDefaultLocalePaths } from "@i18n/utils";
+import type { Locale } from "@i18n/config";
+
+export async function getStaticPaths() {
+  const locales = getNonDefaultLocalePaths().map(
+    (p) => p.params.lang as Locale,
+  );
+  const slugs = await getAllAppSlugs();
+  return locales.flatMap((lang) =>
+    slugs.map((slug) => ({ params: { lang, slug } })),
+  );
+}
+
+const lang = Astro.params.lang as Locale;
+const { slug } = Astro.params;
+const app = await getAppPage(slug!, lang);
+---
+
+<AppPage app={app!} {lang} />

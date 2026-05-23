@@ -62,7 +62,12 @@ export function getPostBySlug(slug: string, lang = DEFAULT_LOCALE) {
   );
 }
 
-export function getRelatedPosts(postId: string, tagIds: string[], lang = DEFAULT_LOCALE, n = RELATED_POSTS_COUNT) {
+export function getRelatedPosts(
+  postId: string,
+  tagIds: string[],
+  lang = DEFAULT_LOCALE,
+  n = RELATED_POSTS_COUNT,
+) {
   return cached(`getRelatedPosts:${postId}:${lang}`, async () => {
     const result = await sanityClient.fetch<PostCard[] | null>(
       `*[_type == "post" && language == $lang && defined(slug.current) && hidden != true && _id != $postId] {
@@ -83,6 +88,15 @@ export function getRelatedPosts(postId: string, tagIds: string[], lang = DEFAULT
     );
     return result ?? [];
   });
+}
+
+export function getPostCount(lang = DEFAULT_LOCALE) {
+  return cached(`getPostCount:${lang}`, () =>
+    sanityClient.fetch<number>(
+      `count(*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && hidden != true])`,
+      { lang },
+    ),
+  );
 }
 
 export function getAllPostSlugs() {

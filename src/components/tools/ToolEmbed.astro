@@ -1,0 +1,70 @@
+---
+const TOOLS_HOST = "https://free-ai-tools-5zreo.ondigitalocean.app";
+
+interface Props {
+  path: string;
+  initialHeight?: number;
+  geolocation?: boolean;
+  title?: string;
+}
+
+const { path, initialHeight = 800, geolocation = false, title } = Astro.props;
+const src = `${TOOLS_HOST}${path}`;
+---
+
+<div class="tool-embed">
+  <iframe
+    src={src}
+    title={title}
+    style={`height: ${initialHeight}px`}
+    frameborder="0"
+    scrolling="no"
+    allow={geolocation ? "geolocation" : undefined}
+    data-tools-host={TOOLS_HOST}
+  ></iframe>
+</div>
+
+<style>
+  .tool-embed {
+    width: 100%;
+    overflow: hidden;
+  }
+  .tool-embed iframe {
+    width: 100%;
+    border: 0;
+    display: block;
+    overflow: hidden;
+  }
+</style>
+
+<script>
+  const iframes = document.querySelectorAll<HTMLIFrameElement>(
+    "iframe[data-tools-host]",
+  );
+  if (iframes.length) {
+    const heights = new WeakMap<HTMLIFrameElement, number>();
+
+    window.addEventListener("message", (event) => {
+      const target = Array.from(iframes).find(
+        (f) => f.dataset.toolsHost && event.origin === f.dataset.toolsHost,
+      );
+      if (!target) return;
+
+      const data = event.data;
+      if (data?.type === "resize" && typeof data.height === "number") {
+        const next = Math.ceil(data.height);
+        if (heights.get(target) !== next) {
+          heights.set(target, next);
+          target.style.height = `${next}px`;
+        }
+      }
+      if (data?.type === "iframe-action" && data.scrollTo !== undefined) {
+        const rect = target.getBoundingClientRect();
+        window.scrollTo({
+          top: rect.top + window.pageYOffset + data.scrollTo,
+          behavior: "smooth",
+        });
+      }
+    });
+  }
+</script>

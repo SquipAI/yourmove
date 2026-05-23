@@ -35,9 +35,7 @@ export const howToUse = defineType({
       name: "screenshot",
       type: "image",
       group: "content",
-      fields: [
-        defineField({ name: "alt", type: "string", title: "Alt text" }),
-      ],
+      fields: [defineField({ name: "alt", type: "string", title: "Alt text" })],
     }),
     defineField({
       name: "buttonText",

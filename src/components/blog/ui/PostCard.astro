@@ -6,7 +6,7 @@ import type { Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 import type { PostCard } from "@lib/types";
 import Eyebrow from "@components/ui/Eyebrow.astro";
-import CardHeading from "./CardHeading.astro";
+import CardHeading from "@components/blog/ui/CardHeading.astro";
 
 interface Props {
   post: PostCard;
@@ -52,7 +52,7 @@ const metaText =
 <article class="card group">
   <div
     class:list={[
-      "flex flex-1 flex-col gap-3 p-svw md:p-6",
+      "p-svw flex flex-1 flex-col gap-3 md:p-6",
       hasImageRight && "lg:pr-32",
     ]}
   >
@@ -69,7 +69,7 @@ const metaText =
       post.tags && post.tags.length > 0 && (
         <ul class="-order-1 flex flex-wrap gap-1">
           {post.tags.map((tag) => (
-            <li class="text-xs font-medium px-2 py-0.5 rounded-full bg-subtle-lighter text-subtle">
+            <li class="bg-subtle-lighter text-subtle rounded-full px-2 py-0.5 text-xs font-medium">
               {tag.title}
             </li>
           ))}
@@ -82,7 +82,7 @@ const metaText =
 
   {
     hasImageTop && (
-      <div class="-order-1 aspect-video overflow-hidden bg-subtle-lighter">
+      <div class="bg-subtle-lighter -order-1 aspect-video overflow-hidden">
         <Image
           src={post.mainImage!.url}
           alt={post.mainImage!.alt ?? post.title}
@@ -91,7 +91,7 @@ const metaText =
           loading={priority ? "eager" : "lazy"}
           fetchpriority={priority ? "high" : "auto"}
           sizes="(min-width: 1024px) calc(33vw - 32px), (min-width: 640px) calc(50vw - 24px), 100vw"
-          class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </div>
     )
@@ -99,7 +99,7 @@ const metaText =
 
   {
     hasImageRight && (
-      <div class="absolute right-0 top-0 hidden h-full aspect-square overflow-hidden rounded-e-md bg-subtle-lighter lg:block">
+      <div class="bg-subtle-lighter absolute top-0 right-0 hidden aspect-square h-full overflow-hidden rounded-e-md lg:block">
         <Image
           src={post.mainImage!.url}
           alt={post.mainImage!.alt ?? post.title}

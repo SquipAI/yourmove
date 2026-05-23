@@ -13,8 +13,11 @@ export function DeployTool() {
     setErrorMsg("");
 
     try {
-      const res = await fetch("https://yourmove.damirakyan.workers.dev/api/deploy", { method: "POST" });
-      const json = await res.json() as { ok: boolean; error?: string };
+      const res = await fetch(
+        "https://yourmove.damirakyan.workers.dev/api/deploy",
+        { method: "POST" },
+      );
+      const json = (await res.json()) as { ok: boolean; error?: string };
       if (!json.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
       setStatus("success");
       setTimeout(() => setStatus("idle"), 5000);
@@ -26,12 +29,19 @@ export function DeployTool() {
 
   return (
     <Box padding={4}>
-      <Card padding={5} radius={3} shadow={1} tone="default" style={{ maxWidth: 480 }}>
+      <Card
+        padding={5}
+        radius={3}
+        shadow={1}
+        tone="default"
+        style={{ maxWidth: 480 }}
+      >
         <Stack space={5}>
           <Heading size={2}>Deploy site</Heading>
 
           <Text muted size={1}>
-            Triggers a rebuild and deployment of <strong>yourmove.ai</strong> via Cloudflare Workers.
+            Triggers a rebuild and deployment of <strong>yourmove.ai</strong>{" "}
+            via Cloudflare Workers.
             <br />
             Limited to 3 builds per hour.
           </Text>
@@ -51,14 +61,19 @@ export function DeployTool() {
 
           {status === "success" && (
             <Card tone="positive" padding={3} radius={2}>
-              <Text size={1}>Deploy triggered successfully. Check Cloudflare dashboard for progress.</Text>
+              <Text size={1}>
+                Deploy triggered successfully. Check Cloudflare dashboard for
+                progress.
+              </Text>
             </Card>
           )}
 
           {status === "error" && (
             <Stack space={3}>
               <Card tone="critical" padding={3} radius={2}>
-                <Text size={1}>Deploy failed: {errorMsg || "Unknown error"}</Text>
+                <Text size={1}>
+                  Deploy failed: {errorMsg || "Unknown error"}
+                </Text>
               </Card>
               <Button tone="default" text="Try again" onClick={handleDeploy} />
             </Stack>

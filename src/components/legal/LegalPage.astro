@@ -15,11 +15,11 @@ const { page, lang = DEFAULT_LOCALE } = Astro.props;
 ---
 
 <Base title={page.metaTitle} description={page.metaDescription} {lang}>
-  <article class="section *:max-w-200 lg:pt-section-sm">
+  <article class="section *:max-w-200">
     <PageHeading title={page.title} />
 
     <div class="prose">
-      {page?.body && <PortableText body={page.body} />}
+      {page?.body && <PortableText body={page.body} {lang} />}
     </div>
   </article>
 </Base>

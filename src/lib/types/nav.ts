@@ -1,6 +1,9 @@
+import type { TargetType } from "@lib/linkTypes";
+
 export type NavItemRaw = {
   label: string;
-  targetType: "home" | "blog" | "privacy" | "terms" | "tool" | "siteLink";
+  targetType: TargetType | "siteLink";
+  targetSlug?: string | null;
   externalUrl?: string | null;
 };
 

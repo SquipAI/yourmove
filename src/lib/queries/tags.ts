@@ -1,5 +1,10 @@
 import { sanityClient } from "@lib/sanity";
-import type { PostCard, TagPageData, TagWithCount, TagWithPosts } from "@lib/types";
+import type {
+  PostCard,
+  TagPageData,
+  TagWithCount,
+  TagWithPosts,
+} from "@lib/types";
 import { POST_CARD } from "./projections";
 import { cached } from "./cache";
 import { DEFAULT_LOCALE } from "@i18n/config";

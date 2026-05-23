@@ -13,7 +13,7 @@ const { posts, lang = DEFAULT_LOCALE } = Astro.props;
 ---
 
 <ul
-  class="grid grid-cols-1 gap-y-6 md:grid-cols-2 md:grid-rows-[repeat(4,auto)] md:items-start md:gap-y-4 md:gap-x-6 xl:*:w-full xl:*:not-first:max-w-156 xl:*:not-first:justify-self-end"
+  class="grid grid-cols-1 gap-y-6 md:grid-cols-2 md:grid-rows-[repeat(4,auto)] md:items-start md:gap-x-6 md:gap-y-4 xl:*:w-full xl:*:not-first:max-w-156 xl:*:not-first:justify-self-end"
 >
   {
     posts.map((post, i) => {

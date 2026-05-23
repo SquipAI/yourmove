@@ -4,6 +4,7 @@ import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 import type { TagWithCount } from "@lib/types";
+import Pill from "@components/ui/Pill.astro";
 
 interface Props {
   tags: TagWithCount[];
@@ -12,36 +13,24 @@ interface Props {
 }
 
 const { tags, lang = DEFAULT_LOCALE, class: cls } = Astro.props;
-
-const pill =
-  "inline-block rounded-full border bg-white px-4 py-1.5 text-sm transition-colors";
 ---
 
 <ul class:list={["flex flex-wrap gap-2", cls]}>
   {
     tags.map((tag) => (
       <li>
-        <a
+        <Pill
           href={getRelativeLocaleUrl(lang, `blog/topics/${tag.slug}`)}
-          class:list={[
-            pill,
-            "border-subtle-lighter text-subtle hover:border-brand hover:text-brand",
-          ]}
-        >
-          {tag.title}
-        </a>
+          label={tag.title}
+        />
       </li>
     ))
   }
   <li>
-    <a
+    <Pill
       href={getRelativeLocaleUrl(lang, "blog/topics")}
-      class:list={[
-        pill,
-        "border-brand font-medium text-brand hover:bg-brand hover:text-white",
-      ]}
-    >
-      {t(lang, "blog.allTopics")} →
-    </a>
+      label={`${t(lang, "blog.allTopics")} →`}
+      variant="brand"
+    />
   </li>
 </ul>

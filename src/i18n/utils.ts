@@ -7,9 +7,9 @@ export function localePathFor(lang: Locale) {
 }
 
 export function getNonDefaultLocalePaths() {
-  return LOCALES
-    .filter((l): l is Exclude<Locale, typeof DEFAULT_LOCALE> => l !== DEFAULT_LOCALE)
-    .map((lang) => ({ params: { lang } }));
+  return LOCALES.filter(
+    (l): l is Exclude<Locale, typeof DEFAULT_LOCALE> => l !== DEFAULT_LOCALE,
+  ).map((lang) => ({ params: { lang } }));
 }
 
 /**
@@ -19,15 +19,17 @@ export function getNonDefaultLocalePaths() {
  */
 export function buildAlternateUrls(
   origin: string,
-  slugs: Partial<Record<Locale, string>> = {}
+  slugs: Partial<Record<Locale, string>> = {},
 ): Record<Locale, string> {
   const defaultSlug = slugs[DEFAULT_LOCALE];
   return Object.fromEntries(
     LOCALES.map((l) => {
       const slug = slugs[l] ?? defaultSlug;
-      const path = slug ? getRelativeLocaleUrl(l, slug) : getRelativeLocaleUrl(l);
+      const path = slug
+        ? getRelativeLocaleUrl(l, slug)
+        : getRelativeLocaleUrl(l);
       return [l, `${origin}${path}`];
-    })
+    }),
   ) as Record<Locale, string>;
 }
 
@@ -39,7 +41,7 @@ export function buildAlternateUrls(
 export function buildNestedAlternateUrls(
   origin: string,
   indexSlugs: Partial<Record<Locale, string>>,
-  itemSlugs: Partial<Record<Locale, string>>
+  itemSlugs: Partial<Record<Locale, string>>,
 ): Record<Locale, string> {
   const defaultIndex = indexSlugs[DEFAULT_LOCALE];
   const defaultItem = itemSlugs[DEFAULT_LOCALE];
@@ -49,6 +51,6 @@ export function buildNestedAlternateUrls(
       const itemSlug = itemSlugs[l] ?? defaultItem;
       const path = getRelativeLocaleUrl(l, `${indexSlug}/${itemSlug}`);
       return [l, `${origin}${path}`];
-    })
+    }),
   ) as Record<Locale, string>;
 }

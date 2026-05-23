@@ -1,0 +1,53 @@
+---
+import { Image } from "astro:assets";
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { DEFAULT_LOCALE } from "@i18n/config";
+import type { Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+import type { ToolCard } from "@lib/types";
+import Eyebrow from "@components/ui/Eyebrow.astro";
+import CardHeading from "@components/blog/ui/CardHeading.astro";
+
+interface Props {
+  tool: ToolCard;
+  lang?: Locale;
+  level?: 2 | 3;
+}
+
+const { tool, lang = DEFAULT_LOCALE, level = 3 } = Astro.props;
+
+const href = getRelativeLocaleUrl(lang, tool.slug);
+const hasImage = !!tool.mainImage?.url;
+const badge = tool.paid ? t(lang, "tools.subscription") : t(lang, "tools.free");
+---
+
+<article class="card group">
+  <div class="p-svw flex flex-1 flex-col gap-3 md:p-6">
+    <CardHeading
+      title={tool.title}
+      description={tool.description}
+      {href}
+      {level}
+      size="sm"
+    />
+
+    <Eyebrow class="mt-auto">{badge}</Eyebrow>
+  </div>
+
+  {
+    hasImage && (
+      <div class="bg-subtle-lighter -order-1 aspect-video overflow-hidden">
+        <Image
+          src={tool.mainImage!.url}
+          alt={tool.mainImage!.alt ?? tool.title}
+          width={400}
+          height={225}
+          loading="lazy"
+          sizes="(min-width: 1024px) calc(33vw - 32px), (min-width: 640px) calc(50vw - 24px), 100vw"
+          class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      </div>
+    )
+  }
+
+</article>

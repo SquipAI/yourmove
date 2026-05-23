@@ -1,0 +1,63 @@
+---
+import Base from "@layouts/Base.astro";
+import SectionHeading from "@components/ui/SectionHeading.astro";
+import ToolList from "@components/tools/ui/ToolList.astro";
+import ToolsHero from "@components/tools/ui/ToolsHero.astro";
+import AppCard from "@components/tools/ui/AppCard.astro";
+import { DEFAULT_LOCALE } from "@i18n/config";
+import type { Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+import type {
+  ToolCard,
+  ToolsPageData,
+  ToolCategoryWithTools,
+  AppWithTools,
+} from "@lib/types";
+
+interface Props {
+  page: ToolsPageData;
+  featured: ToolCard[];
+  categories: ToolCategoryWithTools[];
+  apps: AppWithTools[];
+  lang?: Locale;
+}
+
+const { page, featured, categories, apps, lang = DEFAULT_LOCALE } = Astro.props;
+---
+
+<Base title={page.metaTitle} description={page.metaDescription} {lang}>
+  <ToolsHero {page} {categories} {apps} {lang} />
+
+  {
+    featured.length > 0 && (
+      <section class="section">
+        <h2 class="sr-only">{t(lang, "tools.top")}</h2>
+        <ToolList tools={featured} {lang} level={2} />
+      </section>
+    )
+  }
+
+  {
+    apps.length > 0 && (
+      <section id="by-app" class="section bg-subtle-lighter">
+        <SectionHeading title={t(lang, "tools.browseByApp")} />
+        <ul class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {apps.map((app) => (
+            <li>
+              <AppCard {app} {lang} level={3} />
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  {
+    categories.map((cat) => (
+      <section id={`category-${cat._id}`} class="section">
+        <SectionHeading title={cat.title} subtitle={cat.description} />
+        <ToolList tools={cat.tools} {lang} level={3} />
+      </section>
+    ))
+  }
+</Base>

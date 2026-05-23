@@ -1,0 +1,43 @@
+---
+import { DEFAULT_LOCALE } from "@i18n/config";
+import type { Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+import type {
+  ToolsPageData,
+  ToolCategoryWithTools,
+  AppWithTools,
+} from "@lib/types";
+import Eyebrow from "@components/ui/Eyebrow.astro";
+import PageHeading from "@components/ui/PageHeading.astro";
+import ToolPills from "@components/tools/ui/ToolPills.astro";
+
+interface Props {
+  page: ToolsPageData;
+  categories: ToolCategoryWithTools[];
+  apps: AppWithTools[];
+  lang?: Locale;
+}
+
+const { page, categories, apps, lang = DEFAULT_LOCALE } = Astro.props;
+
+const toolCount = categories.reduce((sum, c) => sum + c.tools.length, 0);
+const appCount = apps.length;
+---
+
+<section id="tools-top" class="section pb-0">
+  <Eyebrow dot>
+    {toolCount}
+    {t(lang, "tools.tools")} · {appCount}
+    {t(lang, "tools.apps")}
+  </Eyebrow>
+
+  <PageHeading
+    title={page.title}
+    subtitle={page.description}
+    size="big"
+    subtitleSize="sm"
+    class="mb-section-sm"
+  />
+
+  <ToolPills {categories} {apps} {lang} totalTools={toolCount} />
+</section>

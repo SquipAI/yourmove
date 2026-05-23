@@ -1,3 +1,5 @@
+import type { FaqItem } from "./faq";
+
 export type PostCard = {
   _id: string;
   title: string;
@@ -21,7 +23,7 @@ export type Post = {
   readingTime: number | null;
   mainImage: { url: string; alt: string | null } | null;
   body: unknown[] | null;
-  faq: { _key: string; question: string; answer: unknown[] }[] | null;
+  faq: FaqItem[] | null;
   tagIds: string[];
   tags: { slug: string; title: string }[] | null;
 };

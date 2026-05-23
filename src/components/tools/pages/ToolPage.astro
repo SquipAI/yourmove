@@ -1,0 +1,67 @@
+---
+import Base from "@layouts/Base.astro";
+import PageHeading from "@components/ui/PageHeading.astro";
+import ToolEmbed from "@components/tools/ToolEmbed.astro";
+import CtaSection from "@components/ui/CtaSection.astro";
+import FaqSection from "@components/ui/FaqSection.astro";
+import SchemaOrg from "@components/seo/SchemaOrg.astro";
+import { toolSchema } from "@lib/schema";
+import { DEFAULT_LOCALE } from "@i18n/config";
+import type { Locale } from "@i18n/config";
+import type { ToolPageData } from "@lib/types";
+
+interface Props {
+  tool: ToolPageData;
+  lang?: Locale;
+}
+
+const { tool, lang = DEFAULT_LOCALE } = Astro.props;
+const pageUrl = String(Astro.url);
+---
+
+<Base title={tool.metaTitle} description={tool.metaDescription} {lang}>
+  <SchemaOrg slot="head" schema={toolSchema(tool, pageUrl, lang)} />
+
+  <section class="section">
+    <PageHeading title={tool.title} subtitle={tool.description} size="big" />
+  </section>
+
+  {
+    tool.embed?.path && (
+      <section class="section">
+        <ToolEmbed
+          path={tool.embed.path}
+          initialHeight={tool.embed.initialHeight ?? undefined}
+          geolocation={tool.embed.geolocation ?? false}
+          title={tool.title}
+        />
+      </section>
+    )
+  }
+
+  {
+    tool.cta && (
+      <section class="section">
+        <CtaSection
+          title={tool.cta.title}
+          subtitle={tool.cta.subtitle}
+          buttonText={tool.cta.buttonText}
+          buttonLink={tool.cta.buttonLink}
+          {lang}
+        />
+      </section>
+    )
+  }
+
+  {
+    tool.faq && tool.faq.length > 0 && (
+      <section class="section">
+        <FaqSection
+          items={tool.faq}
+          heading={tool.faqHeading ?? `${tool.title} FAQ`}
+          {lang}
+        />
+      </section>
+    )
+  }
+</Base>

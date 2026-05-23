@@ -26,13 +26,27 @@
 }
 
 @layer base {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+
   html {
     scroll-behavior: smooth;
     scrollbar-gutter: stable;
   }
 
   body {
-    @apply bg-brand/3 text-mist-800 font-sans antialiased min-h-lvh flex flex-col;
+    @apply bg-brand/3 flex min-h-lvh flex-col font-sans text-mist-800 antialiased;
+  }
+
+  ::selection {
+    background-color: var(--color-brand);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 3px;
   }
 
   h1,
@@ -41,7 +55,7 @@
   h4,
   h5,
   h6 {
-    @apply font-medium leading-[1.1] mb-[.36em] text-balance;
+    @apply not-last:mb-[.36em] leading-[1.1] font-medium text-balance;
   }
 
   :is(h1, h2, h3) + p {
@@ -73,26 +87,28 @@
     @apply flex flex-col items-center;
 
     & > * {
-      @apply w-full px-svw 2xl:container;
+      @apply px-svw w-full 2xl:container;
     }
   }
 
   .section {
-    @apply py-section;
+    @apply py-section lg:py-section-sm;
   }
+
+  /* #main > .section:first-of-type {
+    @apply lg:pt-section-sm;
+  } */
 
   .logo {
-    @apply relative pb-1 pt-1.25 [&>svg]:h-5 [&>svg]:aspect-[5.5];
+    @apply relative pt-1.25 pb-1 [&>svg]:aspect-[5.5] [&>svg]:h-5;
   }
 
-  ::selection {
-    background-color: var(--color-brand);
-    color: #000;
+  details::details-content {
+    @apply h-0 overflow-clip transition-[height,content-visibility] duration-400 ease-in-out transition-discrete motion-reduce:transition-none;
   }
 
-  :focus-visible {
-    outline: 2px solid var(--color-brand);
-    outline-offset: 3px;
+  details[open]::details-content {
+    @apply h-auto;
   }
 }
 
@@ -101,11 +117,11 @@
 }
 
 @utility btn {
-  @apply flex justify-center w-fit px-6 py-2.5 text-center rounded-md border border-brand transition-colors cursor-pointer md:border-2;
+  @apply border-brand flex w-fit cursor-pointer justify-center rounded-md border px-6 py-2.5 text-center transition-colors md:border-2;
 }
 
 @utility btn-solid {
-  @apply bg-brand text-white border-transparent hover:bg-brand-darker;
+  @apply bg-brand hover:bg-brand-darker border-transparent text-white;
 }
 
 @utility btn-outline {
@@ -113,5 +129,5 @@
 }
 
 @utility btn-big {
-  @apply w-full py-3.5 tracking-[0.25em] uppercase max-w-80 md:py-4;
+  @apply w-full max-w-80 py-3.5 tracking-[0.25em] uppercase md:py-4;
 }
