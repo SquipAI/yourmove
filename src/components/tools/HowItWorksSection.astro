@@ -1,0 +1,51 @@
+---
+import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+import type { HowItWorksStep } from "@lib/types";
+import SectionHeading from "@components/shared/SectionHeading.astro";
+import Btn from "@components/shared/Btn.astro";
+
+interface Props {
+  steps: HowItWorksStep[];
+  heading: string;
+  ctaHref: string;
+  ctaText: string;
+  ctaSubtext?: string | null;
+  lang?: Locale;
+  class?: string;
+}
+
+const {
+  steps,
+  heading,
+  ctaHref,
+  ctaText,
+  ctaSubtext,
+  lang = DEFAULT_LOCALE,
+  class: cls,
+} = Astro.props;
+
+const stepLabel = t(lang, "howItWorks.stepLabel");
+---
+
+<div class:list={["flex flex-col items-center text-center", cls]}>
+  <SectionHeading title={heading} />
+
+  <ol class="flex w-full flex-col gap-8 md:flex-row md:items-start md:gap-6">
+    {
+      steps.map((step, i) => (
+        <li class="flex flex-1 flex-col items-center gap-3">
+          <span class="bg-brand/10 text-brand inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium">
+            {stepLabel} {i + 1}
+          </span>
+          <p class="text-subtle max-w-xs">{step.text}</p>
+        </li>
+      ))
+    }
+  </ol>
+
+  <div class="mt-12 flex flex-col items-center gap-2">
+    <Btn href={ctaHref} class="btn-solid">{ctaText}</Btn>
+    {ctaSubtext && <p class="text-subtle text-sm">{ctaSubtext}</p>}
+  </div>
+</div>

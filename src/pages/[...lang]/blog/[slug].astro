@@ -1,0 +1,167 @@
+---
+import Base from "@layouts/Base.astro";
+
+import PageHeading from "@components/shared/PageHeading.astro";
+import PortableText from "@components/shared/PortableText.astro";
+import SectionHeading from "@components/shared/SectionHeading.astro";
+import ShareButtons from "@components/shared/ShareButtons.astro";
+import Breadcrumbs from "@components/blog/ui/Breadcrumbs.astro";
+import PostList from "@components/blog/ui/PostList.astro";
+import SchemaOrg from "@components/seo/SchemaOrg.astro";
+
+import ShortLogo from "@assets/svg/ShortLogoSvg.svg";
+
+import {
+  getPostBySlug,
+  getRelatedPosts,
+  getAllPostPaths,
+  getHome,
+  getBlogPage,
+} from "@lib/queries";
+import { articleSchema } from "@lib/schema";
+import { ogImageHref } from "@lib/og/route";
+import { stripAccent } from "@lib/parseAccent";
+
+import { buildAlternateUrls, localePathFor } from "@i18n/utils";
+import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+
+export async function getStaticPaths() {
+  const paths = await getAllPostPaths();
+  return paths.map(({ lang, slug }) => ({
+    params: { lang: lang === DEFAULT_LOCALE ? undefined : lang, slug },
+  }));
+}
+
+const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
+const { slug } = Astro.params;
+const [post, home, blog] = await Promise.all([
+  getPostBySlug(slug!, lang),
+  getHome(lang),
+  getBlogPage(lang),
+]);
+if (!post) throw new Error(`Post not found: ${slug} (${lang})`);
+const related = await getRelatedPosts(post._id, post.tagIds, lang);
+const alternateUrls = buildAlternateUrls(
+  Astro.url.origin,
+  lang,
+  slug!,
+  post.alternates,
+  "blog",
+);
+
+const origin = Astro.url.origin;
+const pageUrl = String(Astro.url);
+const localePath = localePathFor(lang);
+const blogUrl = `${origin}${localePath("blog")}`;
+const firstTag = post.tags![0];
+const tagUrl = `${origin}${localePath(`blog/topics/${firstTag.slug}`)}`;
+const ogImage = ogImageHref(origin, lang, `blog/${slug}`);
+
+const breadcrumbsNav = [
+  { name: blog.title, url: blogUrl },
+  { name: firstTag.title, url: tagUrl },
+];
+
+const breadcrumbsSchema = [
+  { name: home.navLabel, url: `${origin}${localePath("")}` },
+  { name: blog.title, url: blogUrl },
+  { name: firstTag.title, url: tagUrl },
+  { name: stripAccent(post.title), url: pageUrl },
+];
+
+const published = new Date(post.createdAt);
+const updated = new Date(post._updatedAt);
+const isUpdated = updated.getTime() - published.getTime() > 24 * 60 * 60 * 1000;
+const displayDate = isUpdated ? updated : published;
+const dateFormatted = new Intl.DateTimeFormat(lang, {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+}).format(displayDate);
+---
+
+<Base
+  title={post.metaTitle}
+  description={post.metaDescription}
+  {lang}
+  {alternateUrls}
+  ogType="article"
+  {ogImage}
+>
+  <SchemaOrg
+    slot="head"
+    schema={articleSchema(post, pageUrl, lang, breadcrumbsSchema)}
+  />
+
+  <article class="section *:max-w-[84ch]">
+    <header class="max-w-prose pb-10">
+      <Breadcrumbs items={breadcrumbsNav} />
+      <PageHeading title={post.title} subtitle={post.summary} />
+
+      <div
+        class="border-subtle-lighter flex flex-wrap items-center gap-x-6 gap-y-4 border-t pt-6 text-sm"
+      >
+        <div class="flex items-center gap-3">
+          <span class="[&>svg]:fill-brand aspect-square w-9">
+            <ShortLogo class="aspect-square w-full" />
+          </span>
+          <span class="flex flex-col leading-tight">
+            <span class="tracking-eyebrow text-subtle text-[0.7rem] uppercase">
+              {t(lang, "blog.writtenBy")}
+            </span>
+            <span class="text-subtle font-medium">YourMove Team</span>
+          </span>
+        </div>
+
+        <span class="text-subtle-lighter hidden sm:inline" aria-hidden="true"
+          >•</span
+        >
+
+        <time datetime={displayDate.toISOString()} class="text-subtle">
+          {isUpdated && <span>{t(lang, "blog.updated")} </span>}{dateFormatted}
+        </time>
+
+        {
+          post.readingTime != null && (
+            <>
+              <span
+                class="text-subtle-lighter hidden sm:inline"
+                aria-hidden="true"
+              >
+                •
+              </span>
+              <span class="text-subtle">
+                {post.readingTime} {t(lang, "blog.minRead")}
+              </span>
+            </>
+          )
+        }
+
+        <ShareButtons
+          url={pageUrl}
+          title={stripAccent(post.title)}
+          {lang}
+          class="ml-auto"
+        />
+      </div>
+    </header>
+
+    <div class="prose">
+      <PortableText body={post.body ?? []} faq={post.faq} {lang} />
+    </div>
+  </article>
+
+  {
+    related.length > 0 && (
+      <section class="section">
+        <SectionHeading
+          eyebrow={t(lang, "blog.keepReading")}
+          title={t(lang, "blog.relatedPosts")}
+          class="mb-8"
+        />
+        <PostList posts={related} {lang} level={3} imageMode="none" />
+      </section>
+    )
+  }
+</Base>

@@ -1,27 +1,24 @@
 ---
 import { LOCALES, DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
-import type { NavItem } from "@lib/types";
+import type { NavItem } from "@lib/links";
 import LogoSvg from "@assets/svg/LogoSvg.astro";
-import Btn from "@components/ui/Btn.astro";
-import ChevronDown from "@components/ui/ChevronDown.astro";
+import Btn from "@components/shared/Btn.astro";
+import ChevronDown from "@components/shared/ChevronDown.astro";
 
 interface Props {
   lang?: Locale;
-  alternateUrls?: Partial<Record<Locale, string>>;
-  navItems?: NavItem[];
+  alternateUrls: Record<Locale, string>;
+  tools: { title: string; items: NavItem[]; seeAll: NavItem };
+  flatLinks: NavItem[];
 }
 
 const {
   lang = DEFAULT_LOCALE,
-  alternateUrls = {},
-  navItems = [],
+  alternateUrls,
+  tools,
+  flatLinks,
 } = Astro.props;
-
-function localeHref(l: Locale) {
-  if (alternateUrls[l]) return alternateUrls[l]!;
-  return l === DEFAULT_LOCALE ? "/" : `/${l}`;
-}
 
 const currentPath = Astro.url.pathname;
 function isActive(href: string) {
@@ -39,39 +36,109 @@ function isActive(href: string) {
       <LogoSvg />
     </a>
 
-    <!-- Nav: mobile overlay + desktop inline -->
     <nav
       id="site-nav"
       aria-label="Main navigation"
       class="bg-brand pointer-events-none fixed inset-0 flex flex-col gap-8 px-6 pt-20 pb-10 opacity-0 transition-opacity data-open:pointer-events-auto data-open:opacity-100 md:pointer-events-auto md:static md:flex-1 md:flex-row md:items-center md:gap-0 md:bg-transparent md:p-0 md:opacity-100 md:transition-none"
     >
-      {
-        navItems.length > 0 && (
-          <ul class="flex flex-col gap-2 md:flex-row md:items-center md:gap-0.5">
-            {navItems.map((item) => (
-              <li>
+      <ul
+        class="flex flex-col gap-1 md:flex-row md:items-center md:gap-0.5"
+      >
+        <li class="md:relative">
+          {/* Desktop dropdown */}
+          <details class="tools-dropdown group hidden md:block">
+            <summary
+              class="flex cursor-pointer items-center gap-1 rounded-md px-3 py-1.5 transition-colors hover:bg-white/10 group-open:bg-white/10"
+              aria-haspopup="menu"
+            >
+              <span>{tools.title}</span>
+              <ChevronDown class="w-3 transition-transform group-open:rotate-180" />
+            </summary>
+            <ul
+              class="absolute top-full left-0 mt-1 min-w-56 rounded-lg bg-white py-2 text-black shadow-lg ring-1 ring-black/5"
+              role="menu"
+            >
+              {
+                tools.items.map((item) => (
+                  <li role="none">
+                    <a
+                      role="menuitem"
+                      href={item.href}
+                      aria-current={isActive(item.href) ? "page" : undefined}
+                      class="block px-4 py-1.5 hover:bg-black/5"
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))
+              }
+              <li role="none" class="mt-1 border-t border-black/10 pt-1">
                 <a
-                  href={item.href}
-                  aria-current={
-                    !item.external && isActive(item.href) ? "page" : undefined
-                  }
-                  {...(item.external
-                    ? { target: "_blank", rel: "noopener noreferrer" }
-                    : {})}
-                  class:list={[
-                    "block rounded-md px-3 py-1.5 transition-colors",
-                    !item.external && isActive(item.href)
-                      ? "md:bg-white/20"
-                      : "md:hover:bg-white/10 md:hover:text-white",
-                  ]}
+                  role="menuitem"
+                  href={tools.seeAll.href}
+                  aria-current={isActive(tools.seeAll.href) ? "page" : undefined}
+                  class="block px-4 py-1.5 font-medium hover:bg-black/5"
                 >
-                  {item.label}
+                  {tools.seeAll.label}
                 </a>
               </li>
-            ))}
-          </ul>
-        )
-      }
+            </ul>
+          </details>
+
+          {/* Mobile: flat tools section */}
+          <div class="md:hidden">
+            <p class="text-xs uppercase opacity-70">{tools.title}</p>
+            <ul class="mt-2 flex flex-col gap-1">
+              {
+                tools.items.map((item) => (
+                  <li>
+                    <a
+                      href={item.href}
+                      aria-current={isActive(item.href) ? "page" : undefined}
+                      class="block rounded-md px-3 py-1.5"
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))
+              }
+              <li>
+                <a
+                  href={tools.seeAll.href}
+                  aria-current={isActive(tools.seeAll.href) ? "page" : undefined}
+                  class="block rounded-md px-3 py-1.5 font-medium"
+                >
+                  {tools.seeAll.label}
+                </a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        {
+          flatLinks.map((link) => (
+            <li class="md:contents">
+              <a
+                href={link.href}
+                aria-current={
+                  !link.external && isActive(link.href) ? "page" : undefined
+                }
+                {...(link.external
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {})}
+                class:list={[
+                  "block rounded-md px-3 py-1.5 transition-colors mt-1 md:mt-0",
+                  !link.external && isActive(link.href)
+                    ? "md:bg-white/20"
+                    : "md:hover:bg-white/10",
+                ]}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
 
       <!-- Language switcher mobile -->
       <div
@@ -82,7 +149,7 @@ function isActive(href: string) {
         {
           LOCALES.map((l) => (
             <a
-              href={localeHref(l)}
+              href={alternateUrls[l]}
               hreflang={l}
               role="listitem"
               aria-current={l === lang ? "page" : undefined}
@@ -135,7 +202,7 @@ function isActive(href: string) {
             <li role="none">
               <a
                 role="menuitem"
-                href={localeHref(l)}
+                href={alternateUrls[l]}
                 hreflang={l}
                 tabindex={l === lang ? -1 : 0}
                 class:list={[
@@ -168,19 +235,6 @@ function isActive(href: string) {
     </button>
   </div>
 </header>
-
-<style>
-  #lang-btn {
-    anchor-name: --lang-btn;
-  }
-  #lang-list {
-    position-anchor: --lang-btn;
-    inset: auto;
-    top: anchor(bottom);
-    right: anchor(right);
-    margin-top: 0.5rem;
-  }
-</style>
 
 <script>
   function initHeader() {
@@ -243,6 +297,23 @@ function isActive(href: string) {
         if (!menuOpen) nav.setAttribute("inert", "");
       }
     });
+
+    // Close tools dropdown on outside click / Esc.
+    const dropdown = document.querySelector(
+      ".tools-dropdown",
+    ) as HTMLDetailsElement | null;
+    if (dropdown) {
+      document.addEventListener("click", (e) => {
+        if (dropdown.open && !dropdown.contains(e.target as Node))
+          dropdown.open = false;
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && dropdown.open) {
+          dropdown.open = false;
+          (dropdown.querySelector("summary") as HTMLElement | null)?.focus();
+        }
+      });
+    }
   }
 
   initHeader();

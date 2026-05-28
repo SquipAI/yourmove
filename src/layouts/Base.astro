@@ -3,12 +3,10 @@ import "@styles/global.css";
 import BaseHead from "@components/layout/BaseHead.astro";
 import Header from "@components/layout/Header.astro";
 import Footer from "@components/layout/Footer.astro";
-import { getRelativeLocaleUrl } from "astro:i18n";
-import { LOCALES, DEFAULT_LOCALE, HREFLANG } from "@i18n/config";
+import { DEFAULT_LOCALE, HREFLANG } from "@i18n/config";
 import type { Locale } from "@i18n/config";
-import { getHeaderNav, getFooterNav } from "@lib/queries";
-import type { NavItem, NavItemRaw, FooterNavData } from "@lib/types";
-import { resolveNavHref, isExternalHref } from "@lib/navHref";
+import { buildSiteChrome } from "@lib/siteChrome";
+import { defaultAlternateUrls } from "@lib/alternateUrls";
 
 interface Props {
   title: string;
@@ -29,50 +27,9 @@ const {
   ogType,
 } = Astro.props;
 
-// Derive alternateUrls from the current path if not passed explicitly.
-// Strips locale prefix (/es/privacy → privacy) and builds per-locale URLs.
-// Adding a new locale only requires updating LOCALES in config.
-const alternateUrls: Record<Locale, string> =
-  Astro.props.alternateUrls ??
-  (() => {
-    const nonDefault = LOCALES.filter((l) => l !== DEFAULT_LOCALE);
-    const slug = Astro.url.pathname
-      .replace(new RegExp(`^/(${nonDefault.join("|")})(\/|$)`), "")
-      .replace(/^\//, "");
-    return Object.fromEntries(
-      LOCALES.map((l) => [
-        l,
-        `${Astro.url.origin}${slug ? getRelativeLocaleUrl(l, slug) : getRelativeLocaleUrl(l)}`,
-      ]),
-    ) as Record<Locale, string>;
-  })();
-
-function resolveNavItems(raw: NavItemRaw[] | null): NavItem[] {
-  if (!raw) return [];
-  return raw.flatMap(({ label, targetType, targetSlug, externalUrl }) => {
-    const href = resolveNavHref(targetType, targetSlug, externalUrl, lang);
-    if (!href) return [];
-    return [{ label, href, external: isExternalHref(href) }];
-  });
-}
-
-const [headerNav, footerNav] = await Promise.all([
-  getHeaderNav(),
-  getFooterNav(),
-]);
-const headerNavItems = resolveNavItems(headerNav);
-
-function resolveFooterColumns(data: FooterNavData | null) {
-  if (!data) return { tagline: null, columns: [] };
-  return {
-    tagline: data.tagline ?? null,
-    columns: data.columns.map((col) => ({
-      title: col.title,
-      items: resolveNavItems(col.items),
-    })),
-  };
-}
-const footer = resolveFooterColumns(footerNav);
+const alternateUrls =
+  Astro.props.alternateUrls ?? defaultAlternateUrls(Astro.url);
+const chrome = await buildSiteChrome(lang);
 ---
 
 <!doctype html>
@@ -93,11 +50,17 @@ const footer = resolveFooterColumns(footerNav);
     <Header
       lang={lang}
       alternateUrls={alternateUrls}
-      navItems={headerNavItems}
+      tools={chrome.toolsColumn}
+      flatLinks={chrome.flatLinks}
     />
     <main id="main" class="flex-1">
       <slot />
     </main>
-    <Footer lang={lang} tagline={footer.tagline} columns={footer.columns} />
+    <Footer
+      lang={lang}
+      tagline={chrome.footer.tagline}
+      toolsColumn={chrome.toolsColumn}
+      columns={chrome.footer.columns}
+    />
   </body>
 </html>

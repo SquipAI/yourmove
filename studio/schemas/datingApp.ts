@@ -1,6 +1,13 @@
 import { defineField, defineType } from "sanity";
 import { HeartFilledIcon, EditIcon, SearchIcon } from "@sanity/icons";
-import { languageField, seoMetaFields } from "./shared";
+import {
+  languageField,
+  seoMetaFields,
+  pageTitleField,
+  pageDescriptionField,
+  slugField,
+  hiddenOnNonEn,
+} from "./shared";
 
 export const datingApp = defineType({
   name: "datingApp",
@@ -20,26 +27,15 @@ export const datingApp = defineType({
       group: "content",
       validation: (r) => r.required(),
     }),
-    defineField({
-      name: "title",
-      type: "string",
-      description: "Page heading (H1) for /tools/[slug]",
-      group: "content",
-      validation: (r) => r.required(),
-    }),
-    defineField({
-      name: "description",
-      type: "text",
-      rows: 3,
-      group: "content",
-      description: "Intro paragraph under the page heading",
-    }),
+    pageTitleField({ path: "/tools/{slug}" }),
+    pageDescriptionField(),
     defineField({
       name: "brandColor",
       type: "string",
       group: "content",
       description:
         "Hex or CSS color used as the avatar background (e.g. #FF5864)",
+      hidden: hiddenOnNonEn,
       validation: (r) =>
         r.custom((val) => {
           if (!val) return true;
@@ -48,19 +44,33 @@ export const datingApp = defineType({
         }),
     }),
     defineField({
+      name: "logo",
+      type: "image",
+      group: "content",
+      description:
+        "Wordmark logo (SVG preferred) for the home page compatibility row",
+      hidden: hiddenOnNonEn,
+      options: { accept: "image/svg+xml,image/png,image/avif,image/webp" },
+    }),
+    defineField({
+      name: "hasPage",
+      type: "boolean",
+      group: "content",
+      description:
+        "Generate /tools/{slug} and include in Browse-by-app. Edit on EN; locale variants follow.",
+      initialValue: true,
+      hidden: hiddenOnNonEn,
+    }),
+    defineField({
       name: "order",
       type: "number",
       group: "content",
-      description: "Lower numbers appear first",
+      description:
+        "Lower numbers appear first in the Dating Apps section on /tools",
       initialValue: 0,
+      hidden: hiddenOnNonEn,
     }),
-    defineField({
-      name: "slug",
-      type: "slug",
-      group: "seo",
-      options: { source: "name", maxLength: 96 },
-      validation: (r) => r.required(),
-    }),
+    slugField({ source: "name" }),
     ...seoMetaFields,
     languageField,
   ],

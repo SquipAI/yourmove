@@ -1,7 +1,14 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 import { type ComponentType } from "react";
 import { LockIcon, DocumentTextIcon } from "@sanity/icons";
-import { linkAnnotation, seoMetaFields, standardGroups } from "../shared";
+import {
+  linkAnnotation,
+  seoMetaFields,
+  standardGroups,
+  languageField,
+  pageTitleField,
+  singletonPagePreview,
+} from "../shared";
 
 function makeLegalPage(name: string, title: string, icon: ComponentType) {
   return defineType({
@@ -12,13 +19,7 @@ function makeLegalPage(name: string, title: string, icon: ComponentType) {
     __experimental_omnisearch_visibility: false,
     groups: standardGroups,
     fields: [
-      defineField({
-        name: "title",
-        type: "string",
-        title: "Page heading (H1)",
-        group: "content",
-        validation: (r) => r.required(),
-      }),
+      pageTitleField({ path: `/${name}` }),
       defineField({
         name: "body",
         type: "array",
@@ -47,11 +48,9 @@ function makeLegalPage(name: string, title: string, icon: ComponentType) {
         ],
       }),
       ...seoMetaFields,
+      { ...languageField, group: "meta" },
     ],
-    preview: {
-      select: { title: "title" },
-      prepare: ({ title }) => ({ title: title ?? name }),
-    },
+    preview: singletonPagePreview(name),
   });
 }
 

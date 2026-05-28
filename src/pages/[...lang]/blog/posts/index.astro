@@ -1,0 +1,39 @@
+---
+import Base from "@layouts/Base.astro";
+import PostList from "@components/blog/ui/PostList.astro";
+import PageHeading from "@components/shared/PageHeading.astro";
+import { getAllPublishedPosts, getBlogPostsPage } from "@lib/queries";
+import { ogImageHref } from "@lib/og/route";
+import { getAllLocalePaths } from "@i18n/utils";
+import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+
+export function getStaticPaths() {
+  return getAllLocalePaths();
+}
+
+const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
+const [posts, page] = await Promise.all([
+  getAllPublishedPosts(lang),
+  getBlogPostsPage(lang),
+]);
+const countWord =
+  posts.length === 1 ? t(lang, "blog.article") : t(lang, "blog.articles");
+---
+
+<Base
+  title={page.metaTitle}
+  description={page.metaDescription}
+  {lang}
+  ogImage={ogImageHref(Astro.url.origin, lang, "blog/posts")}
+>
+  <section class="section">
+    <PageHeading
+      title={page.title}
+      eyebrow={`${posts.length} ${countWord}`}
+      subtitle={page.description}
+    />
+
+    <PostList {posts} {lang} priorityCount={2} />
+  </section>
+</Base>

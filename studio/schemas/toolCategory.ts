@@ -1,6 +1,6 @@
 import { defineField, defineType } from "sanity";
 import { TagIcon, EditIcon } from "@sanity/icons";
-import { languageField } from "./shared";
+import { languageField, hiddenOnNonEn } from "./shared";
 
 export const toolCategory = defineType({
   name: "toolCategory",
@@ -16,6 +16,7 @@ export const toolCategory = defineType({
       name: "title",
       type: "string",
       group: "content",
+      description: "Category name shown as a section heading on /tools",
       validation: (r) => r.required(),
     }),
     defineField({
@@ -23,6 +24,7 @@ export const toolCategory = defineType({
       type: "text",
       rows: 2,
       group: "content",
+      description: "Short subtitle shown under the section heading",
     }),
     defineField({
       name: "order",
@@ -30,6 +32,7 @@ export const toolCategory = defineType({
       group: "content",
       description: "Lower numbers appear first on /tools",
       initialValue: 0,
+      hidden: hiddenOnNonEn,
     }),
     languageField,
   ],

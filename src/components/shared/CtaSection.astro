@@ -1,0 +1,25 @@
+---
+import PageHeading from "@components/shared/PageHeading.astro";
+import Btn from "@components/shared/Btn.astro";
+
+interface Props {
+  title: string;
+  subtitle?: string | null;
+  buttonText: string;
+  href: string;
+}
+
+const { title, subtitle, buttonText, href } = Astro.props;
+---
+
+<div class="flex flex-col items-center text-center">
+  <PageHeading
+    title={title}
+    subtitle={subtitle}
+    level={2}
+    class="*:mx-auto *:text-center"
+  />
+  <Btn href={href} class="btn-big">
+    {buttonText} <span aria-hidden="true" class="ml-2">→</span>
+  </Btn>
+</div>

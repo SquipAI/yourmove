@@ -1,6 +1,14 @@
-import { defineField, defineType } from "sanity";
+import { defineType } from "sanity";
 import { BookIcon } from "@sanity/icons";
-import { seoMetaFields, standardGroups, languageField } from "../shared";
+import {
+  seoMetaFields,
+  standardGroups,
+  languageField,
+  pageTitleField,
+  pageDescriptionField,
+  navLabelField,
+  singletonPagePreview,
+} from "../shared";
 
 // Singleton — fixed `_id: "blog"`, exactly one document. Backs the `/blog`
 // index route. Editor-facing label only; will grow with intro/feature blocks
@@ -13,28 +21,11 @@ export const blog = defineType({
   __experimental_omnisearch_visibility: false,
   groups: standardGroups,
   fields: [
-    defineField({
-      name: "title",
-      type: "string",
-      group: "content",
-      description: "Heading shown on the blog index page",
-      initialValue: "Blog",
-    }),
-    defineField({
-      name: "description",
-      type: "text",
-      rows: 3,
-      group: "content",
-      description: "Short paragraph below the heading (optional)",
-    }),
+    pageTitleField({ path: "/blog", initialValue: "Blog" }),
+    pageDescriptionField(),
+    navLabelField("Blog"),
     ...seoMetaFields,
     { ...languageField, group: "meta" },
   ],
-  preview: {
-    select: { title: "title", subtitle: "language" },
-    prepare: ({ title, subtitle }) => ({
-      title: title ?? "Blog",
-      subtitle: subtitle?.toUpperCase(),
-    }),
-  },
+  preview: singletonPagePreview("Blog"),
 });

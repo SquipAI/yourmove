@@ -1,0 +1,47 @@
+---
+import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import type { ToolListData } from "@lib/types";
+import { resolveNavHref } from "@lib/links";
+import SectionHeading from "@components/shared/SectionHeading.astro";
+
+interface Props {
+  data: ToolListData;
+  lang?: Locale;
+  class?: string;
+}
+
+const { data, lang = DEFAULT_LOCALE, class: cls } = Astro.props;
+
+const colsClass =
+  data.groups.length <= 2
+    ? "md:grid-cols-2"
+    : data.groups.length === 3
+      ? "md:grid-cols-3"
+      : "md:grid-cols-2 lg:grid-cols-4";
+---
+
+<div class:list={["card p-8 text-center md:p-12", cls]}>
+  <SectionHeading title={data.title} subtitle={data.subtitle} />
+
+  <div class:list={["grid grid-cols-1 gap-10 text-left", colsClass]}>
+    {
+      data.groups.map((group) => (
+        <div>
+          <h3 class="text-brand mb-4 text-base font-semibold">{group.heading}</h3>
+          <ul class="flex flex-col gap-2">
+            {group.tools.map((tool) => {
+              const href = resolveNavHref("tool", tool.slug, null, lang);
+              return href ? (
+                <li>
+                  <a href={href} class="hover:text-brand transition-colors">
+                    {tool.title}
+                  </a>
+                </li>
+              ) : null;
+            })}
+          </ul>
+        </div>
+      ))
+    }
+  </div>
+</div>

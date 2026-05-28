@@ -2,8 +2,7 @@
 // Used by PortableText.astro (full block renderer) and FaqSection.astro
 // (paragraphs-only renderer for FAQ answers).
 
-import { resolveNavHref } from "@lib/navHref";
-import type { TargetType } from "@lib/linkTypes";
+import { resolveNavHref, isExternalHref, type TargetType } from "@lib/links";
 import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
 
@@ -15,7 +14,6 @@ export type InternalLink = {
 
 export type SiteLink = {
   url: string;
-  openInNewTab?: boolean;
   kind?: string;
 } | null;
 
@@ -31,7 +29,7 @@ export type PTSpan = {
   _key: string;
   _type: "span";
   text: string;
-  marks: string[];
+  marks?: string[];
 };
 
 export type TextBlock = {
@@ -41,51 +39,52 @@ export type TextBlock = {
   listItem?: "bullet" | "number";
   level?: number;
   children: PTSpan[];
-  markDefs: PTLink[];
+  markDefs?: PTLink[];
 };
 
-export function escape(text: string): string {
-  return text
+export function escape(text: unknown): string {
+  if (text == null) return "";
+  return String(text)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
 
+// External links (http/https) open in a new tab; internal paths and
+// mailto/tel stay in the same tab. No editor toggle — pattern-driven.
 export function resolveHref(
   link: PTLink,
   lang: Locale = DEFAULT_LOCALE,
 ): { href: string; newTab: boolean } {
   if (link.siteLink?.url) {
-    return {
-      href: link.siteLink.url,
-      newTab: !!link.siteLink.openInNewTab,
-    };
+    return { href: link.siteLink.url, newTab: isExternalHref(link.siteLink.url) };
   }
   const ref = link.internalLink;
   if (ref) {
     const href = resolveNavHref(ref._type, ref.slug, null, lang);
     if (href) return { href, newTab: false };
   }
-  return { href: link.href ?? "#", newTab: !!link.href };
+  const href = link.href ?? "#";
+  return { href, newTab: isExternalHref(href) };
 }
 
 export function inlineHTML(
-  children: PTSpan[],
-  markDefs: PTLink[],
+  children: PTSpan[] | null | undefined,
+  markDefs: PTLink[] | null | undefined,
   lang: Locale = DEFAULT_LOCALE,
 ): string {
-  return children
+  return (children ?? [])
     .map((span) => {
       let html = escape(span.text);
 
-      for (const mark of span.marks) {
-        const link = markDefs.find((m) => m._key === mark);
+      for (const mark of span.marks ?? []) {
+        const link = (markDefs ?? []).find((m) => m._key === mark);
         if (link) {
           const { href, newTab } = resolveHref(link, lang);
           const extras = newTab
             ? ' target="_blank" rel="noopener noreferrer"'
             : "";
-          html = `<a href="${escape(href)}"${extras}>${html}</a>`;
+          html = `<a href="${escape(href)}"${extras} class="text-brand underline">${html}</a>`;
         } else if (mark === "strong") html = `<strong>${html}</strong>`;
         else if (mark === "em") html = `<em>${html}</em>`;
         else if (mark === "underline") html = `<u>${html}</u>`;

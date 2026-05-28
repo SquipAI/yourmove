@@ -12,30 +12,16 @@ const { path, initialHeight = 800, geolocation = false, title } = Astro.props;
 const src = `${TOOLS_HOST}${path}`;
 ---
 
-<div class="tool-embed">
+<div class="w-full overflow-hidden">
   <iframe
+    class="block w-full overflow-hidden border-0"
     src={src}
     title={title}
     style={`height: ${initialHeight}px`}
-    frameborder="0"
-    scrolling="no"
     allow={geolocation ? "geolocation" : undefined}
     data-tools-host={TOOLS_HOST}
   ></iframe>
 </div>
-
-<style>
-  .tool-embed {
-    width: 100%;
-    overflow: hidden;
-  }
-  .tool-embed iframe {
-    width: 100%;
-    border: 0;
-    display: block;
-    overflow: hidden;
-  }
-</style>
 
 <script>
   const iframes = document.querySelectorAll<HTMLIFrameElement>(

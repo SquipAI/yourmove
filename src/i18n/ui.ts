@@ -3,16 +3,18 @@ import type { Locale } from "./config";
 import { common } from "./ui/common";
 import { blog } from "./ui/blog";
 import { tools } from "./ui/tools";
+import { reviews } from "./ui/reviews";
 
 type AllKeys =
   | keyof (typeof common)["en"]
   | keyof (typeof blog)["en"]
-  | keyof (typeof tools)["en"];
+  | keyof (typeof tools)["en"]
+  | keyof (typeof reviews)["en"];
 
 const ui = Object.fromEntries(
   LOCALES.map((lang) => [
     lang,
-    { ...common[lang], ...blog[lang], ...tools[lang] },
+    { ...common[lang], ...blog[lang], ...tools[lang], ...reviews[lang] },
   ]),
 ) as Record<Locale, Record<AllKeys, string>>;
 

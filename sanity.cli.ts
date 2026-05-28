@@ -14,6 +14,7 @@ export default defineCliConfig({
       alias: {
         "@studio": path.resolve("./studio"),
         "@i18n": path.resolve("./src/i18n"),
+        "@lib": path.resolve("./src/lib"),
       },
     },
   },

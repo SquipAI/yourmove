@@ -110,6 +110,17 @@
   details[open]::details-content {
     @apply h-auto;
   }
+
+  #lang-btn {
+    anchor-name: --lang-btn;
+  }
+  #lang-list {
+    position-anchor: --lang-btn;
+    inset: auto;
+    top: anchor(bottom);
+    right: anchor(right);
+    margin-top: 8px;
+  }
 }
 
 @utility card {

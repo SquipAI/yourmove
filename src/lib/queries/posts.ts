@@ -1,6 +1,8 @@
 import { sanityClient } from "@lib/sanity";
 import type { Post, PostCard } from "@lib/types";
-import { BODY, POST_CARD } from "./projections";
+import type { LocalizedPath } from "./types";
+import { ALTERNATES, BODY, POST_CARD, FAQ_ITEMS, POST_VISIBLE } from "./projections";
+import { coalesceLang } from "./coalesceLang";
 import { cached } from "./cache";
 import { DEFAULT_LOCALE } from "@i18n/config";
 
@@ -11,7 +13,7 @@ export const RELATED_POSTS_COUNT = 6;
 export function getAllPublishedPosts(lang = DEFAULT_LOCALE) {
   return cached(`getAllPublishedPosts:${lang}`, () =>
     sanityClient.fetch<PostCard[]>(
-      `*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && hidden != true] | order(coalesce(createdAt, _createdAt) desc) ${POST_CARD}`,
+      `*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE}] | order(coalesce(createdAt, _createdAt) desc) ${POST_CARD}`,
       { lang },
     ),
   );
@@ -20,7 +22,7 @@ export function getAllPublishedPosts(lang = DEFAULT_LOCALE) {
 export function getLatestPosts(n: number, lang = DEFAULT_LOCALE) {
   return cached(`getLatestPosts:${n}:${lang}`, () =>
     sanityClient.fetch<PostCard[]>(
-      `*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && hidden != true] | order(coalesce(createdAt, _createdAt) desc) [0...$n] ${POST_CARD}`,
+      `*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE}] | order(coalesce(createdAt, _createdAt) desc) [0...$n] ${POST_CARD}`,
       { lang, n },
     ),
   );
@@ -29,7 +31,7 @@ export function getLatestPosts(n: number, lang = DEFAULT_LOCALE) {
 export function getFeaturedPosts(n: number, lang = DEFAULT_LOCALE) {
   return cached(`getFeaturedPosts:${n}:${lang}`, () =>
     sanityClient.fetch<PostCard[]>(
-      `*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && hidden != true && featured == true] | order(coalesce(createdAt, _createdAt) desc) [0...$n] ${POST_CARD}`,
+      `*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE} && featured == true] | order(coalesce(createdAt, _createdAt) desc) [0...$n] ${POST_CARD}`,
       { lang, n },
     ),
   );
@@ -38,24 +40,15 @@ export function getFeaturedPosts(n: number, lang = DEFAULT_LOCALE) {
 export function getPostBySlug(slug: string, lang = DEFAULT_LOCALE) {
   return cached(`getPostBySlug:${slug}:${lang}`, () =>
     sanityClient.fetch<Post | null>(
-      `coalesce(
-        *[_type == "post" && slug.current == $slug && language == $lang][0],
-        *[_type == "post" && slug.current == $slug && (language == "en" || !defined(language))][0]
-      ){
+      `${coalesceLang("post", "slug.current == $slug")}{
         _id, title, summary, metaTitle, metaDescription, language,
         createdAt, _updatedAt, readingTime,
         "tagIds": tags[]._ref,
         "tags": tags[]->{ "slug": slug.current, title },
         "mainImage": mainImage{ "url": asset->url, alt },
+        ${ALTERNATES},
         ${BODY},
-        faq[]{ _key, question, answer[]{
-          ...,
-          markDefs[]{ ..., _type == "link" => {
-            ...,
-            internalLink->{ _type, _id, "slug": slug.current },
-            siteLink->{ url, openInNewTab, kind }
-          }}
-        }}
+        ${FAQ_ITEMS}
       }`,
       { slug, lang },
     ),
@@ -70,7 +63,7 @@ export function getRelatedPosts(
 ) {
   return cached(`getRelatedPosts:${postId}:${lang}`, async () => {
     const result = await sanityClient.fetch<PostCard[] | null>(
-      `*[_type == "post" && language == $lang && defined(slug.current) && hidden != true && _id != $postId] {
+      `*[_type == "post" && language == $lang && defined(slug.current) && ${POST_VISIBLE} && _id != $postId] {
         _id, title, summary,
         "slug": slug.current,
         "mainImage": mainImage{ "url": asset->url, alt },
@@ -93,16 +86,19 @@ export function getRelatedPosts(
 export function getPostCount(lang = DEFAULT_LOCALE) {
   return cached(`getPostCount:${lang}`, () =>
     sanityClient.fetch<number>(
-      `count(*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && hidden != true])`,
+      `count(*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE}])`,
       { lang },
     ),
   );
 }
 
-export function getAllPostSlugs() {
-  return cached("getAllPostSlugs", () =>
-    sanityClient.fetch<string[]>(
-      `*[_type == "post" && defined(slug.current) && count(body) > 0 && hidden != true && (language == "en" || !defined(language))].slug.current`,
+export function getAllPostPaths() {
+  return cached("getAllPostPaths", () =>
+    sanityClient.fetch<LocalizedPath[]>(
+      `*[_type == "post" && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE}]{
+        "lang": coalesce(language, "en"),
+        "slug": slug.current
+      }`,
     ),
   );
 }

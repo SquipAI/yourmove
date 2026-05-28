@@ -1,4 +1,5 @@
 import type { PostCard } from "./post";
+import type { AlternateSlug } from "./tool";
 
 export type Tag = {
   _id: string;
@@ -9,6 +10,7 @@ export type Tag = {
 export type TagPageData = Tag & {
   metaTitle: string;
   metaDescription: string;
+  alternates: AlternateSlug[] | null;
 };
 
 export type TagWithCount = Tag & {

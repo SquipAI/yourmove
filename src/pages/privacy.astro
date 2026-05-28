@@ -1,8 +1,0 @@
----
-import LegalPage from "@components/legal/LegalPage.astro";
-import { getLegalPage } from "@lib/queries";
-
-const page = await getLegalPage("privacy");
----
-
-<LegalPage {page} />

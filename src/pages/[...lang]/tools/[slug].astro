@@ -1,0 +1,49 @@
+---
+import Base from "@layouts/Base.astro";
+import PageHeading from "@components/shared/PageHeading.astro";
+import ToolList from "@components/tools/ui/ToolList.astro";
+import { getAppPage, getAllAppPaths } from "@lib/queries";
+import { ogImageHref } from "@lib/og/route";
+import { buildAlternateUrls } from "@i18n/utils";
+import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+
+export async function getStaticPaths() {
+  const paths = await getAllAppPaths();
+  return paths.map(({ lang, slug }) => ({
+    params: { lang: lang === DEFAULT_LOCALE ? undefined : lang, slug },
+  }));
+}
+
+const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
+const { slug } = Astro.params;
+const app = await getAppPage(slug!, lang);
+if (!app) throw new Error(`App not found: ${slug} (${lang})`);
+const count =
+  app.tools.length === 1 ? t(lang, "tools.tool") : t(lang, "tools.tools");
+const alternateUrls = buildAlternateUrls(
+  Astro.url.origin,
+  lang,
+  app.slug,
+  app.alternates,
+  "tools",
+);
+---
+
+<Base
+  title={app.metaTitle}
+  description={app.metaDescription}
+  {lang}
+  {alternateUrls}
+  ogImage={ogImageHref(Astro.url.origin, lang, `tools/${slug}`)}
+>
+  <section class="section">
+    <PageHeading
+      title={app.title}
+      subtitle={app.description ?? `${app.tools.length} ${count}`}
+      size="big"
+    />
+
+    <ToolList tools={app.tools} {lang} level={2} />
+  </section>
+</Base>

@@ -1,0 +1,130 @@
+---
+import Base from "@layouts/Base.astro";
+import SchemaOrg from "@components/seo/SchemaOrg.astro";
+import PageHeading from "@components/shared/PageHeading.astro";
+import SectionHeading from "@components/shared/SectionHeading.astro";
+import CompatibilityRow from "@components/shared/CompatibilityRow.astro";
+import FaqSection from "@components/shared/FaqSection.astro";
+import TestimonialsSection from "@components/testimonials/TestimonialsSection.astro";
+import ToolList from "@components/tools/ui/ToolList.astro";
+import FeaturedSection from "@components/blog/ui/FeaturedSection.astro";
+import SeeAllLink from "@components/blog/ui/SeeAllLink.astro";
+import {
+  getHome,
+  getSiteStats,
+  getAllTestimonials,
+  getFeaturedTools,
+  getFeaturedPosts,
+  BLOG_FEATURED_COUNT,
+} from "@lib/queries";
+import { homeSchema } from "@lib/schema";
+import { ogImageHref } from "@lib/og/route";
+import { getAllLocalePaths, localePathFor } from "@i18n/utils";
+import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+
+export function getStaticPaths() {
+  return getAllLocalePaths();
+}
+
+const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
+const [home, siteStats, allTestimonials, featuredTools, featuredPosts] =
+  await Promise.all([
+    getHome(lang),
+    getSiteStats(),
+    getAllTestimonials(lang),
+    getFeaturedTools(lang),
+    getFeaturedPosts(BLOG_FEATURED_COUNT, lang),
+  ]);
+const eyebrow =
+  siteStats?.userCount && siteStats?.userRating
+    ? home.statsEyebrow
+        .replace("{count}", siteStats.userCount)
+        .replace("{rating}", siteStats.userRating)
+    : null;
+const lp = localePathFor(lang);
+const pageUrl = String(Astro.url);
+const schema = homeSchema(
+  allTestimonials,
+  home.faq.items,
+  pageUrl,
+  lang,
+  home.metaTitle,
+  home.metaDescription,
+);
+---
+
+<Base
+  title={home.metaTitle}
+  description={home.metaDescription}
+  {lang}
+  ogImage={ogImageHref(Astro.url.origin, lang, "home")}
+>
+  <SchemaOrg slot="head" {schema} />
+
+  <section class="section">
+    <PageHeading
+      title={home.title}
+      subtitle={home.description}
+      {eyebrow}
+      size="big"
+    />
+
+    <CompatibilityRow
+      apps={home.compatibility.apps}
+      label={home.compatibility.label}
+      class="mt-section-sm"
+    />
+  </section>
+
+  <section class="section bg-subtle-lighter">
+    <div class="grid md:grid-cols-[1fr_auto] md:items-baseline mb-section-xs">
+      <SectionHeading
+        title={home.tools.heading}
+        eyebrow={home.tools.eyebrow}
+        subtitle={home.tools.subtitle}
+      />
+      <SeeAllLink
+        href={lp("tools")}
+        {lang}
+        class="md:col-start-2 md:row-start-1 md:justify-self-end"
+      />
+    </div>
+    <ToolList tools={featuredTools} {lang} level={3} />
+  </section>
+
+  <section class="section">
+    <TestimonialsSection
+      testimonials={home.reviews.items}
+      heading={home.reviews.heading}
+      eyebrow={home.reviews.eyebrow}
+      subtitle={home.reviews.subtitle}
+      {lang}
+    />
+  </section>
+
+  {
+    featuredPosts.length > 0 && (
+      <section class="section">
+        <div class="grid md:grid-cols-[1fr_auto] md:items-baseline mb-section-xs">
+          <SectionHeading title={home.blogHeading} />
+          <SeeAllLink
+            href={lp("blog")}
+            {lang}
+            class="md:col-start-2 md:row-start-1 md:justify-self-end"
+          />
+        </div>
+        <FeaturedSection posts={featuredPosts} {lang} />
+      </section>
+    )
+  }
+
+  <section class="section">
+    <FaqSection
+      items={home.faq.items}
+      heading={home.faq.heading}
+      eyebrow={home.faq.eyebrow}
+      subtitle={home.faq.subtitle}
+      {lang}
+    />
+  </section>
+</Base>

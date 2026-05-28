@@ -1,7 +1,10 @@
 import { post } from "./blog/post";
 import { tool } from "./tool";
 import { toolCategory } from "./toolCategory";
+import { toolList } from "./toolList";
 import { datingApp } from "./datingApp";
+import { testimonial } from "./testimonial";
+import { reviewsPage } from "./reviewsPage";
 import { tools } from "./tools";
 import { tag } from "./blog/tag";
 import { howToUse } from "./howToUse";
@@ -11,7 +14,6 @@ import { blog } from "./blog/blog";
 import { blogPosts } from "./blog/blogPosts";
 import { blogTags } from "./blog/blogTags";
 import { privacy, terms } from "./settings/legalPage";
-import { headerNav } from "./settings/headerNav";
 import { footerNav } from "./settings/footerNav";
 import { siteStats } from "./settings/siteStats";
 
@@ -23,13 +25,15 @@ export const schemaTypes = [
   tools,
   privacy,
   terms,
-  headerNav,
   footerNav,
   siteStats,
   post,
   tool,
   toolCategory,
+  toolList,
   datingApp,
+  testimonial,
+  reviewsPage,
   tag,
   howToUse,
   siteLink,
@@ -39,7 +43,10 @@ export const translatedSchemaTypes = [
   "post",
   "tool",
   "toolCategory",
+  "toolList",
   "datingApp",
+  "testimonial",
+  "reviewsPage",
   "tag",
   "howToUse",
   "privacy",
@@ -57,9 +64,9 @@ export const SINGLETON_TYPES = [
   "blog-posts",
   "blog-tags",
   "tools",
+  "reviewsPage",
   "privacy",
   "terms",
-  "headerNav",
   "footerNav",
   "siteStats",
 ];

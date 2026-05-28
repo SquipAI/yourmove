@@ -1,0 +1,31 @@
+---
+import Base from "@layouts/Base.astro";
+import PortableText from "@components/shared/PortableText.astro";
+import PageHeading from "@components/shared/PageHeading.astro";
+import { getLegalPage } from "@lib/queries";
+import { ogImageHref } from "@lib/og/route";
+import { getAllLocalePaths } from "@i18n/utils";
+import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+
+export function getStaticPaths() {
+  return getAllLocalePaths();
+}
+
+const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
+const page = await getLegalPage("terms", lang);
+---
+
+<Base
+  title={page.metaTitle}
+  description={page.metaDescription}
+  {lang}
+  ogImage={ogImageHref(Astro.url.origin, lang, "terms")}
+>
+  <article class="section *:max-w-200">
+    <PageHeading title={page.title} />
+
+    <div class="prose">
+      {page?.body && <PortableText body={page.body} {lang} />}
+    </div>
+  </article>
+</Base>

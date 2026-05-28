@@ -6,6 +6,8 @@ import {
   linkAnnotation,
   seoFields,
   standardGroups,
+  pageTitleField,
+  hiddenOnNonEn,
 } from "../shared";
 
 export const post = defineType({
@@ -15,13 +17,7 @@ export const post = defineType({
   type: "document",
   groups: standardGroups,
   fields: [
-    defineField({
-      name: "title",
-      type: "string",
-      group: "content",
-      options: { search: { weight: 100 } },
-      validation: (r) => r.required(),
-    }),
+    pageTitleField({ path: "/blog/{slug}", searchWeight: 100 }),
     defineField({
       name: "summary",
       type: "text",
@@ -222,23 +218,34 @@ export const post = defineType({
       type: "boolean",
       group: "meta",
       initialValue: false,
+      hidden: hiddenOnNonEn,
     }),
     defineField({
       name: "featured",
       type: "boolean",
       group: "meta",
       initialValue: false,
+      hidden: hiddenOnNonEn,
     }),
     defineField({
       name: "tags",
       type: "array",
       group: "meta",
-      of: [defineArrayMember({ type: "reference", to: [{ type: "tag" }] })],
+      description: "Edit on EN; locales follow via translation.metadata.",
+      hidden: hiddenOnNonEn,
+      of: [
+        defineArrayMember({
+          type: "reference",
+          to: [{ type: "tag" }],
+          options: { filter: 'language == "en"' },
+        }),
+      ],
     }),
     defineField({
       name: "readingTime",
       type: "number",
       group: "meta",
+      hidden: hiddenOnNonEn,
     }),
     defineField({
       name: "createdAt",
@@ -247,6 +254,7 @@ export const post = defineType({
       description:
         "Content creation date (auto-filled for new docs, imported from Webflow for migrated ones)",
       initialValue: () => new Date().toISOString(),
+      hidden: hiddenOnNonEn,
     }),
   ],
   preview: {

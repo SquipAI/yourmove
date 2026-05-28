@@ -1,5 +1,6 @@
 import { defineField, defineType } from "sanity";
 import { LinkIcon } from "@sanity/icons";
+import { translatedField } from "../shared";
 
 export const siteLink = defineType({
   name: "siteLink",
@@ -10,13 +11,7 @@ export const siteLink = defineType({
   description:
     "Reusable destination URL (own subdomain, app stores, partner sites). Pick from the link picker in body content instead of typing the URL each time.",
   fields: [
-    defineField({
-      name: "title",
-      type: "string",
-      description:
-        "Shown only in Studio for picking — not rendered on the site",
-      validation: (r) => r.required(),
-    }),
+    translatedField("title", "Title", { required: "default" }),
     defineField({
       name: "url",
       type: "url",
@@ -25,6 +20,6 @@ export const siteLink = defineType({
     }),
   ],
   preview: {
-    select: { title: "title", subtitle: "url" },
+    select: { title: "title.en", subtitle: "url" },
   },
 });

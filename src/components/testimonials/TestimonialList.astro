@@ -1,0 +1,51 @@
+---
+import TestimonialCard from "@components/testimonials/ui/TestimonialCard.astro";
+import type { Testimonial } from "@lib/types";
+
+interface Props {
+  testimonials: Testimonial[];
+  /**
+   * snap   — horizontal scroll-snap on mobile, column-count on desktop (used on
+   *          home + tool sections).
+   * column — vertical single column on mobile, column-count on desktop (used on
+   *          /reviews page).
+   */
+  variant: "snap" | "column";
+  level?: 2 | 3;
+  class?: string;
+}
+
+const { testimonials, variant, level, class: cls } = Astro.props;
+---
+
+{
+  variant === "snap" ? (
+    <ul
+      class:list={[
+        "flex snap-x snap-mandatory gap-4 overflow-x-auto px-svw pb-2 -mx-svw",
+        "md:mx-0 md:px-0 md:block md:overflow-visible md:columns-2 md:gap-6 lg:columns-3 [&>li]:md:mb-6",
+        cls,
+      ]}
+    >
+      {testimonials.map((t) => (
+        <li class="w-[85%] shrink-0 snap-start md:w-auto md:break-inside-avoid">
+          <TestimonialCard testimonial={t} level={level} />
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <ul
+      class:list={[
+        "flex flex-col gap-4",
+        "md:block md:columns-2 md:gap-6 lg:columns-3 [&>li]:md:mb-6",
+        cls,
+      ]}
+    >
+      {testimonials.map((t) => (
+        <li class="md:break-inside-avoid">
+          <TestimonialCard testimonial={t} level={level} />
+        </li>
+      ))}
+    </ul>
+  )
+}

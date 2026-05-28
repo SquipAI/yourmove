@@ -1,0 +1,57 @@
+---
+import type { FaqItem } from "@lib/types";
+import { inlineHTML, type TextBlock } from "@lib/portableText";
+import ChevronDown from "@components/shared/ChevronDown.astro";
+import SectionHeading from "@components/shared/SectionHeading.astro";
+import { DEFAULT_LOCALE } from "@i18n/config";
+import type { Locale } from "@i18n/config";
+
+interface Props {
+  items: FaqItem[];
+  heading: string;
+  eyebrow?: string | null;
+  subtitle?: string | null;
+  /** Heading level for the section title. Default 2. */
+  level?: 2 | 3;
+  lang?: Locale;
+  class?: string;
+}
+
+const {
+  items,
+  heading,
+  eyebrow,
+  subtitle,
+  level = 2,
+  lang = DEFAULT_LOCALE,
+  class: cls,
+} = Astro.props;
+---
+
+<div class:list={["flex flex-col items-center", cls]}>
+  <SectionHeading title={heading} {eyebrow} {subtitle} {level} />
+  <ul class="flex flex-col gap-2 w-full sm:max-w-156">
+    {
+      items.map((item) => (
+        <li>
+          <details class="group p-svw bg-white rounded-md border border-subtle-lighter sm:p-4">
+            <summary class="flex items-center justify-between gap-4 font-medium text-pretty cursor-pointer">
+              <h3>{item.question}</h3>
+              <ChevronDown class="w-4 transition-transform group-open:rotate-180" />
+            </summary>
+            <div class="flex flex-col gap-3 pt-4">
+              {(item.answer as TextBlock[] | undefined)?.map((block) => {
+                if (block._type !== "block") return null;
+                return (
+                  <p
+                    set:html={inlineHTML(block.children, block.markDefs, lang)}
+                  />
+                );
+              })}
+            </div>
+          </details>
+        </li>
+      ))
+    }
+  </ul>
+</div>

@@ -1,0 +1,44 @@
+---
+import type { CompatibilityApp } from "@lib/types";
+
+interface Props {
+  apps: CompatibilityApp[];
+  label: string;
+  level?: 2 | 3;
+  class?: string;
+}
+
+const { apps, label, level = 2, class: cls } = Astro.props;
+const HeadingTag = `h${level}` as "h2" | "h3";
+---
+
+<div
+  class:list={[
+    "flex flex-col items-center gap-5 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-10 sm:gap-y-4",
+    cls,
+  ]}
+>
+  <HeadingTag class="text-subtle text-sm font-normal">{label}</HeadingTag>
+
+  <ul
+    class="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 sm:gap-x-10"
+  >
+    {
+      apps.map((app) => (
+        <li>
+          {app.logoUrl ? (
+            <img
+              src={app.logoUrl}
+              alt={`${app.name} logo`}
+              height="28"
+              loading="lazy"
+              class="block h-7 w-auto opacity-60 grayscale"
+            />
+          ) : (
+            <span class="text-subtle text-sm font-medium">{app.name}</span>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+</div>

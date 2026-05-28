@@ -1,0 +1,69 @@
+---
+import Base from "@layouts/Base.astro";
+import PostList from "@components/blog/ui/PostList.astro";
+import TagList from "@components/blog/ui/TagList.astro";
+import PageHeading from "@components/shared/PageHeading.astro";
+import SectionHeading from "@components/shared/SectionHeading.astro";
+import {
+  getAllTagsWithCount,
+  getAllTagPaths,
+  getTagBySlug,
+  getTagPosts,
+} from "@lib/queries";
+import { ogImageHref } from "@lib/og/route";
+import { buildAlternateUrls } from "@i18n/utils";
+import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+
+export async function getStaticPaths() {
+  const paths = await getAllTagPaths();
+  return paths.map(({ lang, slug }) => ({
+    params: { lang: lang === DEFAULT_LOCALE ? undefined : lang, tag: slug },
+  }));
+}
+
+const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
+const { tag: slug } = Astro.params;
+const [tag, posts, allTags] = await Promise.all([
+  getTagBySlug(slug!, lang),
+  getTagPosts(slug!, lang),
+  getAllTagsWithCount(lang),
+]);
+const otherTags = allTags.filter((t) => t.slug !== slug);
+const count =
+  posts.length === 1 ? t(lang, "blog.article") : t(lang, "blog.articles");
+const alternateUrls = buildAlternateUrls(
+  Astro.url.origin,
+  lang,
+  slug!,
+  tag.alternates,
+  "blog/topics",
+);
+---
+
+<Base
+  title={tag.metaTitle}
+  description={tag.metaDescription}
+  {lang}
+  {alternateUrls}
+  ogImage={ogImageHref(Astro.url.origin, lang, `blog/topics/${slug}`)}
+>
+  <section class="section">
+    <PageHeading
+      title={tag.title ?? t(lang, "blog.topics")}
+      subtitle={`${posts.length} ${count}`}
+    />
+
+    <PostList {posts} {lang} priorityCount={2} />
+  </section>
+
+  <section class="section pt-0">
+    <SectionHeading
+      eyebrow={t(lang, "blog.explore")}
+      title={t(lang, "blog.moreTopics")}
+      size="sm"
+    />
+
+    <TagList tags={otherTags} {lang} />
+  </section>
+</Base>

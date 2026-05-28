@@ -1,4 +1,5 @@
 import type { FaqItem } from "./faq";
+import type { AlternateSlug } from "./tool";
 
 export type PostCard = {
   _id: string;
@@ -26,4 +27,5 @@ export type Post = {
   faq: FaqItem[] | null;
   tagIds: string[];
   tags: { slug: string; title: string }[] | null;
+  alternates: AlternateSlug[] | null;
 };

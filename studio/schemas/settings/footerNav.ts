@@ -1,6 +1,14 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 import { MenuIcon } from "@sanity/icons";
-import { navItemMember } from "../shared";
+import { translatedField } from "../shared";
+import { linkableTo } from "@lib/links/sanity";
+
+const navItem = defineArrayMember({
+  type: "reference",
+  to: linkableTo({ exclude: ["post", "tag"] }),
+  options: { disableNew: true },
+  weak: true,
+});
 
 export const footerNav = defineType({
   name: "footerNav",
@@ -9,10 +17,7 @@ export const footerNav = defineType({
   icon: MenuIcon,
   __experimental_omnisearch_visibility: false,
   fields: [
-    defineField({
-      name: "tagline",
-      type: "string",
-    }),
+    translatedField("tagline", "Tagline", { required: false }),
     defineField({
       name: "columns",
       type: "array",
@@ -20,26 +25,22 @@ export const footerNav = defineType({
         defineArrayMember({
           type: "object",
           fields: [
-            defineField({
-              name: "title",
-              type: "string",
-              validation: (r) => r.required(),
-            }),
+            translatedField("title", "Title", { required: "default" }),
             defineField({
               name: "items",
               type: "array",
-              of: [navItemMember],
+              of: [navItem],
             }),
           ],
           preview: {
-            select: { title: "title" },
+            select: { title: "title.en" },
+            prepare: ({ title }) => ({ title: title || "Column" }),
           },
         }),
       ],
     }),
   ],
   preview: {
-    select: {},
     prepare: () => ({ title: "Footer" }),
   },
 });

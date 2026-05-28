@@ -1,6 +1,13 @@
-import { defineField, defineType } from "sanity";
+import { defineType } from "sanity";
 import { FilterIcon } from "@sanity/icons";
-import { seoMetaFields, standardGroups, languageField } from "../shared";
+import {
+  seoMetaFields,
+  standardGroups,
+  languageField,
+  pageTitleField,
+  pageDescriptionField,
+  singletonPagePreview,
+} from "../shared";
 
 export const blogTags = defineType({
   name: "blog-tags",
@@ -10,21 +17,10 @@ export const blogTags = defineType({
   __experimental_omnisearch_visibility: false,
   groups: standardGroups,
   fields: [
-    defineField({
-      name: "title",
-      type: "string",
-      group: "content",
-      description: "H1 shown on the /blog/topics listing page",
-      initialValue: "Topics",
-    }),
+    pageTitleField({ path: "/blog/topics", initialValue: "Topics" }),
+    pageDescriptionField(),
     ...seoMetaFields,
     { ...languageField, group: "meta" },
   ],
-  preview: {
-    select: { title: "title", subtitle: "language" },
-    prepare: ({ title, subtitle }) => ({
-      title: title ?? "Blog — Topics",
-      subtitle: subtitle?.toUpperCase(),
-    }),
-  },
+  preview: singletonPagePreview("Blog — Topics"),
 });

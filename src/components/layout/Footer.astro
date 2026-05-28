@@ -1,17 +1,31 @@
 ---
 import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
-import type { NavItem } from "@lib/types";
+import type { NavItem } from "@lib/links";
 import LogoSvg from "@assets/svg/LogoSvg.astro";
 
 interface Props {
   lang?: Locale;
   tagline?: string | null;
+  toolsColumn: { title: string; items: NavItem[]; seeAll: NavItem };
   columns?: { title: string; items: NavItem[] }[];
 }
 
-const { lang = DEFAULT_LOCALE, tagline, columns = [] } = Astro.props;
+const {
+  lang = DEFAULT_LOCALE,
+  tagline,
+  toolsColumn,
+  columns = [],
+} = Astro.props;
 const year = new Date().getFullYear();
+
+const allColumns = [
+  {
+    title: toolsColumn.title,
+    items: [...toolsColumn.items, toolsColumn.seeAll],
+  },
+  ...columns,
+];
 ---
 
 <footer id="footer" class="bg-brand/9">
@@ -30,33 +44,31 @@ const year = new Date().getFullYear();
     </div>
 
     <!-- Columns -->
-    {
-      columns.length > 0 && (
-        <div class="flex flex-wrap gap-x-12 gap-y-8">
-          {columns.map((col) => (
-            <nav aria-label={col.title}>
-              <p class="mb-3 text-xs font-semibold tracking-widest uppercase opacity-50">
-                {col.title}
-              </p>
-              <ul class="flex flex-col gap-2">
-                {col.items.map((item) => (
-                  <li>
-                    <a
-                      href={item.href}
-                      class="text-sm opacity-75 transition-opacity hover:opacity-100"
-                      {...(item.external
-                        ? { target: "_blank", rel: "noopener noreferrer" }
-                        : {})}
-                    >
-                      {item.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ))}
-        </div>
-      )
-    }
+    <div class="flex flex-wrap gap-x-12 gap-y-8">
+      {
+        allColumns.map((col) => (
+          <nav aria-label={col.title}>
+            <p class="mb-3 text-xs font-semibold tracking-widest uppercase opacity-50">
+              {col.title}
+            </p>
+            <ul class="flex flex-col gap-2">
+              {col.items.map((item) => (
+                <li>
+                  <a
+                    href={item.href}
+                    class="text-sm opacity-75 transition-opacity hover:opacity-100"
+                    {...(item.external
+                      ? { target: "_blank", rel: "noopener noreferrer" }
+                      : {})}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))
+      }
+    </div>
   </div>
 </footer>

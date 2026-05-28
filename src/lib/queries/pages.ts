@@ -4,22 +4,52 @@ import type {
   LegalPageData,
   BlogPageData,
   BlogSubPageData,
-  NavItemRaw,
-  FooterNavData,
   SiteStats,
+  NavTools,
+  HeaderLinks,
 } from "@lib/types";
-import { BODY } from "./projections";
+import type { FooterNavData } from "@lib/links";
+import {
+  BODY,
+  FAQ_ITEM_BODY,
+  COMPATIBILITY,
+  TESTIMONIAL_CARD,
+} from "./projections";
+import { coalesceLang } from "./coalesceLang";
 import { cached } from "./cache";
 import { DEFAULT_LOCALE } from "@i18n/config";
-import { linkTargetFields } from "@lib/linkTypes";
 
 export function getHome(lang = DEFAULT_LOCALE) {
   return cached(`getHome:${lang}`, () =>
     sanityClient.fetch<HomeData>(
-      `coalesce(
-        *[_type == "home" && language == $lang][0],
-        *[_type == "home" && (language == "en" || !defined(language))][0]
-      ){ title, metaTitle, metaDescription }`,
+      `${coalesceLang("home")}{
+        title, navLabel, description, metaTitle, metaDescription,
+        statsEyebrow, blogHeading,
+        "reviews": {
+          "eyebrow": reviews.eyebrow,
+          "heading": reviews.heading,
+          "subtitle": reviews.subtitle,
+          "items": *[_id == "home"][0].reviews.items[]->{
+            "loc": coalesce(
+              *[_type == "translation.metadata" && references(^._id)][0]
+                .translations[language == $lang][0].value->,
+              @
+            )
+          }.loc ${TESTIMONIAL_CARD}
+        },
+        "faq": {
+          "eyebrow": faq.eyebrow,
+          "heading": faq.heading,
+          "subtitle": faq.subtitle,
+          "items": faq.items[] ${FAQ_ITEM_BODY}
+        },
+        ${COMPATIBILITY},
+        "tools": {
+          "eyebrow": tools.eyebrow,
+          "heading": tools.heading,
+          "subtitle": tools.subtitle
+        }
+      }`,
       { lang },
     ),
   );
@@ -28,11 +58,8 @@ export function getHome(lang = DEFAULT_LOCALE) {
 export function getLegalPage(type: "privacy" | "terms", lang = DEFAULT_LOCALE) {
   return cached(`getLegalPage:${type}:${lang}`, () =>
     sanityClient.fetch<LegalPageData>(
-      `coalesce(
-        *[_type == $type && language == $lang][0],
-        *[_type == $type && (language == "en" || !defined(language))][0]
-      ){ title, metaTitle, metaDescription, ${BODY} }`,
-      { type, lang },
+      `${coalesceLang(type)}{ title, metaTitle, metaDescription, ${BODY} }`,
+      { lang },
     ),
   );
 }
@@ -40,10 +67,7 @@ export function getLegalPage(type: "privacy" | "terms", lang = DEFAULT_LOCALE) {
 export function getBlogPage(lang = DEFAULT_LOCALE) {
   return cached(`getBlogPage:${lang}`, () =>
     sanityClient.fetch<BlogPageData>(
-      `coalesce(
-        *[_type == "blog" && language == $lang][0],
-        *[_type == "blog" && (language == "en" || !defined(language))][0]
-      ){ title, description, metaTitle, metaDescription }`,
+      `${coalesceLang("blog")}{ title, description, metaTitle, metaDescription }`,
       { lang },
     ),
   );
@@ -52,10 +76,7 @@ export function getBlogPage(lang = DEFAULT_LOCALE) {
 export function getBlogPostsPage(lang = DEFAULT_LOCALE) {
   return cached(`getBlogPostsPage:${lang}`, () =>
     sanityClient.fetch<BlogSubPageData>(
-      `coalesce(
-        *[_type == "blog-posts" && language == $lang][0],
-        *[_type == "blog-posts" && (language == "en" || !defined(language))][0]
-      ){ title, metaTitle, metaDescription }`,
+      `${coalesceLang("blog-posts")}{ title, description, metaTitle, metaDescription }`,
       { lang },
     ),
   );
@@ -64,19 +85,48 @@ export function getBlogPostsPage(lang = DEFAULT_LOCALE) {
 export function getBlogTagsPage(lang = DEFAULT_LOCALE) {
   return cached(`getBlogTagsPage:${lang}`, () =>
     sanityClient.fetch<BlogSubPageData>(
-      `coalesce(
-        *[_type == "blog-tags" && language == $lang][0],
-        *[_type == "blog-tags" && (language == "en" || !defined(language))][0]
-      ){ title, metaTitle, metaDescription }`,
+      `${coalesceLang("blog-tags")}{ title, description, metaTitle, metaDescription }`,
       { lang },
     ),
   );
 }
 
-const NAV_ITEM_PROJECTION = `{
-  "label": coalesce(label, target->title),
-  ${linkTargetFields("target")}
-}`;
+// Affiliate external link — stable Sanity id, editor changes url/title in
+// Studio, the id stays.
+const AFFILIATE_SITELINK_ID = "77b2b26c-8ffc-4534-8dce-22ccb8c92e86";
+
+// Tools dropdown content — shared by header and footer.
+export function getNavTools(lang = DEFAULT_LOCALE) {
+  return cached(`getNavTools:${lang}`, () =>
+    sanityClient.fetch<NavTools>(
+      `{
+        "label": *[_type == "tools" && language == $lang][0].navLabel,
+        "items": *[_type == "tool" && language == $lang && featured == true]
+          | order(coalesce(order, 9999) asc, title asc) [0...6] {
+            _id, "title": coalesce(cardTitle, title), "slug": slug.current
+          }
+      }`,
+      { lang },
+    ),
+  );
+}
+
+// Header flat links — blog, reviews, affiliate.
+export function getHeaderLinks(lang = DEFAULT_LOCALE) {
+  return cached(`getHeaderLinks:${lang}`, () =>
+    sanityClient.fetch<HeaderLinks>(
+      `{
+        "blogLabel": *[_type == "blog" && language == $lang][0].navLabel,
+        "reviewsLabel": *[_type == "reviewsPage" && language == $lang][0].navLabel,
+        "affiliate": *[_id == $affiliateId][0]{
+          "label": coalesce(title[$lang], title.en),
+          url
+        }
+      }`,
+      { lang, affiliateId: AFFILIATE_SITELINK_ID },
+    ),
+  );
+}
 
 export function getSiteStats() {
   return cached("getSiteStats", () =>
@@ -86,24 +136,31 @@ export function getSiteStats() {
   );
 }
 
-export function getHeaderNav() {
-  return cached("getHeaderNav", () =>
-    sanityClient.fetch<NavItemRaw[] | null>(
-      `*[_type == "headerNav" && _id == "header-nav"][0].items[] ${NAV_ITEM_PROJECTION}`,
-    ),
-  );
-}
-
-export function getFooterNav() {
-  return cached("getFooterNav", () =>
+export function getFooterNav(lang = DEFAULT_LOCALE) {
+  return cached(`getFooterNav:${lang}`, () =>
     sanityClient.fetch<FooterNavData | null>(
       `*[_type == "footerNav" && _id == "footer-nav"][0]{
-        tagline,
+        "tagline": tagline[$lang],
         "columns": columns[]{
-          title,
-          "items": items[] ${NAV_ITEM_PROJECTION}
+          "title": title[$lang],
+          "items": items[]->{
+            "label": coalesce(
+              *[_type == "translation.metadata" && references(^._id)][0]
+                .translations[language == $lang][0].value->navLabel,
+              navLabel,
+              title[$lang],
+              *[_type == "translation.metadata" && references(^._id)][0]
+                .translations[language == $lang][0].value->title,
+              title.en,
+              title
+            ),
+            "targetType": _type,
+            "targetSlug": slug.current,
+            "externalUrl": select(_type == "siteLink" => url)
+          }
         }
       }`,
+      { lang },
     ),
   );
 }

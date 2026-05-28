@@ -6,50 +6,33 @@ export function localePathFor(lang: Locale) {
   return (path: string) => getRelativeLocaleUrl(lang, path);
 }
 
-export function getNonDefaultLocalePaths() {
-  return LOCALES.filter(
-    (l): l is Exclude<Locale, typeof DEFAULT_LOCALE> => l !== DEFAULT_LOCALE,
-  ).map((lang) => ({ params: { lang } }));
+export function getAllLocalePaths() {
+  return LOCALES.map((l) => ({
+    params: { lang: l === DEFAULT_LOCALE ? undefined : l },
+  }));
 }
 
-/**
- * Builds alternateUrls for hreflang + language switcher.
- * slugs: per-locale path segment from Sanity (e.g. "tools", "herramientas").
- * Locales without a slug fall back to the EN slug, or to the locale homepage if no EN slug.
- */
+// Build per-locale absolute URLs from translation.metadata alternates.
+// `prefix` joins each slug to a static path segment ("tools", "blog", "blog/topics").
+// Locales without a slug fall back to the locale homepage (never 404).
 export function buildAlternateUrls(
   origin: string,
-  slugs: Partial<Record<Locale, string>> = {},
+  currentLang: Locale,
+  currentSlug: string,
+  alternates: Array<{ lang: Locale; slug: string | null }> | null | undefined,
+  prefix = "",
 ): Record<Locale, string> {
-  const defaultSlug = slugs[DEFAULT_LOCALE];
+  const join = (s: string) => (prefix ? `${prefix}/${s}` : s);
+  const slugs: Partial<Record<Locale, string>> = {
+    [currentLang]: join(currentSlug),
+  };
+  for (const a of alternates ?? []) {
+    if (a.slug) slugs[a.lang] = join(a.slug);
+  }
   return Object.fromEntries(
     LOCALES.map((l) => {
-      const slug = slugs[l] ?? defaultSlug;
-      const path = slug
-        ? getRelativeLocaleUrl(l, slug)
-        : getRelativeLocaleUrl(l);
-      return [l, `${origin}${path}`];
-    }),
-  ) as Record<Locale, string>;
-}
-
-/**
- * Builds alternateUrls for nested routes like /blog/post-slug/ or /tools/tool-slug/.
- * indexSlugs: per-locale slug for the index page (e.g. "blog").
- * itemSlugs: per-locale slug for the item (e.g. the post or tool slug).
- */
-export function buildNestedAlternateUrls(
-  origin: string,
-  indexSlugs: Partial<Record<Locale, string>>,
-  itemSlugs: Partial<Record<Locale, string>>,
-): Record<Locale, string> {
-  const defaultIndex = indexSlugs[DEFAULT_LOCALE];
-  const defaultItem = itemSlugs[DEFAULT_LOCALE];
-  return Object.fromEntries(
-    LOCALES.map((l) => {
-      const indexSlug = indexSlugs[l] ?? defaultIndex;
-      const itemSlug = itemSlugs[l] ?? defaultItem;
-      const path = getRelativeLocaleUrl(l, `${indexSlug}/${itemSlug}`);
+      const slug = slugs[l];
+      const path = slug ? getRelativeLocaleUrl(l, slug) : getRelativeLocaleUrl(l);
       return [l, `${origin}${path}`];
     }),
   ) as Record<Locale, string>;

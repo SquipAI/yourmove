@@ -1,17 +1,64 @@
 import type { Locale } from "@i18n/config";
-import type { FaqItem, Post, ToolPageData } from "./types";
+import { stripAccent } from "./parseAccent";
+import type {
+  FaqItem,
+  Post,
+  ToolPageData,
+  Testimonial,
+  ReviewsPageData,
+} from "./types";
 
 const SITE = "https://yourmove.ai";
 const ORG_ID = `${SITE}/#organization`;
 const SITE_ID = `${SITE}/#website`;
 
-const ORG = {
-  "@type": "Organization",
-  "@id": ORG_ID,
-  name: "YourMove AI",
-  url: SITE,
-  logo: `${SITE}/web-app-manifest-512x512.png`,
+const KNOWS_ABOUT: Record<Locale, string[]> = {
+  en: [
+    "Online dating",
+    "Dating apps",
+    "Dating profile optimization",
+    "Online dating openers and first messages",
+    "Pickup lines",
+    "Rizz",
+    "Tinder",
+    "Hinge",
+    "Bumble",
+  ],
+  es: [
+    "Citas online",
+    "Apps de citas",
+    "Ligar",
+    "Mensajes para ligar",
+    "Frases para ligar",
+    "Optimización de perfil de citas",
+    "Tinder",
+    "Hinge",
+    "Bumble",
+  ],
+  de: [
+    "Online-Dating",
+    "Dating-Apps",
+    "Anmachsprüche",
+    "Rizz Sprüche",
+    "Hinge Prompts",
+    "Dating-Opener",
+    "Dating-Profil optimieren",
+    "Tinder",
+    "Hinge",
+    "Bumble",
+  ],
 };
+
+function orgNode(lang: Locale) {
+  return {
+    "@type": "Organization",
+    "@id": ORG_ID,
+    name: "YourMove AI",
+    url: SITE,
+    logo: `${SITE}/web-app-manifest-512x512.png`,
+    knowsAbout: KNOWS_ABOUT[lang],
+  };
+}
 
 const WEBSITE = {
   "@type": "WebSite",
@@ -64,9 +111,9 @@ export function articleSchema(
   breadcrumbs: BreadcrumbItem[],
 ) {
   const article: Record<string, unknown> = {
-    "@type": "Article",
+    "@type": "BlogPosting",
     "@id": `${url}#article`,
-    headline: post.title,
+    headline: stripAccent(post.title),
     url,
     inLanguage: lang,
     datePublished: post.createdAt,
@@ -74,7 +121,7 @@ export function articleSchema(
     author: AUTHOR,
     publisher: { "@id": ORG_ID },
     isPartOf: { "@id": SITE_ID },
-    mainEntityOfPage: url,
+    mainEntityOfPage: { "@id": `${url}#webpage` },
     ...(post.metaDescription ? { description: post.metaDescription } : {}),
     ...(post.summary ? { abstract: post.summary } : {}),
     ...(post.mainImage?.url ? { image: post.mainImage.url } : {}),
@@ -83,9 +130,21 @@ export function articleSchema(
       : {}),
   };
 
+  const webpage = {
+    "@type": "WebPage",
+    "@id": `${url}#webpage`,
+    url,
+    inLanguage: lang,
+    name: stripAccent(post.title),
+    isPartOf: { "@id": SITE_ID },
+    breadcrumb: { "@id": `${url}#breadcrumb` },
+    ...(post.metaDescription ? { description: post.metaDescription } : {}),
+  };
+
   const graph: unknown[] = [
-    ORG,
+    orgNode(lang),
     WEBSITE,
+    webpage,
     article,
     buildBreadcrumb(breadcrumbs, `${url}#breadcrumb`),
   ];
@@ -97,12 +156,32 @@ export function articleSchema(
   return { "@context": "https://schema.org", "@graph": graph };
 }
 
-export function toolSchema(tool: ToolPageData, url: string, lang: Locale) {
-  const graph: unknown[] = [ORG, WEBSITE];
+export function toolSchema(
+  tool: ToolPageData,
+  testimonials: Testimonial[],
+  url: string,
+  lang: Locale,
+) {
+  const graph: unknown[] = [orgNode(lang), WEBSITE];
 
   if (tool.faq?.length) {
     graph.push(faqPageSchema(tool.faq, url));
   }
+
+  const app: Record<string, unknown> = {
+    "@type": "SoftwareApplication",
+    "@id": `${url}#app`,
+    name: tool.title.replace(/\*/g, ""),
+    url,
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Web",
+    publisher: { "@id": ORG_ID },
+    ...(tool.description ? { description: tool.description.replace(/\*/g, "") } : {}),
+  };
+  const aggregate = aggregateRatingNode(testimonials);
+  if (aggregate) app.aggregateRating = aggregate;
+  if (testimonials.length) app.review = testimonials.map(reviewNode);
+  graph.push(app);
 
   graph.unshift({
     "@type": "WebPage",
@@ -115,6 +194,111 @@ export function toolSchema(tool: ToolPageData, url: string, lang: Locale) {
   });
 
   return { "@context": "https://schema.org", "@graph": graph };
+}
+
+export function reviewsPageSchema(
+  page: ReviewsPageData,
+  testimonials: Testimonial[],
+  url: string,
+  lang: Locale,
+  breadcrumbs: BreadcrumbItem[],
+) {
+  const reviews = testimonials.map(reviewNode);
+  const aggregate = aggregateRatingNode(testimonials);
+
+  const orgWithReviews: Record<string, unknown> = {
+    ...orgNode(lang),
+    ...(aggregate ? { aggregateRating: aggregate } : {}),
+    review: reviews,
+  };
+
+  const graph: unknown[] = [
+    orgWithReviews,
+    WEBSITE,
+    {
+      "@type": "WebPage",
+      "@id": url,
+      url,
+      inLanguage: lang,
+      name: page.metaTitle,
+      description: page.metaDescription,
+      isPartOf: { "@id": SITE_ID },
+      about: { "@id": ORG_ID },
+    },
+    buildBreadcrumb(breadcrumbs, `${url}#breadcrumb`),
+  ];
+
+  return { "@context": "https://schema.org", "@graph": graph };
+}
+
+// Home page: Organization with aggregateRating (no individual reviews — those
+// live on /reviews to avoid duplicate-content signals). Optionally includes
+// FAQPage when the home doc carries FAQ items.
+export function homeSchema(
+  testimonials: Testimonial[],
+  faq: FaqItem[],
+  url: string,
+  lang: Locale,
+  pageName: string,
+  pageDescription: string,
+) {
+  const aggregate = aggregateRatingNode(testimonials);
+
+  const orgWithRating: Record<string, unknown> = {
+    ...orgNode(lang),
+    ...(aggregate ? { aggregateRating: aggregate } : {}),
+  };
+
+  const graph: unknown[] = [
+    orgWithRating,
+    WEBSITE,
+    {
+      "@type": "WebPage",
+      "@id": url,
+      url,
+      inLanguage: lang,
+      name: pageName,
+      description: pageDescription,
+      isPartOf: { "@id": SITE_ID },
+      about: { "@id": ORG_ID },
+    },
+  ];
+
+  if (faq.length) graph.push(faqPageSchema(faq, url));
+
+  return { "@context": "https://schema.org", "@graph": graph };
+}
+
+function reviewNode(t: Testimonial) {
+  const node: Record<string, unknown> = {
+    "@type": "Review",
+    author: { "@type": "Person", name: t.authorName },
+    reviewBody: stripAccent(t.body),
+  };
+  if (t.rating != null) {
+    node.reviewRating = {
+      "@type": "Rating",
+      ratingValue: t.rating,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+  return node;
+}
+
+function aggregateRatingNode(testimonials: Testimonial[]) {
+  const rated = testimonials.filter((t) => t.rating != null);
+  if (!rated.length) return null;
+  const sum = rated.reduce((acc, t) => acc + (t.rating ?? 0), 0);
+  const avg = sum / rated.length;
+  return {
+    "@type": "AggregateRating",
+    ratingValue: Number(avg.toFixed(1)),
+    bestRating: 5,
+    worstRating: 1,
+    ratingCount: rated.length,
+    reviewCount: testimonials.length,
+  };
 }
 
 function portableTextToPlain(blocks: unknown[]): string {

@@ -1,0 +1,25 @@
+---
+import Dot from "@components/shared/Dot.astro";
+
+interface Props {
+  /** Show a leading dot. `true` = brand default, string = custom CSS color. */
+  dot?: boolean | string;
+  /** Drop the default bottom margin. */
+  noMargin?: boolean;
+  class?: string;
+}
+
+const { dot, noMargin, class: cls } = Astro.props;
+const dotColor = typeof dot === "string" ? dot : undefined;
+---
+
+<p
+  class:list={[
+    "tracking-eyebrow text-brand flex items-center gap-2 text-xs font-medium uppercase",
+    !noMargin && "not-last:mb-3",
+    cls,
+  ]}
+>
+  {dot && <Dot color={dotColor} />}
+  <slot />
+</p>

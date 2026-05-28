@@ -1,0 +1,61 @@
+---
+// Lucide icon registry. SVGs live in src/assets/icons/ (one file per icon).
+// Add new icons here AND to the `options.list` in studio/schemas/tool.ts.
+import Camera from "@assets/icons/camera.svg";
+import Check from "@assets/icons/check.svg";
+import Clock from "@assets/icons/clock.svg";
+import Heart from "@assets/icons/heart.svg";
+import Loader from "@assets/icons/loader.svg";
+import MessageCircle from "@assets/icons/message-circle.svg";
+import PenTool from "@assets/icons/pen-tool.svg";
+import Sparkles from "@assets/icons/sparkles.svg";
+import Star from "@assets/icons/star.svg";
+import ThumbsUp from "@assets/icons/thumbs-up.svg";
+import TrendingUp from "@assets/icons/trending-up.svg";
+import Zap from "@assets/icons/zap.svg";
+
+const ICONS = {
+  "trending-up": TrendingUp,
+  heart: Heart,
+  "pen-tool": PenTool,
+  "message-circle": MessageCircle,
+  star: Star,
+  "thumbs-up": ThumbsUp,
+  loader: Loader,
+  clock: Clock,
+  zap: Zap,
+  sparkles: Sparkles,
+  check: Check,
+  camera: Camera,
+};
+
+export type IconName = keyof typeof ICONS;
+
+interface Props {
+  name: IconName;
+  class?: string;
+  stroke?: string;
+  fill?: string;
+  strokeWidth?: string;
+}
+
+const {
+  name,
+  class: cls = "size-6",
+  stroke = "currentColor",
+  fill = "none",
+  strokeWidth = "2",
+} = Astro.props as Props;
+
+const Component = ICONS[name];
+---
+
+<Component
+  class={cls}
+  stroke={stroke}
+  fill={fill}
+  stroke-width={strokeWidth}
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+/>

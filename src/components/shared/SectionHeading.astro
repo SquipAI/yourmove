@@ -1,0 +1,42 @@
+---
+import Eyebrow from "@components/shared/Eyebrow.astro";
+import { linkifyOwnEmails } from "@lib/linkifyOwnEmails";
+
+interface Props {
+  title: string;
+  eyebrow?: string | null;
+  subtitle?: string | null;
+  level?: 2 | 3;
+  size?: "sm" | "md";
+  class?: string;
+}
+
+const {
+  title,
+  eyebrow,
+  subtitle,
+  level = 2,
+  size = "md",
+  class: cls,
+} = Astro.props;
+
+const HeadingTag = `h${level}` as "h2" | "h3";
+const hasExtras = !!eyebrow || !!subtitle;
+const titleClass = size === "sm" ? "text-title-sm" : "text-title";
+const mb = size === "sm" ? "mb-[.75em]" : "mb-section-xs";
+const subtitleHtml = subtitle
+  ? linkifyOwnEmails(subtitle, new URL(Astro.site!).hostname)
+  : null;
+---
+
+{
+  hasExtras ? (
+    <hgroup class:list={[mb, cls]}>
+      {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+      <HeadingTag class={titleClass}>{title}</HeadingTag>
+      {subtitleHtml && <p class="text-lg" set:html={subtitleHtml} />}
+    </hgroup>
+  ) : (
+    <HeadingTag class:list={[titleClass, mb, cls]}>{title}</HeadingTag>
+  )
+}

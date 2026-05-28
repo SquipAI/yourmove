@@ -6,6 +6,12 @@
 // Unbalanced trailing `*` is left as plain text.
 export type AccentPart = { text: string; accent: boolean };
 
+// Drop the `*…*` accent markers, keeping the inner text. For plain-text
+// contexts (cards, schema, meta, alt) where the highlight shouldn't render.
+export function stripAccent(input: string | null | undefined): string {
+  return (input ?? "").replace(/\*([^*]+)\*/g, "$1");
+}
+
 export function parseAccent(input: string | null | undefined): AccentPart[] {
   if (!input) return [];
   const parts: AccentPart[] = [];

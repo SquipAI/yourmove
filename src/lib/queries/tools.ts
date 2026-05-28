@@ -1,7 +1,10 @@
 import { sanityClient } from "@lib/sanity";
+import { coalesceLang } from "./coalesceLang";
 import { cached } from "./cache";
 import { DEFAULT_LOCALE } from "@i18n/config";
-import { linkTargetFields } from "@lib/linkTypes";
+import { linkTargetFields } from "@lib/links";
+import { ALTERNATES, FAQ_ITEMS, HAS_PAGE_FILTER } from "./projections";
+import type { LocalizedPath } from "./types";
 import type {
   ToolCard,
   ToolsPageData,
@@ -11,13 +14,11 @@ import type {
   ToolPageData,
 } from "@lib/types";
 
-export const TOOLS_FEATURED_COUNT = 6;
 export const APP_PREVIEW_COUNT = 3;
 
 const TOOL_CARD = /* groq */ `{
-  _id, title, description, link, paid,
+  _id, title, description, cardTitle, cardDescription, paid,
   "slug": slug.current,
-  "mainImage": mainImage{ "url": asset->url, alt },
   "category": category->{ _id, title },
   "app": app->{ _id, name, "slug": slug.current, brandColor }
 }`;
@@ -25,19 +26,16 @@ const TOOL_CARD = /* groq */ `{
 export function getToolsPage(lang = DEFAULT_LOCALE) {
   return cached(`getToolsPage:${lang}`, () =>
     sanityClient.fetch<ToolsPageData>(
-      `coalesce(
-        *[_type == "tools" && language == $lang][0],
-        *[_type == "tools" && (language == "en" || !defined(language))][0]
-      ){ title, description, metaTitle, metaDescription }`,
+      `${coalesceLang("tools")}{ title, description, metaTitle, metaDescription }`,
       { lang },
     ),
   );
 }
 
-export function getFeaturedTools(n: number, lang = DEFAULT_LOCALE) {
-  return cached(`getFeaturedTools:${n}:${lang}`, () =>
+export function getFeaturedTools(lang = DEFAULT_LOCALE, n = 6) {
+  return cached(`getFeaturedTools:${lang}:${n}`, () =>
     sanityClient.fetch<ToolCard[]>(
-      `*[_type == "tool" && language == $lang && featured == true && defined(link)] | order(title asc) [0...$n] ${TOOL_CARD}`,
+      `*[_type == "tool" && language == $lang && featured == true] | order(coalesce(order, 9999) asc, title asc) [0...$n] ${TOOL_CARD}`,
       { lang, n },
     ),
   );
@@ -49,11 +47,11 @@ export function getAppsWithTools(
 ) {
   return cached(`getAppsWithTools:${lang}:${previewCount}`, () =>
     sanityClient.fetch<AppWithTools[]>(
-      `*[_type == "datingApp" && language == $lang]{
+      `*[_type == "datingApp" && language == $lang && ${HAS_PAGE_FILTER}]{
         _id, name, "slug": slug.current, brandColor,
         "order": coalesce(order, 0),
-        "toolCount": count(*[_type == "tool" && language == $lang && references(^._id) && defined(link)]),
-        "tools": *[_type == "tool" && language == $lang && references(^._id) && defined(link)] | order(title asc) [0...$previewCount] { _id, title }
+        "toolCount": count(*[_type == "tool" && language == $lang && references(^._id)]),
+        "tools": *[_type == "tool" && language == $lang && references(^._id)] | order(title asc) [0...$previewCount] { _id, "title": coalesce(cardTitle, title) }
       }[toolCount > 0] | order(order asc, name asc)`,
       { lang, previewCount },
     ),
@@ -63,9 +61,10 @@ export function getAppsWithTools(
 export function getAppPage(slug: string, lang = DEFAULT_LOCALE) {
   return cached(`getAppPage:${slug}:${lang}`, () =>
     sanityClient.fetch<AppPageData | null>(
-      `*[_type == "datingApp" && language == $lang && slug.current == $slug][0]{
+      `${coalesceLang("datingApp", "slug.current == $slug")}{
         _id, name, title, description, metaTitle, metaDescription,
         "slug": slug.current, brandColor,
+        ${ALTERNATES},
         "tools": *[_type == "tool" && language == $lang && references(^._id) && defined(link)] | order(title asc) ${TOOL_CARD}
       }`,
       { slug, lang },
@@ -76,9 +75,10 @@ export function getAppPage(slug: string, lang = DEFAULT_LOCALE) {
 export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
   return cached(`getToolPage:${slug}:${lang}`, () =>
     sanityClient.fetch<ToolPageData | null>(
-      `*[_type == "tool" && language == $lang && slug.current == $slug][0]{
+      `${coalesceLang("tool", "slug.current == $slug")}{
         _id, title, description, metaTitle, metaDescription,
         "slug": slug.current,
+        ${ALTERNATES},
         "embed": select(
           defined(embedPath) => {
             "path": embedPath,
@@ -88,46 +88,71 @@ export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
           null
         ),
         "cta": select(
-          defined(ctaTitle) && defined(ctaButtonText) => {
+          defined(ctaTitle) => {
             "title": ctaTitle,
             "subtitle": ctaSubtitle,
             "buttonText": ctaButtonText,
-            "buttonLink": select(
-              defined(ctaButtonLink) => { ${linkTargetFields("ctaButtonLink")} },
-              null
-            )
+            "buttonLink": { ${linkTargetFields("ctaButtonLink")} }
           },
           null
         ),
+        howItWorksHeading,
+        howItWorksCtaSubtext,
+        "howItWorks": howItWorks[]{ text },
+        featuresEyebrow,
+        featuresHeading,
+        "features": features[]{
+          icon, title, description,
+          "button": select(
+            defined(button.text) && defined(button.link) => {
+              "text": button.text,
+              "link": { ${linkTargetFields("button.link")} }
+            },
+            null
+          )
+        },
         faqHeading,
-        faq[]{
-          _key, question, answer[]{
-            ...,
-            markDefs[]{ ..., _type == "link" => {
-              ...,
-              internalLink->{ _type, _id, "slug": slug.current },
-              siteLink->{ url, openInNewTab, kind }
-            }}
+        ${FAQ_ITEMS},
+        "toolList": coalesce(
+          toolList->{
+            title, subtitle,
+            "groups": groups[]{
+              heading,
+              "tools": tools[]->{ _id, "title": coalesce(cardTitle, title), "slug": slug.current }
+            }
+          },
+          *[_type == "toolList" && language == $lang && isDefault == true][0]{
+            title, subtitle,
+            "groups": groups[]{
+              heading,
+              "tools": tools[]->{ _id, "title": coalesce(cardTitle, title), "slug": slug.current }
+            }
           }
-        }
+        )
       }`,
       { slug, lang },
     ),
   );
 }
 
-export function getAllToolSlugs() {
-  return cached("getAllToolSlugs", () =>
-    sanityClient.fetch<string[]>(
-      `*[_type == "tool" && defined(slug.current) && (language == "en" || !defined(language))].slug.current`,
+export function getAllToolPaths() {
+  return cached("getAllToolPaths", () =>
+    sanityClient.fetch<LocalizedPath[]>(
+      `*[_type == "tool" && defined(slug.current)]{
+        "lang": coalesce(language, "en"),
+        "slug": slug.current
+      }`,
     ),
   );
 }
 
-export function getAllAppSlugs() {
-  return cached("getAllAppSlugs", () =>
-    sanityClient.fetch<string[]>(
-      `*[_type == "datingApp" && defined(slug.current) && (language == "en" || !defined(language))].slug.current`,
+export function getAllAppPaths() {
+  return cached("getAllAppPaths", () =>
+    sanityClient.fetch<LocalizedPath[]>(
+      `*[_type == "datingApp" && defined(slug.current) && ${HAS_PAGE_FILTER}]{
+        "lang": coalesce(language, "en"),
+        "slug": slug.current
+      }`,
     ),
   );
 }
@@ -137,7 +162,7 @@ export function getCategoriesWithTools(lang = DEFAULT_LOCALE) {
     sanityClient.fetch<ToolCategoryWithTools[]>(
       `*[_type == "toolCategory" && language == $lang]{
         _id, title, description, "order": coalesce(order, 0),
-        "tools": *[_type == "tool" && language == $lang && references(^._id) && defined(link)] | order(title asc) ${TOOL_CARD}
+        "tools": *[_type == "tool" && language == $lang && references(^._id)] | order(title asc) ${TOOL_CARD}
       }[count(tools) > 0] | order(order asc, title asc)`,
       { lang },
     ),

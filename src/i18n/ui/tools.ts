@@ -14,6 +14,9 @@ export const tools = {
     "tools.tools": "tools",
     "tools.apps": "dating apps",
     "tools.exploreAppTools": "Explore {name} tools →",
+    "features.eyebrow": "Features",
+    "howItWorks.stepLabel": "Step",
+    "howItWorks.cta": "Get started",
   },
   es: {
     "tools.top": "Mejores herramientas",
@@ -28,6 +31,9 @@ export const tools = {
     "tools.tools": "herramientas",
     "tools.apps": "apps de citas",
     "tools.exploreAppTools": "Explorar herramientas de {name} →",
+    "features.eyebrow": "Funciones",
+    "howItWorks.stepLabel": "Paso",
+    "howItWorks.cta": "Empezar",
   },
   de: {
     "tools.top": "Top-Tools",
@@ -42,5 +48,8 @@ export const tools = {
     "tools.tools": "Tools",
     "tools.apps": "Dating-Apps",
     "tools.exploreAppTools": "{name}-Tools entdecken →",
+    "features.eyebrow": "Funktionen",
+    "howItWorks.stepLabel": "Schritt",
+    "howItWorks.cta": "Loslegen",
   },
 } satisfies Record<Locale, Record<string, string>>;
