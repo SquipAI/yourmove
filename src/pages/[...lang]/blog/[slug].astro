@@ -5,7 +5,6 @@ import PageHeading from "@components/shared/PageHeading.astro";
 import PortableText from "@components/shared/PortableText.astro";
 import SectionHeading from "@components/shared/SectionHeading.astro";
 import ShareButtons from "@components/shared/ShareButtons.astro";
-import Breadcrumbs from "@components/blog/ui/Breadcrumbs.astro";
 import PostList from "@components/blog/ui/PostList.astro";
 import SchemaOrg from "@components/seo/SchemaOrg.astro";
 
@@ -54,7 +53,7 @@ const origin = Astro.url.origin;
 const pageUrl = String(Astro.url);
 const localePath = localePathFor(lang);
 const blogUrl = `${origin}${localePath("blog")}`;
-const firstTag = post.tags![0];
+const firstTag = post.tags[0];
 const tagUrl = `${origin}${localePath(`blog/topics/${firstTag.slug}`)}`;
 const ogImage = ogImageHref(origin, lang, `blog/${slug}`);
 
@@ -96,54 +95,39 @@ const dateFormatted = new Intl.DateTimeFormat(lang, {
 
   <article class="section *:max-w-[84ch]">
     <header class="max-w-prose pb-10">
-      <Breadcrumbs items={breadcrumbsNav} />
-      <PageHeading title={post.title} subtitle={post.summary} />
+      <PageHeading
+        title={post.title}
+        subtitle={post.summary}
+        breadcrumbs={breadcrumbsNav}
+      />
 
       <div
-        class="border-subtle-lighter flex flex-wrap items-center gap-x-6 gap-y-4 border-t pt-6 text-sm"
+        class="grid grid-cols-[auto_max-content] items-center gap-x-6 gap-y-4 border-y border-subtle/50 py-4 leading-none text-sm md:flex md:flex-row md:flex-wrap md:justify-between"
       >
-        <div class="flex items-center gap-3">
-          <span class="[&>svg]:fill-brand aspect-square w-9">
-            <ShortLogo class="aspect-square w-full" />
+        <div class="grid grid-cols-[max-content_auto] items-center gap-x-2">
+          <ShortLogo class="row-span-2 fill-brand size-9" />
+
+          <span class="tracking-eyebrow text-subtle text-xs uppercase">
+            {t(lang, "blog.writtenBy")}
           </span>
-          <span class="flex flex-col leading-tight">
-            <span class="tracking-eyebrow text-subtle text-[0.7rem] uppercase">
-              {t(lang, "blog.writtenBy")}
-            </span>
-            <span class="text-subtle font-medium">YourMove Team</span>
-          </span>
+          <span class="text-subtle font-medium">YourMove Team</span>
         </div>
 
-        <span class="text-subtle-lighter hidden sm:inline" aria-hidden="true"
-          >•</span
-        >
+        <span aria-hidden="true" class="text-subtle/50 hidden md:block">·</span>
 
         <time datetime={displayDate.toISOString()} class="text-subtle">
           {isUpdated && <span>{t(lang, "blog.updated")} </span>}{dateFormatted}
         </time>
 
-        {
-          post.readingTime != null && (
-            <>
-              <span
-                class="text-subtle-lighter hidden sm:inline"
-                aria-hidden="true"
-              >
-                •
-              </span>
-              <span class="text-subtle">
-                {post.readingTime} {t(lang, "blog.minRead")}
-              </span>
-            </>
-          )
+        <span aria-hidden="true" class="text-subtle/50 hidden md:block">·</span>
+        <span class="text-subtle">
+          {post.readingTime} {t(lang, "blog.minRead")}
+        </span>
         }
 
-        <ShareButtons
-          url={pageUrl}
-          title={stripAccent(post.title)}
-          {lang}
-          class="ml-auto"
-        />
+        <span aria-hidden="true" class="text-subtle/50 hidden md:block">·</span>
+
+        <ShareButtons url={pageUrl} title={stripAccent(post.title)} {lang} />
       </div>
     </header>
 

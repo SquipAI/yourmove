@@ -1,26 +1,14 @@
 ---
-import Dot from "@components/shared/Dot.astro";
-
 interface Props {
   href: string;
   label: string;
   variant?: "default" | "brand";
-  /** Show a leading dot. `true` = brand default, string = custom CSS color. */
-  dot?: boolean | string | null;
   /** Optional trailing count */
   count?: number | string | null;
   class?: string;
 }
 
-const {
-  href,
-  label,
-  variant = "default",
-  dot,
-  count,
-  class: cls,
-} = Astro.props;
-const dotColor = typeof dot === "string" ? dot : undefined;
+const { href, label, variant = "default", count, class: cls } = Astro.props;
 
 const variantClass = {
   default:
@@ -37,7 +25,6 @@ const variantClass = {
     cls,
   ]}
 >
-  {dot && <Dot color={dotColor} />}
   {label}
   {count != null && <span class="text-xs">{count}</span>}
 </a>

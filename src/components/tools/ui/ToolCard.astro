@@ -21,16 +21,14 @@ const title = tool.cardTitle ?? tool.title;
 const description = tool.cardDescription ?? tool.description;
 ---
 
-<article class="card group">
-  <div class="p-svw flex flex-1 flex-col gap-3 md:p-6">
-    <CardHeading
-      {title}
-      {description}
-      {href}
-      {level}
-      size="sm"
-    />
+<article class="card card-body">
+  <CardHeading
+    {title}
+    {description}
+    {href}
+    {level}
+    size="sm"
+  />
 
-    <Eyebrow class="mt-auto">{badge}</Eyebrow>
-  </div>
+  <Eyebrow class="mt-auto">{badge}</Eyebrow>
 </article>

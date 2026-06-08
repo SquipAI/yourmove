@@ -21,7 +21,7 @@ const toolWord =
 const ctaLabel = t(lang, "tools.exploreAppTools").replace("{name}", app.name);
 ---
 
-<article id={`app-${app.slug}`} class="card group p-svw flex-col gap-4 md:p-6">
+<article id={`app-${app.slug}`} class="card card-body">
   <header class="flex items-center gap-3">
     <span
       class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-base font-semibold text-white"
@@ -32,7 +32,7 @@ const ctaLabel = t(lang, "tools.exploreAppTools").replace("{name}", app.name);
     </span>
     <hgroup>
       <HeadingTag class="text-title-xs">{app.name}</HeadingTag>
-      <Eyebrow noMargin>{`${app.toolCount} ${toolWord}`}</Eyebrow>
+      <Eyebrow>{`${app.toolCount} ${toolWord}`}</Eyebrow>
     </hgroup>
   </header>
 
@@ -48,7 +48,7 @@ const ctaLabel = t(lang, "tools.exploreAppTools").replace("{name}", app.name);
 
   <a
     href={href}
-    class="text-brand group-hover:text-brand mt-auto text-sm font-medium after:absolute after:inset-0 after:z-2"
+    class="card-link text-brand group-hover:text-brand mt-auto text-sm font-medium"
   >
     {ctaLabel}
   </a>

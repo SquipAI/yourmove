@@ -1,0 +1,112 @@
+---
+import PageHeading from "@components/shared/PageHeading.astro";
+import LogoRow from "@components/shared/LogoRow.astro";
+import HeroChatCard from "@components/home/HeroChatCard.astro";
+import Apple from "@assets/svg/apple.svg";
+import Google from "@assets/svg/google.svg";
+import { t } from "@i18n/ui";
+import type { Locale } from "@i18n/config";
+import type {
+  CompatibilityApp,
+  Press,
+  HeroChatCard as HeroChatCardData,
+} from "@lib/types";
+
+interface Props {
+  title: string;
+  subtitle: string | null;
+  eyebrow: string | null;
+  cta: { label: string; url: string };
+  chatCards: HeroChatCardData[];
+  appStoreUrl: string | null;
+  playStoreUrl: string | null;
+  compatibilityApps: CompatibilityApp[];
+  press: Press[];
+  lang: Locale;
+}
+
+const {
+  title,
+  subtitle,
+  eyebrow,
+  cta,
+  chatCards,
+  appStoreUrl,
+  playStoreUrl,
+  compatibilityApps,
+  press,
+  lang,
+} = Astro.props;
+---
+
+<script is:inline>
+  const ua = navigator.userAgent;
+  if (/iPhone/i.test(ua)) document.documentElement.classList.add("os-ios");
+  else if (/Android/i.test(ua))
+    document.documentElement.classList.add("os-android");
+</script>
+
+<section class="section lg:pt-section-xs">
+  <PageHeading
+    title={title}
+    subtitle={subtitle}
+    eyebrow={eyebrow}
+    eyebrowVariant="pill"
+    centered
+    size="big"
+  />
+
+  <div
+    class="flex sm:flex-wrap items-center justify-center gap-3 mb-section-xs *:h-11 *:px-5 *:rounded-md *:transition-colors max-xs:*:w-full"
+  >
+    <a
+      href={cta.url}
+      class="min-w-45 inline-flex items-center justify-center gap-2 text-white tracking-wide bg-brand hover:bg-brand-darker md:h-13 md:text-xl md:px-10 md:rounded-lg"
+    >
+      {cta.label}
+      <span aria-hidden="true">→</span>
+    </a>
+
+    {
+      appStoreUrl && (
+        <a
+          href={appStoreUrl}
+          data-os="ios"
+          class="store-btn"
+          aria-label="Download on the App Store"
+        >
+          <Apple aria-hidden="true" />
+        </a>
+      )
+    }
+    {
+      playStoreUrl && (
+        <a
+          href={playStoreUrl}
+          data-os="android"
+          class="store-btn"
+          aria-label="Get it on Google Play"
+        >
+          <Google aria-hidden="true" />
+        </a>
+      )
+    }
+  </div>
+
+  <ul
+    aria-label={t(lang, "home.chatExamplesHeading")}
+    class="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-svw px-svw py-0.5 mx-0 mb-section-sm scrollbar-none md:mx-svw md:px-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible 2xl:mx-auto"
+  >
+    {
+      chatCards.map((card, index) => (
+        <li>
+          <HeroChatCard {card} {index} {lang} />
+        </li>
+      ))
+    }
+  </ul>
+
+  <!-- <LogoRow logos={compatibilityApps} label={t(lang, "tools.compatibleWith")} /> -->
+
+  <LogoRow logos={press} label={t(lang, "home.asSeenOn")} kind="press" />
+</section>

@@ -12,7 +12,6 @@ interface Props {
   ctaText: string;
   ctaSubtext?: string | null;
   lang?: Locale;
-  class?: string;
 }
 
 const {
@@ -22,30 +21,33 @@ const {
   ctaText,
   ctaSubtext,
   lang = DEFAULT_LOCALE,
-  class: cls,
 } = Astro.props;
 
 const stepLabel = t(lang, "howItWorks.stepLabel");
 ---
 
-<div class:list={["flex flex-col items-center text-center", cls]}>
-  <SectionHeading title={heading} />
+<section data-section="how-it-works" class="section">
+  <div class="">
+    <SectionHeading title={heading} />
 
-  <ol class="flex w-full flex-col gap-8 md:flex-row md:items-start md:gap-6">
-    {
-      steps.map((step, i) => (
-        <li class="flex flex-1 flex-col items-center gap-3">
-          <span class="bg-brand/10 text-brand inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium">
-            {stepLabel} {i + 1}
-          </span>
-          <p class="text-subtle max-w-xs">{step.text}</p>
-        </li>
-      ))
-    }
-  </ol>
+    <ol class="grid w-full gap-4 md:grid-cols-3 md:gap-6">
+      {
+        steps.map((step, i) => (
+          <li class="card card-body items-start">
+            <span class="bg-brand/10 text-brand-darker rounded px-2 py-1 font-mono text-xs">
+              <span class="sr-only">{stepLabel} </span>
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <h3>{step.title}</h3>
+            <p>{step.text}</p>
+          </li>
+        ))
+      }
+    </ol>
 
-  <div class="mt-12 flex flex-col items-center gap-2">
-    <Btn href={ctaHref} class="btn-solid">{ctaText}</Btn>
-    {ctaSubtext && <p class="text-subtle text-sm">{ctaSubtext}</p>}
+    <!-- <div class="flex flex-col items-center gap-2">
+      <Btn href={ctaHref} class="btn-solid">{ctaText}</Btn>
+      {ctaSubtext && <p class="text-subtle text-sm">{ctaSubtext}</p>}
+    </div> -->
   </div>
-</div>
+</section>

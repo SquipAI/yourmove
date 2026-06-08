@@ -1,0 +1,21 @@
+---
+import type { ShowcaseDemo } from "@lib/types";
+
+interface Props {
+  demo: Extract<ShowcaseDemo, { _type: "openersDemo" }>;
+}
+const { demo } = Astro.props;
+---
+
+<ul class="flex flex-col gap-2">
+  {
+    demo.items.map((item) => (
+      <li class="rounded-md bg-white px-3 py-2">
+        <span class="text-subtle tracking-eyebrow block text-xs uppercase">
+          {item.tag}
+        </span>
+        <p class="text-sm">{item.text}</p>
+      </li>
+    ))
+  }
+</ul>

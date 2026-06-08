@@ -13,8 +13,9 @@ interface Props {
   subtitle?: string | null;
   /** Heading level for the section title. Default 2. */
   level?: 2 | 3;
+  /** Horizontal alignment. Default "start". */
+  align?: "center" | "start";
   lang?: Locale;
-  class?: string;
 }
 
 const {
@@ -23,35 +24,50 @@ const {
   eyebrow,
   subtitle,
   level = 2,
+  align = "start",
   lang = DEFAULT_LOCALE,
-  class: cls,
 } = Astro.props;
+
+const wrapperAlign = align === "center" ? "items-center" : "items-start";
+const headingAlign = align === "center" ? "text-center" : undefined;
 ---
 
-<div class:list={["flex flex-col items-center", cls]}>
-  <SectionHeading title={heading} {eyebrow} {subtitle} {level} />
-  <ul class="flex flex-col gap-2 w-full sm:max-w-156">
-    {
-      items.map((item) => (
-        <li>
-          <details class="group p-svw bg-white rounded-md border border-subtle-lighter sm:p-4">
-            <summary class="flex items-center justify-between gap-4 font-medium text-pretty cursor-pointer">
-              <h3>{item.question}</h3>
-              <ChevronDown class="w-4 transition-transform group-open:rotate-180" />
-            </summary>
-            <div class="flex flex-col gap-3 pt-4">
-              {(item.answer as TextBlock[] | undefined)?.map((block) => {
-                if (block._type !== "block") return null;
-                return (
-                  <p
-                    set:html={inlineHTML(block.children, block.markDefs, lang)}
-                  />
-                );
-              })}
-            </div>
-          </details>
-        </li>
-      ))
-    }
-  </ul>
-</div>
+<section data-section="faq" class="section">
+  <div class:list={["flex flex-col", wrapperAlign]}>
+    <SectionHeading
+      title={heading}
+      {eyebrow}
+      {subtitle}
+      {level}
+      class={headingAlign}
+    />
+    <ul class="flex flex-col gap-2 w-full sm:max-w-156">
+      {
+        items.map((item) => (
+          <li>
+            <details class="p-svw bg-white rounded-md border border-subtle-lighter sm:p-4">
+              <summary class="justify-between gap-4 font-medium text-pretty">
+                <h3 class="mb-0">{item.question}</h3>
+                <ChevronDown />
+              </summary>
+              <div class="flex flex-col gap-3 pt-4">
+                {(item.answer as TextBlock[] | undefined)?.map((block) => {
+                  if (block._type !== "block") return null;
+                  return (
+                    <p
+                      set:html={inlineHTML(
+                        block.children,
+                        block.markDefs,
+                        lang,
+                      )}
+                    />
+                  );
+                })}
+              </div>
+            </details>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>

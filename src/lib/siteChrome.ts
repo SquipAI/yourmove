@@ -61,5 +61,5 @@ export async function buildSiteChrome(lang: Locale) {
       : []),
   ];
   const footer = resolveFooterColumns(footerNav, lang);
-  return { toolsColumn, flatLinks, footer };
+  return { toolsColumn, flatLinks, footer, ctaUrl: headerLinks.ctaUrl };
 }

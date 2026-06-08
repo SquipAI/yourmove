@@ -118,6 +118,7 @@ const slugIsUnique: import("sanity").SlugOptions["isUnique"] = async (
 export const slugField = ({ source = "title" }: { source?: string } = {}) =>
   defineField({
     name: "slug",
+    title: "Slug *",
     type: "slug",
     group: "seo",
     options: { source, maxLength: 96, isUnique: slugIsUnique },
@@ -127,6 +128,7 @@ export const slugField = ({ source = "title" }: { source?: string } = {}) =>
 export const seoMetaFields = [
   defineField({
     name: "metaTitle",
+    title: "Meta Title *",
     type: "string",
     group: "seo",
     description: "Recommended: 50–60 characters",
@@ -138,6 +140,7 @@ export const seoMetaFields = [
   }),
   defineField({
     name: "metaDescription",
+    title: "Meta Description *",
     type: "text",
     rows: 2,
     group: "seo",
@@ -166,6 +169,7 @@ export function pageTitleField({
 }) {
   return defineField({
     name: "title",
+    title: "Title *",
     type: "string",
     group,
     description: `Page heading (H1) on ${path}. Wrap a phrase in *asterisks* to color it brand.`,
@@ -181,6 +185,7 @@ export function pageTitleField({
 export function navLabelField(initialValue: string, group = "content") {
   return defineField({
     name: "navLabel",
+    title: "Nav Label *",
     type: "string",
     group,
     description: "Short label shown in the header nav.",
@@ -241,19 +246,18 @@ export function translatedField(
     type: "object",
     group,
     description,
-    fields: LOCALES.map((lang) =>
-      defineField({
+    fields: LOCALES.map((lang) => {
+      const isRequired =
+        required === "all" ||
+        (required === "default" && lang === DEFAULT_LOCALE);
+      return defineField({
         name: lang,
-        title: LOCALE_LABELS[lang],
+        title: isRequired ? `${LOCALE_LABELS[lang]} *` : LOCALE_LABELS[lang],
         type,
         ...(type === "text" && rows !== undefined ? { rows } : {}),
-        validation:
-          required === "all" ||
-          (required === "default" && lang === DEFAULT_LOCALE)
-            ? (r) => r.required()
-            : undefined,
-      }),
-    ),
+        validation: isRequired ? (r) => r.required() : undefined,
+      });
+    }),
   });
 }
 
@@ -283,6 +287,7 @@ export const faqItemMember = defineArrayMember({
   fields: [
     defineField({
       name: "question",
+      title: "Question *",
       type: "string",
       validation: (r) => r.required(),
     }),
@@ -291,11 +296,11 @@ export const faqItemMember = defineArrayMember({
   preview: { select: { title: "question" } },
 });
 
-export const faqArrayField = () =>
+export const faqArrayField = (group = "content") =>
   defineField({
     name: "faq",
     type: "array",
-    group: "content",
+    group,
     of: [faqItemMember],
   });
 

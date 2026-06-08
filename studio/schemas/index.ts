@@ -1,11 +1,11 @@
 import { post } from "./blog/post";
-import { tool } from "./tool";
-import { toolCategory } from "./toolCategory";
-import { toolList } from "./toolList";
-import { datingApp } from "./datingApp";
+import { tool } from "./tools/tool";
+import { toolCategory } from "./tools/toolCategory";
+import { toolList } from "./tools/toolList";
+import { datingApp } from "./tools/datingApp";
 import { testimonial } from "./testimonial";
 import { reviewsPage } from "./reviewsPage";
-import { tools } from "./tools";
+import { tools } from "./tools/tools";
 import { tag } from "./blog/tag";
 import { howToUse } from "./howToUse";
 import { siteLink } from "./settings/siteLink";
@@ -16,6 +16,7 @@ import { blogTags } from "./blog/blogTags";
 import { privacy, terms } from "./settings/legalPage";
 import { footerNav } from "./settings/footerNav";
 import { siteStats } from "./settings/siteStats";
+import { press } from "./settings/press";
 
 export const schemaTypes = [
   home,
@@ -37,6 +38,7 @@ export const schemaTypes = [
   tag,
   howToUse,
   siteLink,
+  press,
 ];
 
 export const translatedSchemaTypes = [
@@ -56,6 +58,7 @@ export const translatedSchemaTypes = [
   "blog-posts",
   "blog-tags",
   "tools",
+  "pressLogo",
 ];
 
 export const SINGLETON_TYPES = [

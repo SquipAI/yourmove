@@ -1,10 +1,9 @@
 ---
-import { getRelativeLocaleUrl } from "astro:i18n";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
-import { t } from "@i18n/ui";
-import type { Testimonial } from "@lib/types";
+import type { Press, Testimonial } from "@lib/types";
 import SectionHeading from "@components/shared/SectionHeading.astro";
 import TestimonialList from "@components/testimonials/TestimonialList.astro";
+import PressQuotesRow from "@components/shared/PressQuotesRow.astro";
 
 interface Props {
   testimonials: Testimonial[];
@@ -13,8 +12,8 @@ interface Props {
   subtitle?: string | null;
   /** Heading level for the section title. Default 2. */
   level?: 2 | 3;
+  pressQuotes?: Press[];
   lang?: Locale;
-  class?: string;
 }
 
 const {
@@ -23,20 +22,15 @@ const {
   eyebrow,
   subtitle,
   level = 2,
+  pressQuotes = [],
   lang = DEFAULT_LOCALE,
-  class: cls,
 } = Astro.props;
-
-const seeAllHref = getRelativeLocaleUrl(lang, "reviews");
 ---
 
-<div class:list={["flex flex-col", cls]}>
-  <SectionHeading title={heading} {eyebrow} {subtitle} {level} />
-  <TestimonialList {testimonials} variant="snap" level={3} />
-  <a
-    href={seeAllHref}
-    class="text-brand mt-section-xs inline-block font-medium hover:underline"
-  >
-    {t(lang, "reviews.seeAll")} →
-  </a>
-</div>
+<section data-section="testimonials" class="section">
+  <div class="flex flex-col gap-section-xs">
+    <SectionHeading title={heading} {eyebrow} {subtitle} {level} />
+    <TestimonialList {testimonials} {lang} />
+    <PressQuotesRow {pressQuotes} {lang} />
+  </div>
+</section>

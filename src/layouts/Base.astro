@@ -16,6 +16,7 @@ interface Props {
   alternateUrls?: Record<Locale, string>;
   ogImage?: string;
   ogType?: "website" | "article";
+  mainClass?: string;
 }
 
 const {
@@ -25,6 +26,7 @@ const {
   canonical,
   ogImage,
   ogType,
+  mainClass,
 } = Astro.props;
 
 const alternateUrls =
@@ -52,8 +54,9 @@ const chrome = await buildSiteChrome(lang);
       alternateUrls={alternateUrls}
       tools={chrome.toolsColumn}
       flatLinks={chrome.flatLinks}
+      ctaUrl={chrome.ctaUrl}
     />
-    <main id="main" class="flex-1">
+    <main id="main" class:list={["flex-1", mainClass]}>
       <slot />
     </main>
     <Footer

@@ -7,7 +7,7 @@ import {
   pageDescriptionField,
   slugField,
   hiddenOnNonEn,
-} from "./shared";
+} from "../shared";
 
 export const datingApp = defineType({
   name: "datingApp",
@@ -22,6 +22,7 @@ export const datingApp = defineType({
   fields: [
     defineField({
       name: "name",
+      title: "Name *",
       type: "string",
       description: "Short brand name shown in pills/cards (e.g. Tinder)",
       group: "content",
@@ -66,8 +67,7 @@ export const datingApp = defineType({
       type: "number",
       group: "content",
       description:
-        "Lower numbers appear first in the Dating Apps section on /tools",
-      initialValue: 0,
+        "Lower numbers (1, 2, 3…) appear first. Leave empty or 0 to let the app sort alphabetically at the end.",
       hidden: hiddenOnNonEn,
     }),
     slugField({ source: "name" }),

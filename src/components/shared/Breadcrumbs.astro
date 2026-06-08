@@ -1,5 +1,5 @@
 ---
-interface BreadcrumbItem {
+export interface BreadcrumbItem {
   name: string;
   url?: string;
 }
@@ -12,17 +12,17 @@ interface Props {
 const { items, class: cls } = Astro.props;
 ---
 
-<nav aria-label="Breadcrumb" class:list={["mb-3", cls]}>
+<nav aria-label="Breadcrumb" class:list={["mb-1", cls]}>
   <ol
     class:list={[
-      "tracking-eyebrow flex flex-wrap items-center gap-1.5 text-sm uppercase",
+      "tracking-wider flex flex-wrap items-center gap-2 text-xs uppercase",
     ]}
   >
     {
       items.map((item, i) => (
-        <li class="flex items-center gap-1.5">
+        <li class="flex items-center gap-3 not-last:opacity-70">
           {i > 0 && (
-            <span aria-hidden="true" class="text-subtle-lighter">
+            <span aria-hidden="true" class="">
               /
             </span>
           )}

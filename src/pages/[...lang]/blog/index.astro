@@ -3,6 +3,7 @@ import Base from "@layouts/Base.astro";
 
 import PageHeading from "@components/shared/PageHeading.astro";
 import SectionHeading from "@components/shared/SectionHeading.astro";
+import ListingSection from "@components/shared/ListingSection.astro";
 import FeaturedSection from "@components/blog/ui/FeaturedSection.astro";
 import LatestSection from "@components/blog/ui/LatestSection.astro";
 import PostCard from "@components/blog/ui/PostCard.astro";
@@ -59,20 +60,15 @@ const localePath = localePathFor(lang);
     <FeaturedSection posts={featured} {lang} />
   </section>
 
-  <section class="section bg-subtle-lighter">
-    <div class="grid md:grid-cols-[1fr_auto] md:items-baseline">
-      <SectionHeading title={t(lang, "blog.latest")} />
-      <LatestSection posts={latest} {lang} />
-      <SeeAllLink
-        href={localePath("blog/posts")}
-        {lang}
-        count={postCount}
-        size="sm"
-        class="md:col-start-2 md:row-start-1 md:justify-self-end"
-      />
-    </div>
-    <!-- class="self-start md:col-start-2 md:row-start-1 md:justify-self-end md:pt-[.27lh]" -->
-  </section>
+  <ListingSection
+    title={t(lang, "blog.latest")}
+    seeAllHref={localePath("blog/posts")}
+    seeAllCount={postCount}
+    {lang}
+    class="bg-subtle-lighter"
+  >
+    <LatestSection posts={latest} {lang} />
+  </ListingSection>
 
   <section class="section">
     <SectionHeading title={t(lang, "blog.topics")} />

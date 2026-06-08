@@ -1,0 +1,51 @@
+---
+import type { HeroChatCard } from "@lib/types";
+import { t } from "@i18n/ui";
+import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+
+interface Props {
+  card: HeroChatCard;
+  index: number;
+  lang?: Locale;
+}
+const { card, index, lang = DEFAULT_LOCALE } = Astro.props;
+---
+
+<article
+  class="card card-body w-72 shrink-0 snap-start gap-3 md:w-auto"
+  aria-label={t(lang, "home.chatExampleN").replace("{n}", String(index + 1))}
+>
+  <header
+    class="flex items-center gap-3 -mx-svw px-svw pb-3 border-b border-subtle-lighter md:-mx-6 md:px-6"
+  >
+    <img
+      src={card.avatarUrl}
+      alt=""
+      loading="eager"
+      decoding="async"
+      class="size-7 rounded-full object-cover"
+    />
+    <span class="font-medium">{card.name}</span>
+    <span class="sr-only"> · </span>
+    <span class="tracking-eyebrow text-subtle ms-auto text-xs uppercase">
+      {card.app}
+    </span>
+  </header>
+
+  <p class="chat-bubble bg-subtle-lighter">
+    <span class="sr-only">{card.name}: </span>
+    {card.theirMessage}
+  </p>
+
+  <p class="chat-bubble bg-brand ms-auto text-white">
+    <span class="sr-only">yourmove: </span>
+    {card.ourReply}
+  </p>
+
+  <span
+    class="text-brand tracking-eyebrow ms-auto text-xs lowercase -translate-y-3"
+    aria-hidden="true"
+  >
+    + yourmove
+  </span>
+</article>

@@ -4,7 +4,7 @@
 @theme {
   --color-brand: oklch(0.6 0.2 27);
   --color-brand-lighter: oklch(from var(--color-brand) 84% c h);
-  --color-brand-darker: oklch(from var(--color-brand) 66% c h);
+  --color-brand-darker: oklch(from var(--color-brand) 54% c h);
   --color-subtle: var(--color-mist-700);
   --color-subtle-lighter: oklch(from var(--color-subtle) 96% c h);
 
@@ -14,18 +14,22 @@
   --text-title-sm: clamp(1.5rem, 1.25rem + 1.2svw, 2rem);
   --text-title-big: clamp(2.375rem, 1.75rem + 3.125svw, 3.75rem);
 
-  --text-subtitle: clamp(1.25rem, 1.14rem + 0.55svw, 1.5rem);
+  /* --text-subtitle: clamp(1.25rem, 1.14rem + 0.55svw, 1.5rem); */
+  --text-subtitle: clamp(1rem, 0.9rem + 0.6svw, 1.5rem);
   --text-subtitle-sm: clamp(1rem, 0.96rem + 0.21svw, 1.125rem);
 
   --tracking-eyebrow: 0.18em;
 
-  --spacing-svw: min(3svw, 48px);
+  --spacing-svw: min(3svw, 45px);
   --spacing-section: max(90px, calc(var(--spacing-svw) * 4));
   --spacing-section-sm: calc(var(--spacing-section) / 2);
   --spacing-section-xs: calc(var(--spacing-section) / 3);
+
+  --breakpoint-xs: 30rem;
 }
 
 @layer base {
+  /* Page foundations */
   :root {
     interpolate-size: allow-keywords;
   }
@@ -39,29 +43,23 @@
     @apply bg-brand/3 flex min-h-lvh flex-col font-sans text-mist-800 antialiased;
   }
 
+  /* Selection & focus */
   ::selection {
     background-color: var(--color-brand);
     color: #fff;
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-brand);
+    outline: 2px solid var(--focus-color, var(--color-brand));
     outline-offset: 3px;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply not-last:mb-[.36em] leading-[1.1] font-medium text-balance;
+  .bg-brand {
+    --focus-color: white;
+    --nav-bg-active: rgb(255 255 255 / 0.1);
   }
 
-  :is(h1, h2, h3) + p {
-    @apply text-subtle text-pretty;
-  }
-
+  /* Element resets */
   ul,
   ol {
     list-style: none;
@@ -73,62 +71,185 @@
     font-style: normal;
   }
 
-  button {
-    background-color: none;
+  summary {
+    @apply flex cursor-pointer items-center;
+
+    & > .chevron {
+      @apply size-4 transition-transform;
+    }
+  }
+
+  details[open] .chevron {
+    @apply rotate-180;
+  }
+
+  /* Typography */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply not-last:mb-[.27em] leading-[1.1] font-medium text-balance;
+  }
+
+  :is(h1, h2, h3) + p {
+    @apply text-subtle text-pretty;
   }
 
   hgroup {
     @apply text-balance;
   }
 
+  /* Layout: section / header / footer container */
   .section,
   #header,
   #footer {
-    @apply flex flex-col items-center;
-
     & > * {
-      @apply px-svw w-full 2xl:container;
+      @apply mx-svw 2xl:container 2xl:mx-auto;
     }
   }
 
   .section {
-    @apply py-section lg:py-section-sm;
+    @apply py-section first-of-type:pt-section-sm lg:py-section-sm;
   }
 
-  /* #main > .section:first-of-type {
-    @apply lg:pt-section-sm;
-  } */
-
-  .logo {
-    @apply relative pt-1.25 pb-1 [&>svg]:aspect-[5.5] [&>svg]:h-5;
+  .main-split {
+    @media (width >= 64rem) {
+      @apply grid grid-cols-3 gap-x-12;
+      > section:first-child {
+        @apply col-span-3;
+      }
+      > section:not(:first-child) {
+        @apply col-span-2;
+      }
+    }
   }
 
-  details::details-content {
-    @apply h-0 overflow-clip transition-[height,content-visibility] duration-400 ease-in-out transition-discrete motion-reduce:transition-none;
+  /* Chat bubble — shape, padding, size. Tail corner auto-flips by sibling
+     order (odd = their, even = ours). Background/text colors stay per-context. */
+  .chat-bubble {
+    @apply w-fit max-w-4/5 rounded-xl px-3 py-2 text-sm;
+
+    &:nth-of-type(odd) {
+      @apply rounded-bl-xs;
+    }
+
+    &:nth-of-type(even) {
+      @apply rounded-br-xs;
+    }
   }
 
-  details[open]::details-content {
-    @apply h-auto;
+  /* Section layout: heading (top-left) + See all link (top-right) + listing content (full-width row 2). */
+  .listing-grid {
+    @apply grid md:grid-cols-[1fr_auto] md:items-baseline;
+
+    > *:nth-child(2) {
+      @apply max-md:mb-9 md:col-span-2 md:row-start-2;
+    }
   }
 
-  #lang-btn {
-    anchor-name: --lang-btn;
+  /* Header */
+  #header {
+    /* Dropdowns */
+    details > ul {
+      @apply absolute top-full left-0 rounded-lg bg-white text-black shadow-lg ring-1 ring-black/5;
+      --nav-bg-active: oklch(from var(--color-brand) l c h / 0.09);
+    }
+
+    /* Burger button */
+    #burger-btn {
+      span {
+        @apply relative transition-colors;
+
+        &,
+        &::before,
+        &::after {
+          @apply h-[2px] w-[20px] rounded-full bg-current;
+        }
+
+        &::before,
+        &::after {
+          content: "";
+          @apply absolute left-0 transition-transform;
+        }
+
+        &::before {
+          @apply top-[-6px];
+        }
+
+        &::after {
+          @apply top-[6px];
+        }
+      }
+
+      &[aria-expanded="true"] span {
+        @apply bg-transparent;
+
+        &::before {
+          @apply rotate-45 top-0;
+        }
+
+        &::after {
+          @apply -rotate-45 top-0;
+        }
+      }
+    }
   }
-  #lang-list {
-    position-anchor: --lang-btn;
-    inset: auto;
-    top: anchor(bottom);
-    right: anchor(right);
-    margin-top: 8px;
+
+  /* Hero store badges: rendered always, shown only on mobile when the inline
+     UA-detect script tags <html> with the matching OS class. */
+  .store-btn {
+    display: none;
+  }
+
+  @media (max-width: 1023px) {
+    html.os-ios .store-btn[data-os="ios"],
+    html.os-android .store-btn[data-os="android"] {
+      @apply inline-flex bg-black;
+    }
+  }
+
+  /* FAQ accordion */
+  [data-section="faq"] {
+    details::details-content {
+      @apply h-0 overflow-clip transition-[height,content-visibility] duration-400 ease-in-out transition-discrete motion-reduce:transition-none;
+    }
+
+    details[open]::details-content {
+      @apply h-auto;
+    }
   }
 }
 
 @utility card {
-  @apply relative flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white transition-colors hover:border-gray-300 md:rounded-xl;
+  @apply relative h-full overflow-hidden rounded-lg shadow-xs ring-1 ring-black/5 bg-white md:rounded-xl;
+
+  /* Elevate on hover only when the whole card is clickable. */
+  &:has(.card-link) {
+    @apply transition-shadow hover:ring-black/10 hover:shadow-sm;
+  }
+}
+
+/* Padded content area of a card. Used on the card root for plain cards and on
+   the inner text wrapper of cards with edge-to-edge content (e.g. images). */
+@utility card-body {
+  @apply flex flex-col p-svw gap-4 md:p-6;
+}
+
+/* Stretches a link to cover its nearest positioned ancestor (typically a `.card`),
+   making the whole card clickable while keeping the link semantic. */
+@utility card-link {
+  @apply after:absolute after:inset-0 after:z-2;
+}
+
+/* Inline accent applied to *asterisk*-wrapped spans by parseAccent. */
+@utility accent {
+  @apply font-serif text-brand italic;
 }
 
 @utility btn {
-  @apply border-brand flex w-fit cursor-pointer justify-center rounded-md border px-6 py-2.5 text-center transition-colors md:border-2;
+  @apply border-brand flex w-fit cursor-pointer justify-center rounded-md border px-3 py-1 font-medium transition-colors;
 }
 
 @utility btn-solid {
@@ -140,5 +261,18 @@
 }
 
 @utility btn-big {
-  @apply w-full max-w-80 py-3.5 tracking-[0.25em] uppercase md:py-4;
+  @apply w-full py-3 tracking-wider uppercase;
+}
+
+@utility nav-item {
+  @apply flex items-center rounded-md px-3 py-1.5 font-medium transition-colors;
+
+  &:hover,
+  &[aria-current="page"],
+  details[open] > & {
+    background-color: var(--nav-bg-active);
+  }
+  details ul & {
+    @apply rounded-none;
+  }
 }

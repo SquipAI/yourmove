@@ -1,0 +1,14 @@
+---
+import type { ShowcaseDemo } from "@lib/types";
+
+interface Props {
+  demo: Extract<ShowcaseDemo, { _type: "bioDemo" }>;
+}
+const { demo } = Astro.props;
+---
+
+<blockquote
+  class="rounded-xl border border-white/15 px-4 py-3 text-sm leading-relaxed"
+>
+  &ldquo;{demo.text}&rdquo;
+</blockquote>

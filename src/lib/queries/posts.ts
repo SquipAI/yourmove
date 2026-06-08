@@ -1,7 +1,7 @@
 import { sanityClient } from "@lib/sanity";
 import type { Post, PostCard } from "@lib/types";
 import type { LocalizedPath } from "./types";
-import { ALTERNATES, BODY, POST_CARD, FAQ_ITEMS, POST_VISIBLE } from "./projections";
+import { ALTERNATES, BODY, POST_CARD, POST_EN, FAQ_ITEMS, POST_VISIBLE } from "./projections";
 import { coalesceLang } from "./coalesceLang";
 import { cached } from "./cache";
 import { DEFAULT_LOCALE } from "@i18n/config";
@@ -45,7 +45,10 @@ export function getPostBySlug(slug: string, lang = DEFAULT_LOCALE) {
         createdAt, _updatedAt, readingTime,
         "tagIds": tags[]._ref,
         "tags": tags[]->{ "slug": slug.current, title },
-        "mainImage": mainImage{ "url": asset->url, alt },
+        "mainImage": coalesce(
+          ${POST_EN}mainImage{ asset, hotspot, crop, alt },
+          mainImage{ asset, hotspot, crop, alt }
+        ),
         ${ALTERNATES},
         ${BODY},
         ${FAQ_ITEMS}
@@ -66,7 +69,10 @@ export function getRelatedPosts(
       `*[_type == "post" && language == $lang && defined(slug.current) && ${POST_VISIBLE} && _id != $postId] {
         _id, title, summary,
         "slug": slug.current,
-        "mainImage": mainImage{ "url": asset->url, alt },
+        "mainImage": coalesce(
+          ${POST_EN}mainImage{ asset, hotspot, crop, alt },
+          mainImage{ asset, hotspot, crop, alt }
+        ),
         readingTime,
         "tags": tags[]->{ "slug": slug.current, title },
         "_score": select(

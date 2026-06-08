@@ -58,6 +58,161 @@ const enRefArray = (toType: string, min: number, max: number) =>
     validation: enArrayLimits(min, max),
   });
 
+// Visual demo shown above the description on each showcase card. Pick one
+// variant — frontend renders the matching component (colors/typography
+// driven by demo `_type`, not by editor).
+const showcaseDemoField = defineField({
+  name: "demo",
+  title: "Demo",
+  type: "array",
+  description: "Optional visual demo shown above the description. Pick one variant.",
+  validation: (r) => r.max(1),
+  of: [
+    defineArrayMember({
+      type: "object",
+      name: "chatDemo",
+      title: "Chat",
+      fields: [
+        defineField({
+          name: "theirMessage",
+          title: "Their message *",
+          type: "string",
+          validation: (r) => r.required(),
+        }),
+        defineField({
+          name: "ourReply",
+          title: "Our reply *",
+          type: "string",
+          validation: (r) => r.required(),
+        }),
+      ],
+      preview: {
+        select: { title: "ourReply", subtitle: "theirMessage" },
+      },
+    }),
+    defineArrayMember({
+      type: "object",
+      name: "openersDemo",
+      title: "Openers list",
+      fields: [
+        defineField({
+          name: "items",
+          title: "Openers *",
+          type: "array",
+          validation: (r) => r.required().min(1).max(3),
+          of: [
+            defineArrayMember({
+              type: "object",
+              name: "opener",
+              fields: [
+                defineField({
+                  name: "tag",
+                  title: "Tag *",
+                  type: "string",
+                  description: "Short label (e.g. PLAYFUL, BOLD).",
+                  validation: (r) => r.required(),
+                }),
+                defineField({
+                  name: "text",
+                  title: "Text *",
+                  type: "text",
+                  rows: 2,
+                  validation: (r) => r.required(),
+                }),
+              ],
+              preview: {
+                select: { title: "tag", subtitle: "text" },
+              },
+            }),
+          ],
+        }),
+      ],
+      preview: { prepare: () => ({ title: "Openers list" }) },
+    }),
+    defineArrayMember({
+      type: "object",
+      name: "reviewDemo",
+      title: "Profile review",
+      fields: [
+        defineField({
+          name: "scoreFrom",
+          title: "Current score *",
+          type: "number",
+          validation: (r) => r.required().min(0).max(100),
+        }),
+        defineField({
+          name: "scoreTo",
+          title: "Target score *",
+          type: "number",
+          validation: (r) => r.required().min(0).max(100),
+        }),
+        defineField({
+          name: "items",
+          title: "Fix items",
+          type: "array",
+          validation: (r) => r.required().min(1).max(4),
+          of: [
+            defineArrayMember({
+              type: "object",
+              name: "fixItem",
+              fields: [
+                defineField({
+                  name: "tag",
+                  title: "Tag *",
+                  type: "string",
+                  description: "Short label (e.g. FIX, KEEP).",
+                  validation: (r) => r.required(),
+                }),
+                defineField({
+                  name: "text",
+                  title: "Text *",
+                  type: "string",
+                  validation: (r) => r.required(),
+                }),
+              ],
+              preview: {
+                select: { title: "tag", subtitle: "text" },
+              },
+            }),
+          ],
+        }),
+      ],
+      preview: { prepare: () => ({ title: "Profile review" }) },
+    }),
+    defineArrayMember({
+      type: "object",
+      name: "bioDemo",
+      title: "Bio example",
+      fields: [
+        defineField({
+          name: "text",
+          title: "Bio *",
+          type: "text",
+          rows: 4,
+          validation: (r) => r.required(),
+        }),
+      ],
+      preview: { prepare: () => ({ title: "Bio example" }) },
+    }),
+    defineArrayMember({
+      type: "object",
+      name: "beforeAfterDemo",
+      title: "Before / After",
+      description:
+        "Pulls the first example (before/after) from the linked tool. No fields to fill — edit images on the tool doc.",
+      fields: [
+        defineField({
+          name: "marker",
+          type: "string",
+          hidden: true,
+          readOnly: true,
+        }),
+      ],
+      preview: { prepare: () => ({ title: "Before / After" }) },
+    }),
+  ],
+});
+
 export const home = defineType({
   name: "home",
   title: "Home page",
@@ -71,40 +226,106 @@ export const home = defineType({
     navLabelField("Home", "hero"),
     defineField({
       name: "statsEyebrow",
+      title: "Stats Eyebrow *",
       type: "string",
       group: "hero",
       description:
         "Eyebrow above the H1. Placeholders {count} and {rating} are replaced with live siteStats values.",
-      initialValue: "{count} daters · {rating}★",
+      initialValue: "{count} daters · {rating} ★★★★★",
       validation: (r) => r.required(),
     }),
     defineField({
-      name: "compatibility",
+      name: "heroChatCards",
+      title: "Hero Chat Cards",
+      type: "array",
+      group: "hero",
+      description:
+        "Exactly 3 example chat exchanges shown under the CTA. Write naturally for each language — idioms, slang, references should feel native.",
+      validation: (r) => r.length(3),
+      of: [
+        defineArrayMember({
+          type: "object",
+          name: "chatCard",
+          fields: [
+            defineField({
+              name: "name",
+              title: "Name *",
+              type: "string",
+              validation: (r) => r.required(),
+            }),
+            defineField({
+              name: "avatar",
+              title: "Avatar *",
+              type: "image",
+              description:
+                "Square preferred, small size — around 60×60px is enough (rendered as a tiny rounded circle).",
+              options: { hotspot: true },
+              validation: (r) => r.required(),
+            }),
+            defineField({
+              name: "app",
+              title: "App *",
+              type: "string",
+              description: 'App label badge, e.g. "Tinder", "Hinge", "Bumble"',
+              validation: (r) => r.required(),
+            }),
+            defineField({
+              name: "theirMessage",
+              title: "Their message *",
+              type: "string",
+              description: "The match's opener (left, gray bubble)",
+              validation: (r) => r.required(),
+            }),
+            defineField({
+              name: "ourReply",
+              title: "Our reply *",
+              type: "string",
+              description:
+                "The witty reply YourMove generated (right, brand bubble)",
+              validation: (r) => r.required(),
+            }),
+          ],
+          preview: {
+            select: {
+              title: "name",
+              subtitle: "ourReply",
+              media: "avatar",
+            },
+          },
+        }),
+      ],
+    }),
+    defineField({
+      name: "heroCta",
+      title: "Hero CTA",
       type: "object",
       group: "hero",
-      description: "Hero compatibility row: label + curated app logos.",
+      description:
+        "Button under the H1. Link is set on EN once (inherited by locales). Label is editable per language.",
       fields: [
         defineField({
           name: "label",
+          title: "Label *",
           type: "string",
-          description: "Label shown before the logos (e.g. 'Compatible with').",
-          initialValue: "Compatible with",
+          description: 'Button text, e.g. "Get Started"',
           validation: (r) => r.required(),
         }),
         defineField({
-          name: "apps",
-          type: "array",
-          description: "Curated apps, order matters. Edit on EN; locales follow. Max 9.",
+          name: "link",
+          title: "Link *",
+          type: "reference",
+          to: [{ type: "siteLink" }],
           hidden: hiddenOnNonEn,
-          of: [
-            defineArrayMember({
-              type: "reference",
-              to: [{ type: "datingApp" }],
-              weak: true,
-              options: { disableNew: true, filter: 'language == "en"' },
+          options: { disableNew: true },
+          initialValue: { _ref: "bc386858-e483-4c7e-ab66-9897eeae826f" },
+          validation: (r) =>
+            r.custom((value, ctx) => {
+              const isEn =
+                (ctx.document as { language?: string } | undefined)
+                  ?.language === "en";
+              if (!isEn) return true;
+              return value ? true : "Required";
             }),
-          ],
-          validation: enArrayLimits(3, 9),
         }),
       ],
     }),
@@ -121,6 +342,7 @@ export const home = defineType({
         }),
         defineField({
           name: "heading",
+          title: "Heading *",
           type: "string",
           initialValue: "Your AI dating toolkit",
           validation: (r) => r.required(),
@@ -129,6 +351,122 @@ export const home = defineType({
           name: "subtitle",
           type: "string",
           description: "Optional sentence under the heading.",
+        }),
+        defineField({
+          name: "showcaseCards",
+          title: "Showcase Cards",
+          type: "array",
+          description:
+            "Cards next to the tools heading. Drag to reorder. Edit per locale.",
+          of: [
+            defineArrayMember({
+              type: "object",
+              name: "toolCard",
+              title: "Tool",
+              fields: [
+                defineField({
+                  name: "target",
+                  title: "Tool *",
+                  type: "reference",
+                  to: [{ type: "tool" }],
+                  weak: true,
+                  options: {
+                    disableNew: true,
+                    filter: ({ document }) => ({
+                      filter: "language == $lang",
+                      params: {
+                        lang:
+                          (document as { language?: string } | undefined)
+                            ?.language ?? "en",
+                      },
+                    }),
+                  },
+                  validation: (r) => r.required(),
+                }),
+                defineField({
+                  name: "description",
+                  title: "Description",
+                  type: "text",
+                  rows: 2,
+                }),
+                defineField({
+                  name: "buttonText",
+                  title: "Button text *",
+                  type: "string",
+                  initialValue: "Try it free",
+                  validation: (r) => r.required(),
+                }),
+                showcaseDemoField,
+              ],
+              preview: {
+                select: {
+                  cardTitle: "target.cardTitle",
+                  fallbackTitle: "target.title",
+                  description: "description",
+                },
+                prepare: ({
+                  cardTitle,
+                  fallbackTitle,
+                  description,
+                }: {
+                  cardTitle?: string;
+                  fallbackTitle?: string;
+                  description?: string;
+                }) => ({
+                  title: cardTitle ?? fallbackTitle ?? "(no tool selected)",
+                  subtitle: description,
+                }),
+              },
+            }),
+            defineArrayMember({
+              type: "object",
+              name: "customCard",
+              title: "Custom",
+              fields: [
+                defineField({
+                  name: "title",
+                  title: "Title *",
+                  type: "string",
+                  validation: (r) => r.required(),
+                }),
+                defineField({
+                  name: "url",
+                  title: "URL *",
+                  type: "url",
+                  validation: (r) =>
+                    r.required().uri({ scheme: ["http", "https"] }),
+                }),
+                defineField({
+                  name: "description",
+                  title: "Description",
+                  type: "text",
+                  rows: 2,
+                }),
+                defineField({
+                  name: "buttonText",
+                  title: "Button text *",
+                  type: "string",
+                  initialValue: "Try it free",
+                  validation: (r) => r.required(),
+                }),
+                showcaseDemoField,
+              ],
+              preview: {
+                select: { title: "title", subtitle: "description" },
+              },
+            }),
+          ],
+          validation: (r) => r.max(6),
+        }),
+        defineField({
+          name: "ctaLabel",
+          title: "See-all CTA *",
+          type: "string",
+          description:
+            "Label on the last card that links to /tools. Use {count} — replaced live with the total tool count.",
+          initialValue:
+            "{count} tools. One unfair advantage in your dating life. See it all",
+          validation: (r) => r.required(),
         }),
       ],
     }),
@@ -145,6 +483,7 @@ export const home = defineType({
         }),
         defineField({
           name: "heading",
+          title: "Heading *",
           type: "string",
           initialValue: "What our users say",
           validation: (r) => r.required(),
@@ -159,6 +498,7 @@ export const home = defineType({
     }),
     defineField({
       name: "blogHeading",
+      title: "Blog Heading *",
       type: "string",
       group: "blog",
       description: "Heading shown above the Blog section.",
@@ -178,6 +518,7 @@ export const home = defineType({
         }),
         defineField({
           name: "heading",
+          title: "Heading *",
           type: "string",
           initialValue: "Frequently Asked Questions",
           validation: (r) => r.required(),

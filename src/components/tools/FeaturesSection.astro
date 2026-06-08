@@ -12,49 +12,42 @@ interface Props {
   heading: string;
   eyebrow?: string | null;
   lang?: Locale;
-  class?: string;
 }
 
-const {
-  items,
-  heading,
-  eyebrow,
-  lang = DEFAULT_LOCALE,
-  class: cls,
-} = Astro.props;
+const { items, heading, eyebrow, lang = DEFAULT_LOCALE } = Astro.props;
 
-const eyebrowText = eyebrow ?? t(lang, "features.eyebrow");
+// const eyebrowText = eyebrow ?? t(lang, "features.eyebrow");
 ---
 
-<div class:list={["flex flex-col items-center text-center", cls]}>
-  <SectionHeading title={heading} eyebrow={eyebrowText} />
+<section data-section="features" class="section">
+  <div>
+    <SectionHeading title={heading} />
 
-  <ul
-    class="grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
-  >
-    {
-      items.map((item) => {
-        const href = item.button
-          ? resolveNavHref(
-              item.button.link.targetType,
-              item.button.link.targetSlug,
-              item.button.link.externalUrl,
-              lang,
-            )
-          : null;
-        return (
-          <li class="card flex flex-col gap-3 p-5 text-left md:p-6">
-            <Icon name={item.icon as IconName} class="text-brand size-6" />
-            <h3 class="text-lg font-semibold leading-tight">{item.title}</h3>
-            <p class="text-subtle">{item.description}</p>
-            {item.button && href && (
-              <Btn href={href} class="btn-outline mt-auto self-start">
-                {item.button.text}
-              </Btn>
-            )}
-          </li>
-        );
-      })
-    }
-  </ul>
-</div>
+    <ul class="grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {
+        items.map((item) => {
+          const href = item.button
+            ? resolveNavHref(
+                item.button.link.targetType,
+                item.button.link.targetSlug,
+                item.button.link.externalUrl,
+                lang,
+              )
+            : null;
+          return (
+            <li class="card flex flex-col gap-3 p-5 text-left md:p-6">
+              <Icon name={item.icon as IconName} class="text-brand size-6" />
+              <h3 class="text-lg font-semibold leading-tight">{item.title}</h3>
+              <p class="text-subtle">{item.description}</p>
+              {item.button && href && (
+                <Btn href={href} class="btn-outline mt-auto self-start">
+                  {item.button.text}
+                </Btn>
+              )}
+            </li>
+          );
+        })
+      }
+    </ul>
+  </div>
+</section>

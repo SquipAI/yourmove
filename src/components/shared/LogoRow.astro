@@ -1,0 +1,44 @@
+---
+interface Logo {
+  name: string;
+  logoUrl: string;
+}
+
+interface Props {
+  logos: Logo[];
+  label: string;
+  level?: 2 | 3;
+  /** apps  — dating-app marks (small, tight gaps). Default.
+   *  press — newspaper/network wordmarks (larger, looser gaps). */
+  kind?: "apps" | "press";
+  class?: string;
+}
+
+const { logos, label, level = 2, kind = "apps", class: cls } = Astro.props;
+if (logos.length === 0) return;
+const HeadingTag = `h${level}` as "h2" | "h3";
+
+const listGapClass =
+  kind === "press"
+    ? "gap-x-10 gap-y-6 sm:gap-x-14 md:gap-x-16 *:h-9 lg:*:h-12"
+    : "gap-x-8 gap-y-6 sm:gap-x-10 *:h-5 lg:*:h-7";
+---
+
+<div class:list={["flex flex-col items-center gap-4", cls]}>
+  <HeadingTag class="mb-0 lowercase lg:text-lg">{label}</HeadingTag>
+
+  <ul class:list={["flex flex-wrap items-center justify-center", listGapClass]}>
+    {
+      logos.map((logo) => (
+        <li>
+          <img
+            src={logo.logoUrl}
+            alt={`${logo.name} logo`}
+            class="h-full w-auto grayscale"
+            loading="lazy"
+          />
+        </li>
+      ))
+    }
+  </ul>
+</div>

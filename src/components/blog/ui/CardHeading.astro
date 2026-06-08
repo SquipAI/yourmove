@@ -26,24 +26,25 @@ const sizeClass = {
   lg: "text-title-sm",
 }[size];
 
-const headingClasses = [
-  sizeClass,
-  "text-pretty transition-colors group-hover:text-brand [&_a]:after:absolute [&_a]:after:inset-0 [&_a]:after:z-2",
-  cls,
-];
+const headingClasses = [sizeClass, "text-pretty", cls];
+const linkClasses = "card-link transition-colors hover:text-brand";
 ---
 
 {
   description ? (
     <hgroup>
       <HeadingTag class:list={headingClasses}>
-        <a href={href}>{stripAccent(title)}</a>
+        <a href={href} class={linkClasses}>
+          {stripAccent(title)}
+        </a>
       </HeadingTag>
       <p class="leading-relaxed">{description}</p>
     </hgroup>
   ) : (
     <HeadingTag class:list={headingClasses}>
-      <a href={href}>{stripAccent(title)}</a>
+      <a href={href} class={linkClasses}>
+        {stripAccent(title)}
+      </a>
     </HeadingTag>
   )
 }

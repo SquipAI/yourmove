@@ -9,15 +9,14 @@ import type {
   HeaderLinks,
 } from "@lib/types";
 import type { FooterNavData } from "@lib/links";
-import {
-  BODY,
-  FAQ_ITEM_BODY,
-  COMPATIBILITY,
-  TESTIMONIAL_CARD,
-} from "./projections";
+import { BODY, FAQ_ITEM_BODY, TESTIMONIAL_CARD } from "./projections";
 import { coalesceLang } from "./coalesceLang";
 import { cached } from "./cache";
 import { DEFAULT_LOCALE } from "@i18n/config";
+
+// Store-badge siteLink ids — stable, hardcoded since they're not editor-pickable.
+const APP_STORE_SITELINK_ID = "ca2829ce-8438-435e-a8f1-6ab07a03c6f2";
+const GOOGLE_PLAY_SITELINK_ID = "a3c746b7-d6a9-45f3-a3a5-6e2bbd3f6ea9";
 
 export function getHome(lang = DEFAULT_LOCALE) {
   return cached(`getHome:${lang}`, () =>
@@ -25,6 +24,16 @@ export function getHome(lang = DEFAULT_LOCALE) {
       `${coalesceLang("home")}{
         title, navLabel, description, metaTitle, metaDescription,
         statsEyebrow, blogHeading,
+        "cta": {
+          "label": heroCta.label,
+          "url": *[_type == "home" && language == "en"][0].heroCta.link->url
+        },
+        "chatCards": heroChatCards[]{
+          name, app, theirMessage, ourReply,
+          "avatarUrl": avatar.asset->url
+        },
+        "appStoreUrl": *[_id == $appStoreId][0].url,
+        "playStoreUrl": *[_id == $playStoreId][0].url,
         "reviews": {
           "eyebrow": reviews.eyebrow,
           "heading": reviews.heading,
@@ -43,14 +52,49 @@ export function getHome(lang = DEFAULT_LOCALE) {
           "subtitle": faq.subtitle,
           "items": faq.items[] ${FAQ_ITEM_BODY}
         },
-        ${COMPATIBILITY},
         "tools": {
           "eyebrow": tools.eyebrow,
           "heading": tools.heading,
-          "subtitle": tools.subtitle
+          "subtitle": tools.subtitle,
+          "ctaLabel": tools.ctaLabel,
+          "showcaseCards": tools.showcaseCards[]{
+            _key,
+            _type,
+            description,
+            buttonText,
+            "title": select(
+              _type == "toolCard" => coalesce(target->cardTitle, target->title),
+              title
+            ),
+            "href": select(
+              _type == "toolCard" => target->slug.current,
+              url
+            ),
+            "external": _type == "customCard",
+            "demo": demo[0]{
+              _type,
+              theirMessage,
+              ourReply,
+              scoreFrom,
+              scoreTo,
+              text,
+              items[]{ tag, text },
+              "example": select(_type == "beforeAfterDemo" =>
+                *[_type == "translation.metadata" && references(^.^.target._ref)][0]
+                  .translations[language == "en"][0].value->examples[0]{
+                    "before": before.asset->{ "url": url },
+                    "after": after.asset->{ "url": url }
+                  }
+              )
+            }
+          }
         }
       }`,
-      { lang },
+      {
+        lang,
+        appStoreId: APP_STORE_SITELINK_ID,
+        playStoreId: GOOGLE_PLAY_SITELINK_ID,
+      },
     ),
   );
 }
@@ -111,7 +155,10 @@ export function getNavTools(lang = DEFAULT_LOCALE) {
   );
 }
 
-// Header flat links — blog, reviews, affiliate.
+// Brand CTA destination — same Start siteLink that the home hero uses.
+const START_SITELINK_ID = "bc386858-e483-4c7e-ab66-9897eeae826f";
+
+// Header flat links — blog, reviews, affiliate, brand CTA url.
 export function getHeaderLinks(lang = DEFAULT_LOCALE) {
   return cached(`getHeaderLinks:${lang}`, () =>
     sanityClient.fetch<HeaderLinks>(
@@ -121,16 +168,45 @@ export function getHeaderLinks(lang = DEFAULT_LOCALE) {
         "affiliate": *[_id == $affiliateId][0]{
           "label": coalesce(title[$lang], title.en),
           url
-        }
+        },
+        "ctaUrl": *[_id == $startId][0].url
       }`,
-      { lang, affiliateId: AFFILIATE_SITELINK_ID },
+      {
+        lang,
+        affiliateId: AFFILIATE_SITELINK_ID,
+        startId: START_SITELINK_ID,
+      },
+    ),
+  );
+}
+
+// `hidden` only suppresses the logo strip — a hidden outlet can still
+// contribute a pull quote. Anchored on EN docs (canonical name/logo); quote
+// resolved via translation.metadata sibling for the current locale.
+export function getPress(lang = DEFAULT_LOCALE) {
+  return cached(`getPress:${lang}`, () =>
+    sanityClient.fetch<import("@lib/types").Press[]>(
+      `*[_type == "pressLogo" && language == "en" && defined(logo.asset)]
+        | order(coalesce(order, 9999) asc, name asc) {
+          _id,
+          name,
+          "logoUrl": logo.asset->url,
+          "hidden": hidden == true,
+          citationUrl,
+          "quote": coalesce(
+            *[_type == "translation.metadata" && references(^._id)][0]
+              .translations[value->language == $lang][0].value->quote,
+            quote
+          )
+        }`,
+      { lang },
     ),
   );
 }
 
 export function getSiteStats() {
   return cached("getSiteStats", () =>
-    sanityClient.fetch<SiteStats | null>(
+    sanityClient.fetch<SiteStats>(
       `*[_type == "siteStats" && _id == "site-stats"][0]{ userCount, userRating }`,
     ),
   );

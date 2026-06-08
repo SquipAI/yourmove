@@ -1,16 +1,18 @@
 ---
 import { LOCALES, DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
 import type { NavItem } from "@lib/links";
 import LogoSvg from "@assets/svg/LogoSvg.astro";
-import Btn from "@components/shared/Btn.astro";
 import ChevronDown from "@components/shared/ChevronDown.astro";
+import NavLink from "@components/shared/NavLink.astro";
 
 interface Props {
   lang?: Locale;
   alternateUrls: Record<Locale, string>;
   tools: { title: string; items: NavItem[]; seeAll: NavItem };
   flatLinks: NavItem[];
+  ctaUrl: string;
 }
 
 const {
@@ -18,6 +20,7 @@ const {
   alternateUrls,
   tools,
   flatLinks,
+  ctaUrl,
 } = Astro.props;
 
 const currentPath = Astro.url.pathname;
@@ -26,155 +29,135 @@ function isActive(href: string) {
 }
 ---
 
-<header id="header" class="bg-brand sticky top-0 z-10 text-white">
-  <div class="flex items-center justify-between gap-6 py-3">
+<header id="header" class="sticky top-0 z-10 bg-brand text-white">
+  <div
+    class="py-[12px] flex flex-wrap items-center justify-between gap-x-svw gap-y-4 sm:gap-x-6"
+  >
     <a
       href={lang === DEFAULT_LOCALE ? "/" : `/${lang}`}
-      aria-label="YourMove AI home"
-      class="logo z-11"
+      aria-label={t(lang, "header.homeLabel")}
+      class="relative z-11 pt-1.25 pb-1 [&>svg]:aspect-[5.5] [&>svg]:h-5"
     >
       <LogoSvg />
     </a>
 
     <nav
       id="site-nav"
-      aria-label="Main navigation"
-      class="bg-brand pointer-events-none fixed inset-0 flex flex-col gap-8 px-6 pt-20 pb-10 opacity-0 transition-opacity data-open:pointer-events-auto data-open:opacity-100 md:pointer-events-auto md:static md:flex-1 md:flex-row md:items-center md:gap-0 md:bg-transparent md:p-0 md:opacity-100 md:transition-none"
+      aria-label={t(lang, "header.navLabel")}
+      class="fixed inset-0 px-svw pt-20 pb-[24px]
+             flex flex-col gap-8
+             bg-brand pointer-events-none opacity-0 transition-opacity
+             data-open:pointer-events-auto data-open:opacity-100
+             md:static md:p-0 md:flex-row md:gap-0
+             md:bg-transparent md:opacity-100 md:pointer-events-auto"
     >
-      <ul
-        class="flex flex-col gap-1 md:flex-row md:items-center md:gap-0.5"
-      >
+      <ul class="flex flex-col gap-1 md:flex-row md:items-center md:gap-0.5">
         <li class="md:relative">
-          {/* Desktop dropdown */}
-          <details class="tools-dropdown group hidden md:block">
-            <summary
-              class="flex cursor-pointer items-center gap-1 rounded-md px-3 py-1.5 transition-colors hover:bg-white/10 group-open:bg-white/10"
-              aria-haspopup="menu"
-            >
-              <span>{tools.title}</span>
-              <ChevronDown class="w-3 transition-transform group-open:rotate-180" />
-            </summary>
-            <ul
-              class="absolute top-full left-0 mt-1 min-w-56 rounded-lg bg-white py-2 text-black shadow-lg ring-1 ring-black/5"
-              role="menu"
-            >
-              {
-                tools.items.map((item) => (
-                  <li role="none">
-                    <a
-                      role="menuitem"
-                      href={item.href}
-                      aria-current={isActive(item.href) ? "page" : undefined}
-                      class="block px-4 py-1.5 hover:bg-black/5"
-                    >
-                      {item.label}
-                    </a>
-                  </li>
-                ))
-              }
-              <li role="none" class="mt-1 border-t border-black/10 pt-1">
-                <a
-                  role="menuitem"
-                  href={tools.seeAll.href}
-                  aria-current={isActive(tools.seeAll.href) ? "page" : undefined}
-                  class="block px-4 py-1.5 font-medium hover:bg-black/5"
-                >
-                  {tools.seeAll.label}
-                </a>
-              </li>
-            </ul>
-          </details>
-
           {/* Mobile: flat tools section */}
-          <div class="md:hidden">
-            <p class="text-xs uppercase opacity-70">{tools.title}</p>
-            <ul class="mt-2 flex flex-col gap-1">
+          <div class="md:hidden pb-1 border-b border-white/20">
+            <p class="uppercase mb-2">{tools.title}</p>
+            <ul class="flex flex-col gap-1 -translate-x-3">
               {
                 tools.items.map((item) => (
                   <li>
-                    <a
-                      href={item.href}
-                      aria-current={isActive(item.href) ? "page" : undefined}
-                      class="block rounded-md px-3 py-1.5"
-                    >
+                    <NavLink href={item.href} active={isActive(item.href)}>
                       {item.label}
-                    </a>
+                    </NavLink>
                   </li>
                 ))
               }
               <li>
-                <a
+                <NavLink
                   href={tools.seeAll.href}
-                  aria-current={isActive(tools.seeAll.href) ? "page" : undefined}
-                  class="block rounded-md px-3 py-1.5 font-medium"
+                  active={isActive(tools.seeAll.href)}
                 >
                   {tools.seeAll.label}
-                </a>
+                </NavLink>
               </li>
             </ul>
           </div>
+
+          {/* Desktop dropdown */}
+          <details class="hidden md:block">
+            <summary class="nav-item gap-1">
+              <span>{tools.title}</span>
+              <ChevronDown />
+            </summary>
+            <ul class="min-w-56">
+              {
+                tools.items.map((item) => (
+                  <li>
+                    <NavLink href={item.href} active={isActive(item.href)}>
+                      {item.label}
+                    </NavLink>
+                  </li>
+                ))
+              }
+              <li>
+                <NavLink
+                  href={tools.seeAll.href}
+                  active={isActive(tools.seeAll.href)}
+                >
+                  {tools.seeAll.label}
+                </NavLink>
+              </li>
+            </ul>
+          </details>
         </li>
 
         {
           flatLinks.map((link) => (
-            <li class="md:contents">
-              <a
+            <li class="md:contents max-md:-translate-x-3">
+              <NavLink
                 href={link.href}
-                aria-current={
-                  !link.external && isActive(link.href) ? "page" : undefined
-                }
-                {...(link.external
-                  ? { target: "_blank", rel: "noopener noreferrer" }
-                  : {})}
-                class:list={[
-                  "block rounded-md px-3 py-1.5 transition-colors mt-1 md:mt-0",
-                  !link.external && isActive(link.href)
-                    ? "md:bg-white/20"
-                    : "md:hover:bg-white/10",
-                ]}
+                active={!link.external && isActive(link.href)}
+                external={link.external}
               >
                 {link.label}
-              </a>
+              </NavLink>
             </li>
           ))
         }
       </ul>
 
       <!-- Language switcher mobile -->
-      <div
-        class="mt-auto flex gap-4 md:hidden"
-        role="list"
-        aria-label="Select language"
+      <ul
+        class="mt-auto flex md:hidden"
+        aria-label={t(lang, "header.langSelectLabel")}
       >
         {
           LOCALES.map((l) => (
-            <a
-              href={alternateUrls[l]}
-              hreflang={l}
-              role="listitem"
-              aria-current={l === lang ? "page" : undefined}
-              class:list={[
-                "text-sm uppercase transition-opacity",
-                l === lang ? "" : "opacity-50 hover:opacity-100",
-              ]}
-            >
-              {l}
-            </a>
+            <li>
+              <a
+                href={alternateUrls[l]}
+                hreflang={l}
+                aria-current={l === lang ? "page" : undefined}
+                class:list={[
+                  `inline-flex items-center justify-center
+                   min-h-[44px] min-w-[44px]
+                   text-sm uppercase transition-opacity`,
+                  l === lang ? "" : "opacity-50 hover:opacity-100",
+                ]}
+              >
+                {l}
+              </a>
+            </li>
           ))
         }
-      </div>
+      </ul>
     </nav>
 
     <!-- Language dropdown -->
-    <div id="lang-dropdown" class="hidden md:block">
-      <button
-        id="lang-btn"
-        popovertarget="lang-list"
-        aria-label={`Language: ${lang.toUpperCase()}, open selector`}
-        class="lang-btn flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1.5 transition-colors hover:bg-white/10"
+    <details class="relative hidden md:block md:ms-auto">
+      <summary
+        aria-label={t(lang, "header.langButton").replace(
+          "{lang}",
+          lang.toUpperCase(),
+        )}
+        class="gap-[5px] rounded-md px-2 py-1 transition-colors hover:bg-white/12"
       >
         <svg
-          class="h-4 w-4"
+          class="size-5"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -187,26 +170,19 @@ function isActive(href: string) {
           ></path>
         </svg>
         <span class="uppercase">{lang}</span>
-        <ChevronDown class="w-3" />
-      </button>
+        <ChevronDown />
+      </summary>
 
-      <ul
-        id="lang-list"
-        popover
-        role="menu"
-        aria-label="Select language"
-        class="lang-list absolute min-w-20 origin-top-right scale-95 rounded-lg border-0 bg-white py-1.5 opacity-0 shadow-lg ring-1 ring-black/5 transition-[opacity,scale,display,overlay] transition-discrete duration-150 ease-in open:scale-100 open:opacity-100 starting:open:scale-95 starting:open:opacity-0"
-      >
+      <ul class="min-w-20">
         {
           LOCALES.map((l) => (
-            <li role="none">
+            <li>
               <a
-                role="menuitem"
                 href={alternateUrls[l]}
                 hreflang={l}
                 tabindex={l === lang ? -1 : 0}
                 class:list={[
-                  "block px-3 py-1.5 text-black uppercase transition-opacity",
+                  "nav-item uppercase transition-opacity",
                   l === lang ? "" : "opacity-50 hover:opacity-100",
                 ]}
               >
@@ -216,22 +192,31 @@ function isActive(href: string) {
           ))
         }
       </ul>
-    </div>
+    </details>
 
     <!-- CTA -->
-    <Btn href="https://app.yourmove.ai" variant="ghost">Get Started</Btn>
+    <a
+      href={ctaUrl}
+      class="nav-item bg-white text-brand whitespace-nowrap
+             max-md:ms-auto max-md:translate-x-svw
+             hover:bg-brand hover:text-white"
+    >
+      {t(lang, "header.cta")}
+    </a>
 
     <!-- Burger -->
     <button
       id="burger-btn"
       aria-expanded="false"
       aria-controls="site-nav"
-      aria-label="Open navigation"
-      class="group relative z-11 flex aspect-square w-[44px] cursor-pointer items-center justify-center md:hidden"
+      aria-label={t(lang, "header.openNav")}
+      data-label-open={t(lang, "header.openNav")}
+      data-label-close={t(lang, "header.closeNav")}
+      class="relative z-11 flex size-[44px] translate-x-svw
+             cursor-pointer items-center justify-center
+             md:hidden"
     >
-      <span
-        class="relative transition-colors group-aria-expanded:bg-transparent before:-top-[6px] group-aria-expanded:before:rotate-45 after:top-[6px] group-aria-expanded:after:-rotate-45 [&,&::before,&::after]:h-[2px] [&,&::before,&::after]:w-[20px] [&,&::before,&::after]:rounded-full [&,&::before,&::after]:bg-current [&::before,&::after]:absolute [&::before,&::after]:left-0 [&::before,&::after]:transition-transform group-aria-expanded:[&::before,&::after]:top-0"
-      ></span>
+      <span></span>
     </button>
   </div>
 </header>
@@ -246,10 +231,13 @@ function isActive(href: string) {
 
     let menuOpen = false;
 
+    const labelOpen = burger.dataset.labelOpen ?? "";
+    const labelClose = burger.dataset.labelClose ?? "";
+
     function openMenu() {
       menuOpen = true;
       burger.setAttribute("aria-expanded", "true");
-      burger.setAttribute("aria-label", "Close navigation");
+      burger.setAttribute("aria-label", labelClose);
       nav.removeAttribute("inert");
       nav.dataset.open = "";
       document.body.style.overflow = "hidden";
@@ -262,7 +250,7 @@ function isActive(href: string) {
     function closeMenu() {
       menuOpen = false;
       burger.setAttribute("aria-expanded", "false");
-      burger.setAttribute("aria-label", "Open navigation");
+      burger.setAttribute("aria-label", labelOpen);
       nav.setAttribute("inert", "");
       delete nav.dataset.open;
       document.body.style.overflow = "";
@@ -298,22 +286,23 @@ function isActive(href: string) {
       }
     });
 
-    // Close tools dropdown on outside click / Esc.
-    const dropdown = document.querySelector(
-      ".tools-dropdown",
-    ) as HTMLDetailsElement | null;
-    if (dropdown) {
-      document.addEventListener("click", (e) => {
-        if (dropdown.open && !dropdown.contains(e.target as Node))
-          dropdown.open = false;
+    // Close dropdowns on outside click / Esc.
+    const dropdowns =
+      document.querySelectorAll<HTMLDetailsElement>("#header details");
+    document.addEventListener("click", (e) => {
+      dropdowns.forEach((d) => {
+        if (d.open && !d.contains(e.target as Node)) d.open = false;
       });
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && dropdown.open) {
-          dropdown.open = false;
-          (dropdown.querySelector("summary") as HTMLElement | null)?.focus();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      dropdowns.forEach((d) => {
+        if (d.open) {
+          d.open = false;
+          (d.querySelector("summary") as HTMLElement | null)?.focus();
         }
       });
-    }
+    });
   }
 
   initHeader();

@@ -1,6 +1,6 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 import { ThListIcon, EditIcon, StarIcon } from "@sanity/icons";
-import { languageField, hiddenOnNonEn } from "./shared";
+import { languageField, hiddenOnNonEn } from "../shared";
 
 export const toolList = defineType({
   name: "toolList",
@@ -14,6 +14,7 @@ export const toolList = defineType({
   fields: [
     defineField({
       name: "title",
+      title: "Title *",
       type: "string",
       group: "content",
       description: "Section heading (e.g. 'More tools for dating')",
@@ -28,6 +29,7 @@ export const toolList = defineType({
     }),
     defineField({
       name: "groups",
+      title: "Groups *",
       type: "array",
       group: "content",
       hidden: hiddenOnNonEn,
@@ -39,12 +41,14 @@ export const toolList = defineType({
           fields: [
             defineField({
               name: "heading",
+              title: "Heading *",
               type: "string",
               description: "Column heading (e.g. 'Profile Generator')",
               validation: (r) => r.required(),
             }),
             defineField({
               name: "tools",
+              title: "Tools *",
               type: "array",
               of: [
                 defineArrayMember({

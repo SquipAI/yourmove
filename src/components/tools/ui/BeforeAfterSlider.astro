@@ -1,0 +1,109 @@
+---
+import { Image } from "astro:assets";
+import BeforeAfterBadge from "@components/shared/BeforeAfterBadge.astro";
+import { t } from "@i18n/ui";
+import type { Locale } from "@i18n/config";
+
+interface Props {
+  before: string;
+  after: string;
+  /** Subject of the comparison (used for alt text + aria-label, e.g. tool name) */
+  subject: string;
+  lang: Locale;
+  beforeCaption?: string | null;
+  afterCaption?: string | null;
+  /** Initial divider position, 0–100. Default 50. */
+  initial?: number;
+  class?: string;
+}
+
+const {
+  before,
+  after,
+  subject,
+  lang,
+  beforeCaption,
+  afterCaption,
+  initial = 90,
+  class: cls,
+} = Astro.props;
+const labelBefore = t(lang, "beforeAfter.before");
+const labelAfter = t(lang, "beforeAfter.after");
+const ariaLabel = t(lang, "beforeAfter.aria");
+
+const captionClass =
+  "absolute inset-0 flex items-center justify-center px-6 text-center text-sm font-mono text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] pointer-events-none";
+---
+
+<figure
+  data-before-after
+  style={`--p:${initial}%`}
+  class:list={[
+    "relative aspect-4/5 w-full overflow-hidden rounded-lg select-none has-focus-visible:outline-2 has-focus-visible:outline-offset-3 has-focus-visible:outline-brand sm:max-w-[550px]",
+    cls,
+  ]}
+>
+  <Image
+    src={before}
+    alt={beforeCaption ?? `${subject} — ${labelBefore.toLowerCase()}`}
+    inferSize
+    priority
+    class="absolute inset-0 size-full object-cover"
+  />
+  {
+    beforeCaption && (
+      <span class={captionClass} aria-hidden="true">
+        [ {beforeCaption} ]
+      </span>
+    )
+  }
+  <BeforeAfterBadge variant="before" {lang} />
+
+  <div class="absolute inset-0 [clip-path:inset(0_0_0_var(--p))]">
+    <Image
+      src={after}
+      alt={afterCaption ?? `${subject} — ${labelAfter.toLowerCase()}`}
+      inferSize
+      class="absolute inset-0 size-full object-cover"
+    />
+    {
+      afterCaption && (
+        <span class={captionClass} aria-hidden="true">
+          [ {afterCaption} ]
+        </span>
+      )
+    }
+
+    <BeforeAfterBadge variant="after" {lang} />
+  </div>
+
+  <input
+    type="range"
+    min="0"
+    max="100"
+    value={initial}
+    step="1"
+    aria-label={`${ariaLabel}: ${subject}`}
+    class="peer absolute inset-0 m-0 size-full cursor-ew-resize appearance-none bg-transparent opacity-0"
+  />
+
+  <div
+    aria-hidden="true"
+    class="pointer-events-none absolute inset-y-0 left-(--p) w-[2px] -translate-x-1/2 bg-white before:absolute before:top-1/2 before:left-1/2 before:size-9 before:-translate-x-1/2 before:-translate-y-1/2 before:rounded-full before:bg-white before:shadow-[0_2px_6px_rgba(0,0,0,0.35)] before:content-[''] after:absolute after:top-1/2 after:left-1/2 after:size-3 after:-translate-x-1/2 after:-translate-y-1/2 after:rounded-full after:bg-brand after:content-[''] peer-focus-visible:before:ring-2 peer-focus-visible:before:ring-brand peer-focus-visible:before:ring-offset-2"
+  >
+  </div>
+
+  <figcaption class="sr-only">{subject}</figcaption>
+</figure>
+
+<script>
+  document
+    .querySelectorAll<HTMLElement>("figure[data-before-after]")
+    .forEach((el) => {
+      const range = el.querySelector<HTMLInputElement>('input[type="range"]');
+      if (!range) return;
+      const apply = () => el.style.setProperty("--p", `${range.value}%`);
+      range.addEventListener("input", apply);
+      apply();
+    });
+</script>

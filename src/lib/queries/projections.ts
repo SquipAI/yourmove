@@ -23,9 +23,29 @@ export const BODY = /* groq */ `body[]{
   }
 }`;
 
+// Path to a field on the canonical EN post doc. Append a field name
+// (e.g. `${POST_EN}mainImage`) to read it regardless of current locale —
+// locales inherit, so editing on EN propagates at render time.
+export const POST_EN = /* groq */ `*[_type == "translation.metadata" && schemaTypes[0] == "post" && references(^._id)][0]
+  .translations[language == "en"][0].value->`;
+
+// Filter: keep docs whose datingApp.hasPage on EN canonical is not false.
+export const HAS_PAGE_FILTER = /* groq */ `coalesce(
+  *[_type == "translation.metadata" && schemaTypes[0] == "datingApp" && references(^._id)][0]
+    .translations[language == "en"][0].value->hasPage,
+  hasPage
+) != false`;
+
+// Filter: keep posts whose `hidden` on EN canonical is not true.
+// Single source of truth — hide a post once on EN and every locale follows.
+export const POST_VISIBLE = /* groq */ `coalesce(${POST_EN}hidden, hidden) != true`;
+
 export const POST_CARD = /* groq */ `{
   _id, title, summary, "slug": slug.current,
-  "mainImage": mainImage{ "url": asset->url, alt },
+  "mainImage": coalesce(
+    ${POST_EN}mainImage{ asset, hotspot, crop },
+    mainImage{ asset, hotspot, crop }
+  ),
   readingTime,
   "createdAt": coalesce(createdAt, _createdAt),
   "tags": tags[]->{ "slug": slug.current, title }
@@ -44,31 +64,6 @@ export const TESTIMONIAL_CARD = /* groq */ `{
 export const ALTERNATES = /* groq */ `"alternates": *[_type == "translation.metadata" && references(^._id)][0].translations[]{
   "lang": value->language,
   "slug": value->slug.current
-}`;
-
-// Resolves hasPage from EN canonical so locales inherit EN's value.
-export const HAS_PAGE_FILTER = /* groq */ `coalesce(
-  *[_type == "translation.metadata" && schemaTypes[0] == "datingApp" && references(^._id)][0]
-    .translations[language == "en"][0].value->hasPage,
-  hasPage
-) != false`;
-
-// Post visibility resolved from the EN canonical, so locales inherit EN's `hidden`
-// (single source of truth — hide a post once on EN and every locale follows).
-// Drop into any post filter; refers to the resolved post via ^._id.
-export const POST_VISIBLE = /* groq */ `coalesce(
-  *[_type == "translation.metadata" && schemaTypes[0] == "post" && references(^._id)][0]
-    .translations[language == "en"][0].value->hidden,
-  hidden
-) != true`;
-
-// Label per-locale (EN fallback); apps list always from EN home so curation propagates.
-export const COMPATIBILITY = /* groq */ `"compatibility": {
-  "label": coalesce(compatibility.label, *[_id == "home"][0].compatibility.label),
-  "apps": *[_id == "home"][0].compatibility.apps[]->{
-    _id, name,
-    "logoUrl": logo.asset->url
-  }
 }`;
 
 // Inner FAQ item projection — question + rich-text answer with link annotations.

@@ -17,21 +17,18 @@ const { categories, apps, totalTools, lang = DEFAULT_LOCALE } = Astro.props;
 ---
 
 <div
-  class="flex gap-x-6 overflow-x-auto scrollbar-none md:mx-0 md:flex-col md:gap-y-3 md:overflow-clip *:flex *:shrink-0 *:items-baseline *:gap-3"
+  class="flex gap-x-6 overflow-x-auto scrollbar-none *:flex *:shrink-0 *:items-baseline *:gap-3 md:mx-svw md:flex-col md:gap-y-3 md:overflow-clip 2xl:mx-auto"
 >
   {
     apps.length > 0 && (
       <nav aria-label={t(lang, "tools.byApp")}>
-        <Eyebrow noMargin class="shrink-0">
-          {t(lang, "tools.byApp")}
-        </Eyebrow>
+        <Eyebrow class="shrink-0">{t(lang, "tools.byApp")}</Eyebrow>
         <ul class="flex flex-nowrap gap-2 md:flex-wrap">
           {apps.map((app) => (
             <li>
               <Pill
                 href={`#app-${app.slug}`}
                 label={app.name}
-                dot={app.brandColor}
                 count={app.toolCount}
               />
             </li>
@@ -44,9 +41,7 @@ const { categories, apps, totalTools, lang = DEFAULT_LOCALE } = Astro.props;
   {
     categories.length > 0 && (
       <nav aria-label={t(lang, "tools.byFunction")} class="md:-order-1">
-        <Eyebrow noMargin class="shrink-0">
-          {t(lang, "tools.byFunction")}
-        </Eyebrow>
+        <Eyebrow class="shrink-0">{t(lang, "tools.byFunction")}</Eyebrow>
         <ul class="flex flex-nowrap gap-2">
           <li>
             <Pill

@@ -15,6 +15,7 @@ export const howToUse = defineType({
   fields: [
     defineField({
       name: "title",
+      title: "Title *",
       type: "string",
       group: "content",
       validation: (r) => r.required(),

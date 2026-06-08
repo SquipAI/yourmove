@@ -1,20 +1,20 @@
 ---
 import Base from "@layouts/Base.astro";
 import SchemaOrg from "@components/seo/SchemaOrg.astro";
-import PageHeading from "@components/shared/PageHeading.astro";
-import SectionHeading from "@components/shared/SectionHeading.astro";
-import CompatibilityRow from "@components/shared/CompatibilityRow.astro";
+import HomeHero from "@components/home/HomeHero.astro";
+import ToolsShowcaseSection from "@components/home/ToolsShowcaseSection.astro";
 import FaqSection from "@components/shared/FaqSection.astro";
+import ListingSection from "@components/shared/ListingSection.astro";
 import TestimonialsSection from "@components/testimonials/TestimonialsSection.astro";
-import ToolList from "@components/tools/ui/ToolList.astro";
 import FeaturedSection from "@components/blog/ui/FeaturedSection.astro";
-import SeeAllLink from "@components/blog/ui/SeeAllLink.astro";
 import {
   getHome,
   getSiteStats,
   getAllTestimonials,
-  getFeaturedTools,
   getFeaturedPosts,
+  getCompatibilityApps,
+  getPress,
+  getToolCount,
   BLOG_FEATURED_COUNT,
 } from "@lib/queries";
 import { homeSchema } from "@lib/schema";
@@ -27,29 +27,40 @@ export function getStaticPaths() {
 }
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
-const [home, siteStats, allTestimonials, featuredTools, featuredPosts] =
-  await Promise.all([
-    getHome(lang),
-    getSiteStats(),
-    getAllTestimonials(lang),
-    getFeaturedTools(lang),
-    getFeaturedPosts(BLOG_FEATURED_COUNT, lang),
-  ]);
-const eyebrow =
-  siteStats?.userCount && siteStats?.userRating
-    ? home.statsEyebrow
-        .replace("{count}", siteStats.userCount)
-        .replace("{rating}", siteStats.userRating)
-    : null;
+const [
+  home,
+  siteStats,
+  allTestimonials,
+  toolCount,
+  featuredPosts,
+  compatibilityApps,
+  press,
+] = await Promise.all([
+  getHome(lang),
+  getSiteStats(),
+  getAllTestimonials(lang),
+  getToolCount(lang),
+  getFeaturedPosts(BLOG_FEATURED_COUNT, lang),
+  getCompatibilityApps(),
+  getPress(lang),
+]);
+const pressLogos = press.filter((p) => !p.hidden);
+const pressQuotes = press.filter((p) => p.quote);
+const eyebrow = home.statsEyebrow
+  .replace("{count}", siteStats.userCount)
+  .replace("{rating}", siteStats.userRating);
 const lp = localePathFor(lang);
 const pageUrl = String(Astro.url);
+const ogImage = ogImageHref(Astro.url.origin, lang, "home");
 const schema = homeSchema(
   allTestimonials,
+  pressQuotes,
   home.faq.items,
   pageUrl,
   lang,
   home.metaTitle,
   home.metaDescription,
+  ogImage,
 );
 ---
 
@@ -57,74 +68,57 @@ const schema = homeSchema(
   title={home.metaTitle}
   description={home.metaDescription}
   {lang}
-  ogImage={ogImageHref(Astro.url.origin, lang, "home")}
+  ogImage={ogImage}
 >
   <SchemaOrg slot="head" {schema} />
 
-  <section class="section">
-    <PageHeading
-      title={home.title}
-      subtitle={home.description}
-      {eyebrow}
-      size="big"
-    />
+  <HomeHero
+    title={home.title}
+    subtitle={home.description}
+    {eyebrow}
+    cta={home.cta}
+    chatCards={home.chatCards}
+    appStoreUrl={home.appStoreUrl}
+    playStoreUrl={home.playStoreUrl}
+    compatibilityApps={compatibilityApps}
+    press={pressLogos}
+    {lang}
+  />
 
-    <CompatibilityRow
-      apps={home.compatibility.apps}
-      label={home.compatibility.label}
-      class="mt-section-sm"
-    />
-  </section>
+  <ToolsShowcaseSection
+    tools={home.tools}
+    {toolCount}
+    {lang}
+    class="bg-subtle-lighter"
+  />
 
-  <section class="section bg-subtle-lighter">
-    <div class="grid md:grid-cols-[1fr_auto] md:items-baseline mb-section-xs">
-      <SectionHeading
-        title={home.tools.heading}
-        eyebrow={home.tools.eyebrow}
-        subtitle={home.tools.subtitle}
-      />
-      <SeeAllLink
-        href={lp("tools")}
-        {lang}
-        class="md:col-start-2 md:row-start-1 md:justify-self-end"
-      />
-    </div>
-    <ToolList tools={featuredTools} {lang} level={3} />
-  </section>
-
-  <section class="section">
-    <TestimonialsSection
-      testimonials={home.reviews.items}
-      heading={home.reviews.heading}
-      eyebrow={home.reviews.eyebrow}
-      subtitle={home.reviews.subtitle}
-      {lang}
-    />
-  </section>
+  <TestimonialsSection
+    testimonials={home.reviews.items}
+    heading={home.reviews.heading}
+    eyebrow={home.reviews.eyebrow}
+    subtitle={home.reviews.subtitle}
+    {pressQuotes}
+    {lang}
+  />
 
   {
     featuredPosts.length > 0 && (
-      <section class="section">
-        <div class="grid md:grid-cols-[1fr_auto] md:items-baseline mb-section-xs">
-          <SectionHeading title={home.blogHeading} />
-          <SeeAllLink
-            href={lp("blog")}
-            {lang}
-            class="md:col-start-2 md:row-start-1 md:justify-self-end"
-          />
-        </div>
+      <ListingSection
+        title={home.blogHeading}
+        seeAllHref={lp("blog")}
+        {lang}
+      >
         <FeaturedSection posts={featuredPosts} {lang} />
-      </section>
+      </ListingSection>
     )
   }
 
-  <section class="section">
-    <FaqSection
-      items={home.faq.items}
-      heading={home.faq.heading}
-      eyebrow={home.faq.eyebrow}
-      subtitle={home.faq.subtitle}
-      {lang}
-    />
-  </section>
+  <FaqSection
+    items={home.faq.items}
+    heading={home.faq.heading}
+    eyebrow={home.faq.eyebrow}
+    subtitle={home.faq.subtitle}
+    align="center"
+    {lang}
+  />
 </Base>

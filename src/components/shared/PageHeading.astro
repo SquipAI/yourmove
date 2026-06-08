@@ -1,24 +1,34 @@
 ---
 import { parseAccent } from "@lib/parseAccent";
+import Breadcrumbs, {
+  type BreadcrumbItem,
+} from "@components/shared/Breadcrumbs.astro";
 import Eyebrow from "@components/shared/Eyebrow.astro";
 
 interface Props {
   title: string;
   eyebrow?: string | null;
+  /** Visual variant for the eyebrow. `pill` = rounded tinted background. */
+  eyebrowVariant?: "default" | "pill";
+  /** Breadcrumbs rendered above the heading. */
+  breadcrumbs?: BreadcrumbItem[];
   subtitle?: string | null;
   level?: 1 | 2;
   size?: "default" | "big";
-  subtitleSize?: "default" | "sm";
+  /** Center the eyebrow/title/subtitle horizontally. */
+  centered?: boolean;
   class?: string;
 }
 
 const {
   title,
   eyebrow,
+  eyebrowVariant = "default",
+  breadcrumbs,
   subtitle,
   level = 1,
   size = "default",
-  subtitleSize = "default",
+  centered = false,
   class: cls,
 } = Astro.props;
 
@@ -26,28 +36,30 @@ const Tag = `h${level}` as "h1" | "h2";
 const isBig = size === "big";
 const titleParts = parseAccent(title);
 const subtitleParts = parseAccent(subtitle);
-const subtitleClass =
-  subtitleSize === "sm"
-    ? "text-subtitle-sm"
-    : isBig
-      ? "text-subtitle"
-      : "text-xl";
 const hasExtras = !!eyebrow || !!subtitle;
 ---
 
+{breadcrumbs && breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} />}
+
 {
   hasExtras ? (
-    <hgroup class:list={["not-last:mb-section-xs *:max-w-150", cls]}>
-      {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+    <hgroup
+      class:list={[
+        "flex flex-col not-last:mb-section-xs *:max-w-180 lg:not-last:mb-svw",
+        centered && "items-center text-center",
+        cls,
+      ]}
+    >
+      {eyebrow && <Eyebrow variant={eyebrowVariant}>{eyebrow}</Eyebrow>}
       <Tag class:list={[isBig ? "text-title-big" : "text-title"]}>
         {titleParts.map((p) =>
-          p.accent ? <span class="text-brand italic">{p.text}</span> : p.text,
+          p.accent ? <span class="accent">{p.text}</span> : p.text,
         )}
       </Tag>
       {subtitle && (
-        <p class={subtitleClass}>
+        <p class="text-subtitle">
           {subtitleParts.map((p) =>
-            p.accent ? <span class="text-brand italic">{p.text}</span> : p.text,
+            p.accent ? <span class="accent">{p.text}</span> : p.text,
           )}
         </p>
       )}
@@ -56,12 +68,13 @@ const hasExtras = !!eyebrow || !!subtitle;
     <Tag
       class:list={[
         isBig ? "text-title-big" : "text-title",
-        "mb-section-xs",
+        "mb-section-xs max-w-180 lg:mb-svw",
+        centered && "mx-auto text-center",
         cls,
       ]}
     >
       {titleParts.map((p) =>
-        p.accent ? <span class="text-brand italic">{p.text}</span> : p.text,
+        p.accent ? <span class="accent">{p.text}</span> : p.text,
       )}
     </Tag>
   )

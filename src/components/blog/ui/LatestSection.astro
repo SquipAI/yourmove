@@ -12,9 +12,7 @@ interface Props {
 const { posts, lang = DEFAULT_LOCALE } = Astro.props;
 ---
 
-<ul
-  class="grid grid-cols-1 gap-6 max-md:mb-9 sm:grid-cols-2 md:col-span-2 md:row-start-2 lg:grid-cols-4"
->
+<ul class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
   {
     posts.map((post) => (
       <li>

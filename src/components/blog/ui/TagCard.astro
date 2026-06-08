@@ -18,7 +18,7 @@ const href = getRelativeLocaleUrl(lang, `blog/topics/${tag.slug}`);
 const countLabel = `${tag.postCount} ${t(lang, tag.postCount === 1 ? "blog.article" : "blog.articles")}`;
 ---
 
-<li class="card group p-svw justify-between gap-3 md:p-6">
+<li class="card card-body justify-between">
   <CardHeading title={tag.title} description={tag.description} {href} {level} />
   <Eyebrow>{countLabel}</Eyebrow>
 </li>

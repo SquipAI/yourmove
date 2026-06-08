@@ -1,51 +1,121 @@
 ---
-import TestimonialCard from "@components/testimonials/ui/TestimonialCard.astro";
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+import { getSiteStats, getAllTestimonials } from "@lib/queries";
 import type { Testimonial } from "@lib/types";
+import TestimonialCard from "@components/testimonials/ui/TestimonialCard.astro";
 
 interface Props {
   testimonials: Testimonial[];
   /**
-   * snap   — horizontal scroll-snap on mobile, column-count on desktop (used on
-   *          home + tool sections).
-   * column — vertical single column on mobile, column-count on desktop (used on
-   *          /reviews page).
+   * snap   — horizontal scroll-snap on mobile, column-count on desktop. Default.
+   *          Renders a trailing "see all" CTA card.
+   * column — vertical single column on mobile, column-count on desktop. Used on
+   *          /reviews where the see-all CTA is meaningless.
    */
-  variant: "snap" | "column";
+  variant?: "snap" | "column";
   level?: 2 | 3;
+  lang?: Locale;
+  /** Render the `interstitial` slot after this many testimonials, breaking
+   *  across all CSS columns on desktop. 1-based. */
+  interstitialAt?: number;
   class?: string;
 }
 
-const { testimonials, variant, level, class: cls } = Astro.props;
+const {
+  testimonials,
+  variant = "snap",
+  level,
+  lang = DEFAULT_LOCALE,
+  interstitialAt,
+  class: cls,
+} = Astro.props;
+
+const hasInterstitial =
+  Astro.slots.has("interstitial") &&
+  typeof interstitialAt === "number" &&
+  interstitialAt > 0 &&
+  interstitialAt < testimonials.length;
+
+const ulClass =
+  variant === "snap"
+    ? "flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-svw px-svw pb-2 -mx-svw scrollbar-none md:mx-0 md:px-0 md:block md:overflow-visible md:columns-2 md:gap-6 lg:columns-3 [&>li]:md:mb-6"
+    : "flex flex-col gap-4 md:block md:columns-2 md:gap-6 lg:columns-3 [&>li]:md:mb-6";
+
+const liClass =
+  variant === "snap"
+    ? "w-5/6 shrink-0 snap-start sm:w-2/3 md:w-auto md:break-inside-avoid"
+    : "md:break-inside-avoid";
+
+// Build "see all" CTA data only for the snap variant (the /reviews page itself
+// uses the column variant — a CTA to /reviews from /reviews makes no sense).
+const showSeeAll = variant === "snap";
+const [siteStats, allTestimonials] = showSeeAll
+  ? await Promise.all([getSiteStats(), getAllTestimonials(lang)])
+  : [null, []];
+
+const avatars = allTestimonials
+  .map((t) => t.avatar?.url)
+  .filter((u): u is string => !!u)
+  .slice(0, 6);
+
+const stars = Math.round(Number(siteStats?.userRating));
+const seeAllHref = getRelativeLocaleUrl(lang, "reviews");
+const seeAllLabel = t(lang, "reviews.readTheirReviews");
+const seeAllHeading = t(lang, "reviews.joinDaters").replace(
+  "{count}",
+  siteStats?.userCount ?? "",
+);
 ---
 
-{
-  variant === "snap" ? (
-    <ul
-      class:list={[
-        "flex snap-x snap-mandatory gap-4 overflow-x-auto px-svw pb-2 -mx-svw",
-        "md:mx-0 md:px-0 md:block md:overflow-visible md:columns-2 md:gap-6 lg:columns-3 [&>li]:md:mb-6",
-        cls,
-      ]}
-    >
-      {testimonials.map((t) => (
-        <li class="w-[85%] shrink-0 snap-start md:w-auto md:break-inside-avoid">
+<ul class:list={[ulClass, cls]}>
+  {
+    testimonials.map((t, i) => (
+      <>
+        <li class={liClass}>
           <TestimonialCard testimonial={t} level={level} />
         </li>
-      ))}
-    </ul>
-  ) : (
-    <ul
-      class:list={[
-        "flex flex-col gap-4",
-        "md:block md:columns-2 md:gap-6 lg:columns-3 [&>li]:md:mb-6",
-        cls,
-      ]}
-    >
-      {testimonials.map((t) => (
-        <li class="md:break-inside-avoid">
-          <TestimonialCard testimonial={t} level={level} />
-        </li>
-      ))}
-    </ul>
-  )
-}
+        {hasInterstitial && i === interstitialAt! - 1 && (
+          <li class="md:[column-span:all] md:mb-6">
+            <slot name="interstitial" />
+          </li>
+        )}
+      </>
+    ))
+  }
+  {
+    showSeeAll && (
+      <li class:list={[liClass, "card card-body"]}>
+        <div class="flex -space-x-2">
+          {avatars.map((url) => (
+            <img
+              src={url}
+              alt=""
+              loading="lazy"
+              class="size-8 rounded-full object-cover ring-2 ring-white"
+            />
+          ))}
+        </div>
+
+        <div
+          class="text-amber-500 text-xl leading-none tracking-widest"
+          aria-label={`${stars} out of 5 stars`}
+        >
+          {"★".repeat(stars)}
+        </div>
+
+        <p class="text-title-xxs text-balance leading-tight mb-2">
+          {seeAllHeading}
+        </p>
+
+        <a
+          href={seeAllHref}
+          class="card-link text-brand mt-auto w-fit font-medium underline underline-offset-4 hover:no-underline"
+        >
+          {seeAllLabel} →
+        </a>
+      </li>
+    )
+  }
+</ul>

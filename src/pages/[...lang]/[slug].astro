@@ -1,15 +1,10 @@
 ---
 import Base from "@layouts/Base.astro";
 
-import CtaSection from "@components/shared/CtaSection.astro";
-import FaqSection from "@components/shared/FaqSection.astro";
-import PageHeading from "@components/shared/PageHeading.astro";
-import ToolEmbed from "@components/tools/ToolEmbed.astro";
-import FeaturesSection from "@components/tools/FeaturesSection.astro";
-import HowItWorksSection from "@components/tools/HowItWorksSection.astro";
-import ToolListSection from "@components/tools/ToolListSection.astro";
 import SchemaOrg from "@components/seo/SchemaOrg.astro";
-import TestimonialsSection from "@components/testimonials/TestimonialsSection.astro";
+import BaseTemplate from "@components/tools/templates/BaseTemplate.astro";
+import BaseExtendedTemplate from "@components/tools/templates/BaseExtendedTemplate.astro";
+import PhotoEnhancerTemplate from "@components/tools/templates/PhotoEnhancerTemplate.astro";
 
 import {
   getToolPage,
@@ -22,9 +17,6 @@ import { ogImageHref } from "@lib/og/route";
 
 import { buildAlternateUrls } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
-import { t } from "@i18n/ui";
-
-
 
 export async function getStaticPaths() {
   const paths = await getAllToolPaths();
@@ -38,6 +30,7 @@ const { slug } = Astro.params;
 const tool = await getToolPage(slug!, lang);
 if (!tool) throw new Error(`Tool not found: ${slug} (${lang})`);
 const pageUrl = String(Astro.url);
+const ogImage = ogImageHref(Astro.url.origin, lang, slug!);
 const { display: testimonials, specific } = await getTestimonialsForTool(
   tool._id,
   lang,
@@ -54,8 +47,7 @@ const alternateUrls = buildAlternateUrls(
 // the same set would repeat across tools).
 const TESTIMONIALS_MIN = 3;
 const showTestimonials = testimonials.length >= TESTIMONIALS_MIN;
-const schemaTestimonials =
-  specific.length >= TESTIMONIALS_MIN ? specific : [];
+const schemaTestimonials = specific.length >= TESTIMONIALS_MIN ? specific : [];
 
 const ctaHref = tool.cta
   ? resolveNavHref(
@@ -65,6 +57,15 @@ const ctaHref = tool.cta
       lang,
     )!
   : null;
+
+const TEMPLATES = {
+  base: BaseTemplate,
+  baseExtended: BaseExtendedTemplate,
+  photoEnhancer: PhotoEnhancerTemplate,
+  profileWriter: BaseTemplate,
+  profileReviewer: BaseTemplate,
+} as const;
+const Template = TEMPLATES[tool.kind] ?? BaseTemplate;
 ---
 
 <Base
@@ -72,100 +73,14 @@ const ctaHref = tool.cta
   description={tool.metaDescription}
   {lang}
   {alternateUrls}
-  ogImage={ogImageHref(Astro.url.origin, lang, slug!)}
+  {ogImage}
+  mainClass="main-split"
 >
   <SchemaOrg
     slot="head"
-    schema={toolSchema(tool, schemaTestimonials, pageUrl, lang)}
+    schema={toolSchema(tool, schemaTestimonials, pageUrl, lang, ogImage)}
   />
+  <Template {tool} {lang} {ctaHref} {testimonials} {showTestimonials} />
 
-  <section class="section">
-    <PageHeading title={tool.title} subtitle={tool.description} size="big" />
-  </section>
-
-  {
-    tool.embed?.path && (
-      <section class="section">
-        <ToolEmbed
-          path={tool.embed.path}
-          initialHeight={tool.embed.initialHeight ?? undefined}
-          geolocation={tool.embed.geolocation ?? false}
-          title={tool.title}
-        />
-      </section>
-    )
-  }
-
-  {
-    tool.howItWorks && tool.howItWorks.length > 0 && tool.howItWorksHeading && (
-      <section class="section">
-        <HowItWorksSection
-          steps={tool.howItWorks}
-          heading={tool.howItWorksHeading}
-          ctaText={tool.cta?.buttonText ?? t(lang, "howItWorks.cta")}
-          ctaHref={ctaHref ?? "#"}
-          ctaSubtext={tool.howItWorksCtaSubtext}
-          {lang}
-        />
-      </section>
-    )
-  }
-
-  {
-    tool.features && tool.features.length > 0 && tool.featuresHeading && (
-      <section class="section">
-        <FeaturesSection
-          items={tool.features}
-          heading={tool.featuresHeading}
-          eyebrow={tool.featuresEyebrow}
-          {lang}
-        />
-      </section>
-    )
-  }
-
-  {
-    showTestimonials && (
-      <section class="section">
-        <TestimonialsSection
-          {testimonials}
-          heading={t(lang, "reviews.heading")}
-          {lang}
-        />
-      </section>
-    )
-  }
-
-  {
-    tool.cta && (
-      <section class="section">
-        <CtaSection
-          title={tool.cta.title}
-          subtitle={tool.cta.subtitle}
-          buttonText={tool.cta.buttonText}
-          href={ctaHref!}
-        />
-      </section>
-    )
-  }
-
-  {
-    tool.faq && tool.faq.length > 0 && (
-      <section class="section">
-        <FaqSection
-          items={tool.faq}
-          heading={tool.faqHeading ?? `${tool.title} FAQ`}
-          {lang}
-        />
-      </section>
-    )
-  }
-
-  {
-    tool.toolList && tool.toolList.groups.length > 0 && (
-      <section class="section">
-        <ToolListSection data={tool.toolList} {lang} />
-      </section>
-    )
-  }
+  <!-- <div class="lg:grid lg:grid-cols-3"></div> -->
 </Base>

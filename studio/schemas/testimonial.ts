@@ -22,6 +22,7 @@ export const testimonial = defineType({
   fields: [
     defineField({
       name: "authorName",
+      title: "Author Name *",
       type: "string",
       group: "content",
       description: "For Reddit reviews include the `u/` prefix.",
@@ -38,6 +39,7 @@ export const testimonial = defineType({
     }),
     defineField({
       name: "source",
+      title: "Source *",
       type: "string",
       group: "content",
       options: { list: SOURCE_OPTIONS, layout: "radio", direction: "horizontal" },
@@ -54,6 +56,7 @@ export const testimonial = defineType({
     }),
     defineField({
       name: "body",
+      title: "Body *",
       type: "text",
       rows: 5,
       group: "content",

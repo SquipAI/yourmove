@@ -1,0 +1,38 @@
+---
+import PressQuoteCard from "@components/shared/PressQuoteCard.astro";
+import { t } from "@i18n/ui";
+import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import type { Press } from "@lib/types";
+
+interface Props {
+  pressQuotes: Press[];
+  lang?: Locale;
+  /** Heading level. Default 3 (sub-heading inside a section). */
+  level?: 2 | 3;
+  class?: string;
+}
+
+const {
+  pressQuotes,
+  lang = DEFAULT_LOCALE,
+  level = 3,
+  class: cls,
+} = Astro.props;
+if (pressQuotes.length === 0) return;
+const HeadingTag = `h${level}` as "h2" | "h3";
+---
+
+<div class:list={["flex flex-col gap-6", cls]}>
+  <HeadingTag class="text-subtitle lowercase text-center">
+    {t(lang, "home.asSeenOn")}
+  </HeadingTag>
+  <ul class="grid gap-4 md:grid-cols-3 md:gap-6">
+    {
+      pressQuotes.map((p) => (
+        <li>
+          <PressQuoteCard press={p} {lang} />
+        </li>
+      ))
+    }
+  </ul>
+</div>

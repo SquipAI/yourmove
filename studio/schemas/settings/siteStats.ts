@@ -1,5 +1,5 @@
 import { defineField, defineType } from "sanity";
-import { TrendUpwardIcon, EditIcon } from "@sanity/icons";
+import { TrendUpwardIcon } from "@sanity/icons";
 
 // Singleton — fixed `_id: "site-stats"`. Global social-proof numbers
 // (user count, rating). Used on /tools, future CTAs, footer, etc.
@@ -9,9 +9,6 @@ export const siteStats = defineType({
   type: "document",
   icon: TrendUpwardIcon,
   __experimental_omnisearch_visibility: false,
-  groups: [
-    { name: "content", title: "Content", default: true, icon: EditIcon },
-  ],
   fields: [
     defineField({
       name: "title",
@@ -22,15 +19,17 @@ export const siteStats = defineType({
     }),
     defineField({
       name: "userCount",
+      title: "User Count *",
       type: "string",
-      group: "content",
       description: 'Formatted total user count, e.g. "300K+"',
+      validation: (r) => r.required(),
     }),
     defineField({
       name: "userRating",
+      title: "User Rating *",
       type: "string",
-      group: "content",
       description: 'Average rating, e.g. "4.8"',
+      validation: (r) => r.required(),
     }),
   ],
   preview: {

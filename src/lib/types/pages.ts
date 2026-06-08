@@ -1,12 +1,25 @@
 export type CompatibilityApp = {
   _id: string;
   name: string;
-  logoUrl: string | null;
+  logoUrl: string;
 };
 
-export type Compatibility = {
-  label: string;
-  apps: CompatibilityApp[];
+export type Press = {
+  _id: string;
+  name: string;
+  logoUrl: string;
+  quote: string | null;
+  citationUrl: string | null;
+  /** Hidden from the logo strip. Quote cards still show if `quote` is set. */
+  hidden: boolean;
+};
+
+export type HeroChatCard = {
+  name: string;
+  avatarUrl: string;
+  app: string;
+  theirMessage: string;
+  ourReply: string;
 };
 
 type Section<Item> = {
@@ -16,10 +29,41 @@ type Section<Item> = {
   items: Item[];
 };
 
+type DemoImage = { url: string };
+type TaggedItem = { tag: string; text: string };
+
+export type ShowcaseDemo =
+  | { _type: "chatDemo"; theirMessage: string; ourReply: string }
+  | { _type: "openersDemo"; items: TaggedItem[] }
+  | {
+      _type: "reviewDemo";
+      scoreFrom: number;
+      scoreTo: number;
+      items: TaggedItem[];
+    }
+  | { _type: "bioDemo"; text: string }
+  | {
+      _type: "beforeAfterDemo";
+      example: { before: DemoImage; after: DemoImage } | null;
+    };
+
+export type ShowcaseCard = {
+  _key: string;
+  _type: "toolCard" | "customCard";
+  title: string;
+  href: string;
+  external: boolean;
+  description: string | null;
+  buttonText: string;
+  demo: ShowcaseDemo | null;
+};
+
 export type HomeTools = {
   eyebrow: string | null;
   heading: string;
   subtitle: string | null;
+  ctaLabel: string;
+  showcaseCards: ShowcaseCard[] | null;
 };
 export type HomeReviews = Section<import("./testimonial").Testimonial>;
 export type HomeFaq = Section<import("./faq").FaqItem>;
@@ -32,10 +76,13 @@ export type HomeData = {
   metaDescription: string;
   statsEyebrow: string;
   blogHeading: string;
-  compatibility: Compatibility;
   tools: HomeTools;
   reviews: HomeReviews;
   faq: HomeFaq;
+  cta: { label: string; url: string };
+  chatCards: HeroChatCard[];
+  appStoreUrl: string | null;
+  playStoreUrl: string | null;
 };
 
 export type LegalPageData = {
@@ -60,8 +107,8 @@ export type BlogSubPageData = {
 };
 
 export type SiteStats = {
-  userCount: string | null;
-  userRating: string | null;
+  userCount: string;
+  userRating: string;
 };
 
 // Tools dropdown/column data — used by both the header dropdown and the
@@ -71,9 +118,10 @@ export type NavTools = {
   items: { _id: string; title: string; slug: string }[];
 };
 
-// Header-only flat links: blog, reviews, affiliate.
+// Header-only flat links: blog, reviews, affiliate, brand CTA url.
 export type HeaderLinks = {
   blogLabel: string;
   reviewsLabel: string;
   affiliate: { label: string; url: string } | null;
+  ctaUrl: string;
 };

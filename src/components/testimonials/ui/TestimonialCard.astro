@@ -25,17 +25,10 @@ const sourceLabel: Record<TestimonialSource, string> = {
   productHunt: "Product Hunt",
 };
 
-const hasSourceLink =
-  testimonial.source !== "web" && !!testimonial.sourceUrl;
+const hasSourceLink = testimonial.source !== "web" && !!testimonial.sourceUrl;
 ---
 
-<article
-  class:list={[
-    "card break-inside-avoid p-5 md:p-6",
-    "flex flex-col gap-4",
-    cls,
-  ]}
->
+<article class:list={["card card-body break-inside-avoid", cls]}>
   <header class="flex items-start gap-3">
     {
       testimonial.avatar?.url ? (
@@ -45,7 +38,6 @@ const hasSourceLink =
           width={48}
           height={48}
           loading="lazy"
-          aria-hidden="true"
           class="size-12 shrink-0 rounded-full object-cover"
         />
       ) : (
@@ -110,11 +102,7 @@ const hasSourceLink =
   <p class="text-base whitespace-pre-line">
     {
       bodyParts.map((p) =>
-        p.accent ? (
-          <span class="bg-brand/15 px-0.5 italic">{p.text}</span>
-        ) : (
-          p.text
-        ),
+        p.accent ? <span class="accent">{p.text}</span> : p.text,
       )
     }
   </p>

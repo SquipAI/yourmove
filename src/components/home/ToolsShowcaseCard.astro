@@ -1,0 +1,97 @@
+---
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+import type { ShowcaseCard } from "@lib/types";
+import BeforeAfterGrid from "@components/shared/BeforeAfterGrid.astro";
+import ChatDemo from "./showcase/ChatDemo.astro";
+import OpenersDemo from "./showcase/OpenersDemo.astro";
+import ReviewDemo from "./showcase/ReviewDemo.astro";
+import BioDemo from "./showcase/BioDemo.astro";
+
+interface Props {
+  card: ShowcaseCard;
+  lang?: Locale;
+}
+const { card, lang = DEFAULT_LOCALE } = Astro.props;
+
+// Demo `_type` → { component, card palette, button palette }. Single source of
+// truth for rendering and styling. `beforeAfterDemo` reuses the shared
+// BeforeAfterGrid directly — its prop shape differs, handled inline below.
+const REGISTRY = {
+  chatDemo: {
+    Component: ChatDemo,
+    card: "bg-brand text-white",
+    button: "bg-white text-mist-900 hover:bg-mist-100",
+  },
+  openersDemo: {
+    Component: OpenersDemo,
+    card: "bg-[oklch(0.86_0.1_115)] text-mist-900",
+    button: "bg-mist-900 text-white hover:bg-mist-800",
+  },
+  reviewDemo: {
+    Component: ReviewDemo,
+    card: "bg-[oklch(0.82_0.04_75)] text-mist-900",
+    button: "bg-mist-900 text-white hover:bg-mist-800",
+  },
+  bioDemo: {
+    Component: BioDemo,
+    card: "bg-mist-900 text-white",
+    button: "bg-white text-mist-900 hover:bg-mist-100",
+  },
+  beforeAfterDemo: {
+    Component: null,
+    card: "bg-subtle-lighter text-mist-900",
+    button: "bg-mist-900 text-white hover:bg-mist-800",
+  },
+} as const;
+
+const FALLBACK = {
+  Component: null,
+  card: "bg-white text-mist-900 ring-1 ring-black/5",
+  button: "bg-mist-900 text-white hover:bg-mist-800",
+};
+
+const variant = card.demo ? REGISTRY[card.demo._type] : FALLBACK;
+// `as any`: TS can't link `_type` to matching Component props through the registry.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const Demo = variant.Component as any;
+
+const href = card.external ? card.href : getRelativeLocaleUrl(lang, card.href);
+const linkAttrs = card.external
+  ? { target: "_blank", rel: "noopener noreferrer" }
+  : {};
+---
+
+<article
+  class:list={["p-svw flex flex-col gap-4 rounded-xl md:p-6", variant.card]}
+>
+  <h3 class="text-title-sm">{card.title}</h3>
+  {
+    card.demo &&
+      (card.demo._type === "beforeAfterDemo"
+        ? card.demo.example && (
+            <BeforeAfterGrid
+              before={card.demo.example.before.url}
+              after={card.demo.example.after.url}
+              beforeAlt={t(lang, "beforeAfter.altBefore")}
+              afterAlt={t(lang, "beforeAfter.altAfter")}
+              {lang}
+              class="rounded-md overflow-clip"
+            />
+          )
+        : Demo && <Demo demo={card.demo} />)
+  }
+  {card.description && <p class="text-base">{card.description}</p>}
+  <a
+    {href}
+    class:list={[
+      "mt-auto inline-flex w-fit items-center gap-2 rounded-md px-4 py-2 font-medium transition-colors",
+      variant.button,
+    ]}
+    {...linkAttrs}
+  >
+    {card.buttonText}
+    <span aria-hidden="true">→</span>
+  </a>
+</article>

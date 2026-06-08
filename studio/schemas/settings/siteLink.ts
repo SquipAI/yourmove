@@ -14,6 +14,7 @@ export const siteLink = defineType({
     translatedField("title", "Title", { required: "default" }),
     defineField({
       name: "url",
+      title: "URL *",
       type: "url",
       validation: (r) =>
         r.required().uri({ scheme: ["http", "https", "mailto", "tel"] }),

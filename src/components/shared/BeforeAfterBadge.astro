@@ -1,0 +1,23 @@
+---
+import { t } from "@i18n/ui";
+import type { Locale } from "@i18n/config";
+
+interface Props {
+  variant: "before" | "after";
+  lang: Locale;
+}
+
+const { variant, lang } = Astro.props;
+const isBefore = variant === "before";
+const label = t(lang, isBefore ? "beforeAfter.before" : "beforeAfter.after");
+---
+
+<span
+  aria-hidden="true"
+  class:list={[
+    "absolute top-3 rounded-full px-2 py-1 text-xs text-white uppercase",
+    isBefore ? "left-3 bg-black/60" : "right-3 bg-brand",
+  ]}
+>
+  {label}
+</span>

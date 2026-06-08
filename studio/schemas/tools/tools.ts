@@ -8,7 +8,7 @@ import {
   pageDescriptionField,
   navLabelField,
   singletonPagePreview,
-} from "./shared";
+} from "../shared";
 
 // Singleton — fixed `_id: "tools"`, exactly one document per language.
 // Backs the `/tools` index route.

@@ -1,0 +1,39 @@
+---
+import SectionHeading from "@components/shared/SectionHeading.astro";
+import SeeAllLink from "@components/blog/ui/SeeAllLink.astro";
+import type { Locale } from "@i18n/config";
+
+interface Props {
+  title: string;
+  eyebrow?: string | null;
+  subtitle?: string | null;
+  seeAllHref: string;
+  seeAllCount?: number | null;
+  lang: Locale;
+  class?: string;
+}
+
+const {
+  title,
+  eyebrow,
+  subtitle,
+  seeAllHref,
+  seeAllCount,
+  lang,
+  class: cls,
+} = Astro.props;
+---
+
+<section class:list={["section", cls]}>
+  <div class="listing-grid">
+    <SectionHeading {title} {eyebrow} {subtitle} />
+    <slot />
+    <SeeAllLink
+      href={seeAllHref}
+      count={seeAllCount}
+      {lang}
+      size="sm"
+      class="md:col-start-2 md:row-start-1 md:justify-self-end"
+    />
+  </div>
+</section>

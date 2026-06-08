@@ -1,0 +1,35 @@
+---
+import { t } from "@i18n/ui";
+import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import type { Press } from "@lib/types";
+
+interface Props {
+  press: Press;
+  lang?: Locale;
+}
+const { press, lang = DEFAULT_LOCALE } = Astro.props;
+---
+
+<article class="card card-body break-inside-avoid">
+  <img
+    src={press.logoUrl}
+    alt={`${press.name} logo`}
+    loading="lazy"
+    class="h-9 w-auto self-start"
+  />
+  <blockquote class="text-lg">
+    &ldquo;{press.quote}&rdquo;
+  </blockquote>
+  {
+    press.citationUrl && (
+      <a
+        href={press.citationUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="card-link text-subtle hover:text-brand mt-auto w-fit text-sm underline underline-offset-4 transition-colors"
+      >
+        {t(lang, "reviews.readFullArticle")} →
+      </a>
+    )
+  }
+</article>

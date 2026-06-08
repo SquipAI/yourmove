@@ -1,0 +1,41 @@
+---
+import SectionHeading from "@components/shared/SectionHeading.astro";
+import ToolsShowcaseCard from "@components/home/ToolsShowcaseCard.astro";
+import type { Locale } from "@i18n/config";
+import { localePathFor } from "@i18n/utils";
+import type { HomeTools } from "@lib/types";
+
+interface Props {
+  tools: HomeTools;
+  toolCount: number;
+  lang: Locale;
+  class?: string;
+}
+
+const { tools, toolCount, lang, class: cls } = Astro.props;
+const lp = localePathFor(lang);
+const ctaLabel = tools.ctaLabel.replace("{count}", String(toolCount));
+const cards = tools.showcaseCards ?? [];
+---
+
+<section class:list={["section", cls]}>
+  <div class="grid gap-section-xs md:grid-cols-2 md:items-start md:gap-12">
+    <SectionHeading
+      title={tools.heading}
+      eyebrow={tools.eyebrow}
+      subtitle={tools.subtitle}
+      class="md:sticky md:top-24"
+    />
+    <div class="flex flex-col gap-6">
+      {cards.map((card) => <ToolsShowcaseCard {card} {lang} />)}
+      <a href={lp("tools")} class="card card-body card-link">
+        <span class="text-title-sm">{ctaLabel}</span>
+        <span
+          aria-hidden="true"
+          class="mt-auto self-end text-title-sm transition-transform"
+          >→</span
+        >
+      </a>
+    </div>
+  </div>
+</section>

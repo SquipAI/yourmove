@@ -1,8 +1,10 @@
 import type { Locale } from "@i18n/config";
 import { stripAccent } from "./parseAccent";
+import { urlFor } from "./sanity-image";
 import type {
   FaqItem,
   Post,
+  Press,
   ToolPageData,
   Testimonial,
   ReviewsPageData,
@@ -122,12 +124,10 @@ export function articleSchema(
     publisher: { "@id": ORG_ID },
     isPartOf: { "@id": SITE_ID },
     mainEntityOfPage: { "@id": `${url}#webpage` },
-    ...(post.metaDescription ? { description: post.metaDescription } : {}),
-    ...(post.summary ? { abstract: post.summary } : {}),
-    ...(post.mainImage?.url ? { image: post.mainImage.url } : {}),
-    ...(post.tags?.length
-      ? { keywords: post.tags.map((t) => t.title).join(", ") }
-      : {}),
+    description: post.metaDescription,
+    abstract: post.summary,
+    keywords: post.tags.map((t) => t.title).join(", "),
+    image: urlFor(post.mainImage).width(1200).height(630).fit("crop").url(),
   };
 
   const webpage = {
@@ -161,6 +161,7 @@ export function toolSchema(
   testimonials: Testimonial[],
   url: string,
   lang: Locale,
+  ogImage: string,
 ) {
   const graph: unknown[] = [orgNode(lang), WEBSITE];
 
@@ -176,6 +177,7 @@ export function toolSchema(
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",
     publisher: { "@id": ORG_ID },
+    image: ogImage,
     ...(tool.description ? { description: tool.description.replace(/\*/g, "") } : {}),
   };
   const aggregate = aggregateRatingNode(testimonials);
@@ -191,6 +193,7 @@ export function toolSchema(
     name: tool.metaTitle,
     description: tool.metaDescription,
     isPartOf: { "@id": SITE_ID },
+    image: ogImage,
   });
 
   return { "@context": "https://schema.org", "@graph": graph };
@@ -199,9 +202,11 @@ export function toolSchema(
 export function reviewsPageSchema(
   page: ReviewsPageData,
   testimonials: Testimonial[],
+  pressQuotes: Press[],
   url: string,
   lang: Locale,
   breadcrumbs: BreadcrumbItem[],
+  ogImage: string,
 ) {
   const reviews = testimonials.map(reviewNode);
   const aggregate = aggregateRatingNode(testimonials);
@@ -224,8 +229,10 @@ export function reviewsPageSchema(
       description: page.metaDescription,
       isPartOf: { "@id": SITE_ID },
       about: { "@id": ORG_ID },
+      image: ogImage,
     },
     buildBreadcrumb(breadcrumbs, `${url}#breadcrumb`),
+    ...pressQuotes.map((p) => quotationNode(p, lang)),
   ];
 
   return { "@context": "https://schema.org", "@graph": graph };
@@ -236,11 +243,13 @@ export function reviewsPageSchema(
 // FAQPage when the home doc carries FAQ items.
 export function homeSchema(
   testimonials: Testimonial[],
+  pressQuotes: Press[],
   faq: FaqItem[],
   url: string,
   lang: Locale,
   pageName: string,
   pageDescription: string,
+  ogImage: string,
 ) {
   const aggregate = aggregateRatingNode(testimonials);
 
@@ -261,12 +270,31 @@ export function homeSchema(
       description: pageDescription,
       isPartOf: { "@id": SITE_ID },
       about: { "@id": ORG_ID },
+      image: ogImage,
     },
+    ...pressQuotes.map((p) => quotationNode(p, lang)),
   ];
 
   if (faq.length) graph.push(faqPageSchema(faq, url));
 
   return { "@context": "https://schema.org", "@graph": graph };
+}
+
+function quotationNode(p: Press, lang: Locale) {
+  const node: Record<string, unknown> = {
+    "@type": "Quotation",
+    "@id": `${SITE}/#quote-${p._id}`,
+    inLanguage: lang,
+    text: p.quote,
+    creator: {
+      "@type": "Organization",
+      name: p.name,
+      ...(p.logoUrl ? { logo: p.logoUrl } : {}),
+    },
+    about: { "@id": ORG_ID },
+  };
+  if (p.citationUrl) node.citation = p.citationUrl;
+  return node;
 }
 
 function reviewNode(t: Testimonial) {

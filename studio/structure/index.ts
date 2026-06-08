@@ -165,6 +165,7 @@ export function createStructure(lang: string) {
                 S.documentTypeListItem("siteLink")
                   .title("External Links")
                   .icon(LinkIcon),
+                localizedList(S, "pressLogo", "Press", lang, CommentIcon),
               ]),
           ),
       ]);

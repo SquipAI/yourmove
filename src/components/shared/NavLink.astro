@@ -1,0 +1,19 @@
+---
+interface Props {
+  href: string;
+  active?: boolean;
+  external?: boolean;
+  class?: string;
+}
+
+const { href, active, external, class: cls } = Astro.props;
+---
+
+<a
+  {href}
+  aria-current={active ? "page" : undefined}
+  {...external ? { target: "_blank", rel: "noopener" } : {}}
+  class:list={["nav-item", cls]}
+>
+  <slot />
+</a>

@@ -66,7 +66,7 @@ export type FeatureItem = {
   } | null;
 };
 
-export type HowItWorksStep = { text: string };
+export type HowItWorksStep = { title: string; text: string };
 
 export type ToolListGroup = {
   heading: string;
@@ -79,9 +79,39 @@ export type ToolListData = {
   groups: ToolListGroup[];
 };
 
+export type ToolKind =
+  | "base"
+  | "baseExtended"
+  | "photoEnhancer"
+  | "profileWriter"
+  | "profileReviewer";
+
+export type BaseExtendedHero = {
+  before: { url: string } | null;
+  after: { url: string } | null;
+  beforeCaption: string | null;
+  afterCaption: string | null;
+  ctaText: string | null;
+  ctaSubtext: string | null;
+  socialProof: string | null;
+} | null;
+
+export type HeroExample = {
+  _key: string;
+  title: string;
+  description: string | null;
+  before: { url: string } | null;
+  after: { url: string } | null;
+};
+
 export type ToolPageData = {
   _id: string;
+  kind: ToolKind;
+  eyebrow: string | null;
   title: string;
+  cardTitle: string | null;
+  app: { _id: string; name: string; slug: string } | null;
+  toolsNavLabel: string;
   description: string | null;
   metaTitle: string;
   metaDescription: string;
@@ -98,6 +128,10 @@ export type ToolPageData = {
   faqHeading: string | null;
   faq: import("./faq").FaqItem[] | null;
   toolList: ToolListData | null;
+  extendedHero: BaseExtendedHero;
+  examplesHeading: string | null;
+  examplesSubtitle: string | null;
+  examples: HeroExample[] | null;
 };
 
 export type ToolsPageData = {

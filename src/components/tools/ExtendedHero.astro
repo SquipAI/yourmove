@@ -1,0 +1,62 @@
+---
+import Btn from "@components/shared/Btn.astro";
+import PageHeading from "@components/shared/PageHeading.astro";
+import BeforeAfterSlider from "@components/tools/ui/BeforeAfterSlider.astro";
+import type { Locale } from "@i18n/config";
+import type { ToolPageData, BaseExtendedHero } from "@lib/types";
+
+interface Props {
+  tool: ToolPageData;
+  hero: NonNullable<BaseExtendedHero>;
+  breadcrumbItems: { name: string; url?: string }[];
+  lang: Locale;
+}
+
+const { tool, hero, breadcrumbItems, lang } = Astro.props;
+---
+
+<section
+  class="section flex flex-col gap-section-sm lg:pt-section-xs lg:gap-section-xs"
+>
+  <div
+    class="grid gap-y-section-xs md:grid-cols-[1.5fr_1fr] md:items-center md:gap-x-section-xs"
+  >
+    <div>
+      <PageHeading
+        title={tool.title}
+        subtitle={tool.description}
+        breadcrumbs={breadcrumbItems}
+        eyebrow={tool.eyebrow}
+        eyebrowVariant="pill"
+      />
+
+      {
+        hero.ctaText && (
+          <div class="w-fit flex flex-col items-center gap-2 text-center text-pretty md:items-start md:text-left">
+            <Btn href="#tool" class="btn-big">
+              {hero.ctaText}{" "}
+              <span aria-hidden="true" class="ml-2">
+                →
+              </span>
+            </Btn>
+            {hero.ctaSubtext && (
+              <p class="text-subtle text-sm">{hero.ctaSubtext}</p>
+            )}
+          </div>
+        )
+      }
+    </div>
+
+    <BeforeAfterSlider
+      before={hero.before!.url}
+      after={hero.after!.url}
+      subject={tool.title}
+      {lang}
+      beforeCaption={hero.beforeCaption}
+      afterCaption={hero.afterCaption}
+      class="max-w-2xl"
+    />
+  </div>
+
+  <slot />
+</section>

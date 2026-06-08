@@ -170,11 +170,8 @@ for (const raw of body as Block[]) {
             ? `/blog/${block.doc.slug}`
             : `/${block.doc.slug}`;
         return (
-          <a
-            href={href}
-            class="not-prose my-6 block rounded-lg border border-gray-200 p-4 hover:bg-gray-50"
-          >
-            <span class="text-sm tracking-wide text-gray-500 uppercase">
+          <a href={href} class="card not-prose my-6 p-4">
+            <span class="text-subtle text-sm tracking-eyebrow uppercase">
               {block.doc._type}
             </span>
             <div class="font-medium">{block.doc.title}</div>

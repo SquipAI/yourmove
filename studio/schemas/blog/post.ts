@@ -20,6 +20,7 @@ export const post = defineType({
     pageTitleField({ path: "/blog/{slug}", searchWeight: 100 }),
     defineField({
       name: "summary",
+      title: "Summary *",
       type: "text",
       rows: 3,
       group: "content",
@@ -28,8 +29,14 @@ export const post = defineType({
     }),
     defineField({
       name: "mainImage",
+      title: "Main image *",
       type: "image",
       group: "content",
+      options: { hotspot: true },
+      description:
+        "Recommended ~750×500 (3:2). Cards display at 16:9 and 1:1, Sanity crops server-side around the hotspot. If no hotspot is set, center is used. Edit on EN; locales inherit.",
+      hidden: hiddenOnNonEn,
+      validation: (r) => r.required(),
     }),
     defineField({
       name: "body",
@@ -102,7 +109,7 @@ export const post = defineType({
             defineField({
               name: "kind",
               type: "string",
-              title: "Type",
+              title: "Type *",
               validation: (r) => r.required(),
               options: {
                 list: [
@@ -170,7 +177,7 @@ export const post = defineType({
             defineField({
               name: "code",
               type: "text",
-              title: "HTML",
+              title: "HTML *",
               rows: 6,
               validation: (r) => r.required(),
             }),
@@ -200,6 +207,7 @@ export const post = defineType({
           fields: [
             defineField({
               name: "question",
+              title: "Question *",
               type: "string",
               validation: (r) => r.required(),
             }),
@@ -240,12 +248,14 @@ export const post = defineType({
           options: { filter: 'language == "en"' },
         }),
       ],
+      validation: (r) => r.required().min(1),
     }),
     defineField({
       name: "readingTime",
       type: "number",
       group: "meta",
       hidden: hiddenOnNonEn,
+      validation: (r) => r.required(),
     }),
     defineField({
       name: "createdAt",
@@ -255,6 +265,7 @@ export const post = defineType({
         "Content creation date (auto-filled for new docs, imported from Webflow for migrated ones)",
       initialValue: () => new Date().toISOString(),
       hidden: hiddenOnNonEn,
+      validation: (r) => r.required(),
     }),
   ],
   preview: {

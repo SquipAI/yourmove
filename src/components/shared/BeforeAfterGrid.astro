@@ -1,0 +1,27 @@
+---
+import { Image } from "astro:assets";
+import BeforeAfterBadge from "@components/shared/BeforeAfterBadge.astro";
+import Icon from "@components/shared/Icon.astro";
+import type { Locale } from "@i18n/config";
+
+interface Props {
+  before: string;
+  after: string;
+  beforeAlt: string;
+  afterAlt: string;
+  lang: Locale;
+  class?: string;
+}
+const { before, after, beforeAlt, afterAlt, lang, class: cls } = Astro.props;
+---
+
+<div class:list={["relative grid grid-cols-2", cls]}>
+  <Image src={before} alt={beforeAlt} inferSize class="aspect-square" />
+  <Image src={after} alt={afterAlt} inferSize class="aspect-square" />
+  <BeforeAfterBadge variant="before" {lang} />
+  <BeforeAfterBadge variant="after" {lang} />
+  <Icon
+    name="arrow-right"
+    class="bg-white shadow-subtle absolute top-1/2 left-1/2 size-8 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-sm"
+  />
+</div>
