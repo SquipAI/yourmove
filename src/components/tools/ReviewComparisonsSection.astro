@@ -1,0 +1,50 @@
+---
+import Icon from "@components/shared/Icon.astro";
+import SectionHeading from "@components/shared/SectionHeading.astro";
+import type { ReviewComparisonItem } from "@lib/types";
+
+interface Props {
+  heading: string;
+  items: ReviewComparisonItem[];
+}
+
+const { heading, items } = Astro.props;
+---
+
+<section data-section="comparisons" class="section">
+  <SectionHeading title={heading} class="mb-section-xs" />
+
+  <ul class="flex flex-col gap-4">
+    {
+      items.map((item) => (
+        <li class="card flex flex-col gap-4 p-5 sm:p-6">
+          <div class="flex items-center gap-3">
+            <span class="text-brand tracking-eyebrow text-xs font-medium uppercase whitespace-nowrap">
+              {item.eyebrow}
+            </span>
+            <span class="border-subtle-lighter h-px grow border-t" />
+          </div>
+
+          <ul class="flex flex-col gap-2">
+            <li class="flex items-center gap-3">
+              <span class="bg-brand-lighter/25 text-brand flex size-6 shrink-0 items-center justify-center rounded-md">
+                <Icon name="x" class="size-4" strokeWidth="2.5" />
+              </span>
+              <span class="text-subtle">{item.bad}</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <span class="bg-brand-lighter/25 text-brand flex size-6 shrink-0 items-center justify-center rounded-md">
+                <Icon name="check" class="size-4" strokeWidth="2.5" />
+              </span>
+              <span class="font-semibold">{item.good}</span>
+            </li>
+          </ul>
+
+          <hr class="border-subtle-lighter" />
+
+          <p class="text-subtle">{item.description}</p>
+        </li>
+      ))
+    }
+  </ul>
+</section>

@@ -1,6 +1,5 @@
 ---
 import { getRelativeLocaleUrl } from "astro:i18n";
-import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 import type { TagWithCount } from "@lib/types";
@@ -9,11 +8,11 @@ import CardHeading from "@components/blog/ui/CardHeading.astro";
 
 interface Props {
   tag: TagWithCount;
-  lang?: Locale;
+  lang: Locale;
   level?: 2 | 3;
 }
 
-const { tag, lang = DEFAULT_LOCALE, level = 2 } = Astro.props;
+const { tag, lang, level = 2 } = Astro.props;
 const href = getRelativeLocaleUrl(lang, `blog/topics/${tag.slug}`);
 const countLabel = `${tag.postCount} ${t(lang, tag.postCount === 1 ? "blog.article" : "blog.articles")}`;
 ---

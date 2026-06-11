@@ -1,19 +1,19 @@
 ---
 import { getRelativeLocaleUrl } from "astro:i18n";
-import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import type { Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 import type { ShowcaseCard } from "@lib/types";
 import BeforeAfterGrid from "@components/shared/BeforeAfterGrid.astro";
-import ChatDemo from "./showcase/ChatDemo.astro";
-import OpenersDemo from "./showcase/OpenersDemo.astro";
-import ReviewDemo from "./showcase/ReviewDemo.astro";
-import BioDemo from "./showcase/BioDemo.astro";
+import ChatDemo from "@components/home/showcase/ChatDemo.astro";
+import OpenersDemo from "@components/home/showcase/OpenersDemo.astro";
+import ReviewDemo from "@components/home/showcase/ReviewDemo.astro";
+import BioDemo from "@components/home/showcase/BioDemo.astro";
 
 interface Props {
   card: ShowcaseCard;
-  lang?: Locale;
+  lang: Locale;
 }
-const { card, lang = DEFAULT_LOCALE } = Astro.props;
+const { card, lang } = Astro.props;
 
 // Demo `_type` → { component, card palette, button palette }. Single source of
 // truth for rendering and styling. `beforeAfterDemo` reuses the shared

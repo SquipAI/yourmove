@@ -1,0 +1,276 @@
+---
+import Icon from "@components/shared/Icon.astro";
+import type { Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+import type {
+  ChatPreviewStage,
+  ChatPreviewStageKey,
+  ChatPreviewToneKey,
+} from "@lib/types";
+
+interface Props {
+  stages: ChatPreviewStage[];
+  ctaHref: string | null;
+  lang: Locale;
+}
+
+const { stages, ctaHref, lang } = Astro.props;
+
+const TAB_KEYS: ChatPreviewStageKey[] = ["open", "reply", "close"];
+const TONE_EMOJI: Record<ChatPreviewToneKey, string> = {
+  flirty: "😉",
+  feisty: "🤪",
+  friendly: "😊",
+  funny: "😄",
+  formal: "👔",
+};
+
+const tabs = TAB_KEYS.map((key) => ({
+  key,
+  label: t(lang, `chatPreview.tabs.${key}` as const),
+}));
+
+const tones = (Object.keys(TONE_EMOJI) as ChatPreviewToneKey[]).map((key) => ({
+  key,
+  label: t(lang, `chatPreview.tones.${key}` as const),
+  emoji: TONE_EMOJI[key],
+}));
+
+const initialStage: ChatPreviewStageKey = "reply";
+const initialTone: ChatPreviewToneKey = "flirty";
+
+const stageByKey = Object.fromEntries(stages.map((s) => [s.tabKey, s]));
+---
+
+<figure
+  class="chat-preview flex flex-col gap-4 bg-white rounded-lg border border-subtle-lighter shadow-xl shadow-brand/10 p-4 sm:p-5"
+  data-stage={initialStage}
+  data-tone={initialTone}
+>
+  <figcaption class="sr-only">{t(lang, "chatPreview.figcaption")}</figcaption>
+
+  <p
+    class="tracking-eyebrow text-subtle text-[10px] font-medium uppercase"
+    aria-hidden="true"
+  >
+    {t(lang, "chatPreview.eyebrow")}
+  </p>
+
+  <div
+    role="tablist"
+    aria-label={t(lang, "chatPreview.tabsLabel")}
+    class="flex gap-2"
+  >
+    {
+      tabs.map((tab) => (
+        <button
+          type="button"
+          role="tab"
+          id={`chat-tab-${tab.key}`}
+          aria-controls={`chat-panel-${tab.key}`}
+          aria-selected={tab.key === initialStage ? "true" : "false"}
+          tabindex={tab.key === initialStage ? 0 : -1}
+          data-tab={tab.key}
+          class="chat-preview-tab flex-1 text-center text-sm font-medium rounded-full px-4 py-2 cursor-pointer text-subtle bg-subtle-lighter aria-selected:ring-2 aria-selected:ring-mist-800 aria-selected:text-mist-800 aria-selected:bg-white"
+        >
+          {tab.label}
+        </button>
+      ))
+    }
+  </div>
+
+  <div class="grid">
+    {
+      TAB_KEYS.map((tabKey) => {
+        const stage = stageByKey[tabKey];
+        if (!stage) return null;
+        return (
+          <section
+            role="tabpanel"
+            id={`chat-panel-${tabKey}`}
+            aria-labelledby={`chat-tab-${tabKey}`}
+            aria-hidden={tabKey !== initialStage ? "true" : "false"}
+            data-stage-panel={tabKey}
+            class="[grid-area:1/1] flex flex-col gap-4 aria-hidden:invisible"
+          >
+            <div class="bg-mist-900 text-white rounded-md p-4 flex flex-col gap-2">
+              <span class="text-white/60 tracking-eyebrow text-[10px] font-medium uppercase">
+                {stage.eyebrow}
+              </span>
+              <p class="text-pretty">{stage.message}</p>
+            </div>
+
+            <div class="grid">
+              {stage.replyTones.map((tone) => (
+                <ul
+                  data-tone-panel={tone.toneKey}
+                  aria-hidden={tone.toneKey !== initialTone ? "true" : "false"}
+                  class="[grid-area:1/1] flex flex-col gap-2 aria-hidden:invisible"
+                >
+                  {tone.replies.map((reply) => (
+                    <li class="flex items-start gap-3 border border-subtle-lighter rounded-md p-3">
+                      <p class="grow text-sm text-pretty">{reply}</p>
+                      <button
+                        type="button"
+                        class="chat-preview-copy text-subtle shrink-0 p-1 -m-1 cursor-pointer"
+                        data-copy-text={reply}
+                        aria-label={t(lang, "chatPreview.copy")}
+                      >
+                        <Icon name="copy" class="size-4" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ))}
+            </div>
+          </section>
+        );
+      })
+    }
+  </div>
+
+  <div
+    role="radiogroup"
+    aria-label={t(lang, "chatPreview.tonesLabel")}
+    class="flex flex-wrap items-center gap-2"
+  >
+    <span
+      aria-hidden="true"
+      class="flex size-9 shrink-0 items-center justify-center rounded-full border border-subtle-lighter text-subtle"
+    >
+      <Icon name="sliders-horizontal" class="size-4" />
+    </span>
+    {
+      tones.map((tone) => (
+        <button
+          type="button"
+          role="radio"
+          aria-checked={tone.key === initialTone ? "true" : "false"}
+          tabindex={tone.key === initialTone ? 0 : -1}
+          data-tone={tone.key}
+          class="chat-preview-tone flex items-center gap-1.5 text-sm rounded-full px-3 py-1.5 border cursor-pointer border-subtle-lighter text-mist-800 aria-checked:border-brand aria-checked:bg-brand-lighter/25 aria-checked:text-brand-darker"
+        >
+          <span aria-hidden="true">{tone.emoji}</span>
+          <span>{tone.label}</span>
+        </button>
+      ))
+    }
+  </div>
+
+  <a
+    href={ctaHref ?? "#tool"}
+    class="bg-brand hover:bg-brand-darker text-white text-center font-medium rounded-full py-3 transition-colors motion-reduce:transition-none"
+  >
+    {t(lang, "chatPreview.go")}
+  </a>
+
+  <div class="bg-mist-900 text-white rounded-md p-3 flex flex-col gap-1">
+    <p class="text-sm font-semibold">{t(lang, "chatPreview.balance")}</p>
+    <p class="text-white/60 text-xs">{t(lang, "chatPreview.upgrade")}</p>
+  </div>
+
+  <span
+    class="chat-preview-status sr-only"
+    role="status"
+    aria-live="polite"
+    data-copied-label={t(lang, "chatPreview.copied")}
+  ></span>
+</figure>
+
+<script>
+  import type {
+    ChatPreviewStageKey as Stage,
+    ChatPreviewToneKey as Tone,
+  } from "@lib/types";
+
+  document.querySelectorAll<HTMLElement>(".chat-preview").forEach((root) => {
+    const tabs = Array.from(
+      root.querySelectorAll<HTMLButtonElement>(".chat-preview-tab"),
+    );
+    const panels = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-stage-panel]"),
+    );
+    const tones = Array.from(
+      root.querySelectorAll<HTMLButtonElement>(".chat-preview-tone"),
+    );
+    const status = root.querySelector<HTMLElement>(".chat-preview-status");
+
+    function setStage(next: Stage) {
+      root.dataset.stage = next;
+      tabs.forEach((t) => {
+        const active = t.dataset.tab === next;
+        t.setAttribute("aria-selected", active ? "true" : "false");
+        t.tabIndex = active ? 0 : -1;
+      });
+      panels.forEach((p) => {
+        p.setAttribute(
+          "aria-hidden",
+          p.dataset.stagePanel === next ? "false" : "true",
+        );
+      });
+    }
+
+    function setTone(next: Tone) {
+      root.dataset.tone = next;
+      tones.forEach((t) => {
+        const active = t.dataset.tone === next;
+        t.setAttribute("aria-checked", active ? "true" : "false");
+        t.tabIndex = active ? 0 : -1;
+      });
+      panels.forEach((p) => {
+        p.querySelectorAll<HTMLElement>("[data-tone-panel]").forEach((g) => {
+          g.setAttribute(
+            "aria-hidden",
+            g.dataset.tonePanel === next ? "false" : "true",
+          );
+        });
+      });
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => setStage(tab.dataset.tab as Stage));
+      tab.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        e.preventDefault();
+        const i = tabs.indexOf(tab);
+        const dir = e.key === "ArrowRight" ? 1 : -1;
+        const nextTab = tabs[(i + dir + tabs.length) % tabs.length];
+        setStage(nextTab.dataset.tab as Stage);
+        nextTab.focus();
+      });
+    });
+
+    tones.forEach((tone) => {
+      tone.addEventListener("click", () => setTone(tone.dataset.tone as Tone));
+      tone.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        e.preventDefault();
+        const i = tones.indexOf(tone);
+        const dir = e.key === "ArrowRight" ? 1 : -1;
+        const nextTone = tones[(i + dir + tones.length) % tones.length];
+        setTone(nextTone.dataset.tone as Tone);
+        nextTone.focus();
+      });
+    });
+
+    root
+      .querySelectorAll<HTMLButtonElement>(".chat-preview-copy")
+      .forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const text = btn.dataset.copyText ?? "";
+          try {
+            await navigator.clipboard.writeText(text);
+            if (status) {
+              status.textContent =
+                status.getAttribute("data-copied-label") ?? "";
+              setTimeout(() => {
+                if (status) status.textContent = "";
+              }, 1500);
+            }
+          } catch {
+            /* clipboard not available */
+          }
+        });
+      });
+  });
+</script>

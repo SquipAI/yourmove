@@ -267,6 +267,36 @@ import type { ConditionalPropertyCallbackContext } from "sanity";
 export const hiddenOnNonEn = ({ document }: ConditionalPropertyCallbackContext) =>
   (document as { language?: string } | undefined)?.language !== "en";
 
+// Read `kind` / `language` off the untyped document in conditional/validation
+// callbacks.
+export const docKind = (document: unknown) =>
+  (document as { kind?: string } | undefined)?.kind;
+export const docLang = (document: unknown) =>
+  (document as { language?: string } | undefined)?.language ?? "en";
+
+// Hide a field group (or field) unless tool.kind is one of the given templates.
+export const hideUnlessKind =
+  (...kinds: string[]) =>
+  ({ document }: ConditionalPropertyCallbackContext) =>
+    !kinds.includes(docKind(document) ?? "");
+
+// Array validator: exactly `n` items.
+export const exactLength = (n: number, message: string) => (value: unknown) =>
+  Array.isArray(value) && value.length === n ? true : message;
+
+// Image required on EN docs (locales inherit at render); when `kinds` is given,
+// required only for those tool templates.
+export function requiredImage(message: string, kinds?: string[]) {
+  return (
+    value: { asset?: unknown } | undefined,
+    ctx: { document?: unknown },
+  ) => {
+    if (docLang(ctx.document) !== "en") return true;
+    if (kinds && !kinds.includes(docKind(ctx.document) ?? "")) return true;
+    return value?.asset ? true : message;
+  };
+}
+
 export const metaFields = [
   { ...languageField, group: "meta" },
   defineField({

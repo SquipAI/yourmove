@@ -1,27 +1,16 @@
 ---
-import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import type { Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 import type { HowItWorksStep } from "@lib/types";
 import SectionHeading from "@components/shared/SectionHeading.astro";
-import Btn from "@components/shared/Btn.astro";
 
 interface Props {
   steps: HowItWorksStep[];
   heading: string;
-  ctaHref: string;
-  ctaText: string;
-  ctaSubtext?: string | null;
-  lang?: Locale;
+  lang: Locale;
 }
 
-const {
-  steps,
-  heading,
-  ctaHref,
-  ctaText,
-  ctaSubtext,
-  lang = DEFAULT_LOCALE,
-} = Astro.props;
+const { steps, heading, lang } = Astro.props;
 
 const stepLabel = t(lang, "howItWorks.stepLabel");
 ---
@@ -44,10 +33,5 @@ const stepLabel = t(lang, "howItWorks.stepLabel");
         ))
       }
     </ol>
-
-    <!-- <div class="flex flex-col items-center gap-2">
-      <Btn href={ctaHref} class="btn-solid">{ctaText}</Btn>
-      {ctaSubtext && <p class="text-subtle text-sm">{ctaSubtext}</p>}
-    </div> -->
   </div>
 </section>

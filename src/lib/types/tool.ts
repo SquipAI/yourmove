@@ -1,4 +1,7 @@
 import type { Locale } from "@i18n/config";
+import type { TargetType } from "@lib/links";
+import type { FeatureIconName } from "@lib/icons";
+import type { FaqItem } from "./faq";
 
 export type AlternateSlug = { lang: Locale; slug: string };
 
@@ -41,8 +44,6 @@ export type ToolEmbed = {
   geolocation: boolean | null;
 };
 
-import type { TargetType } from "@lib/links";
-
 export type CtaLink = {
   targetType: TargetType | "siteLink";
   targetSlug?: string | null;
@@ -57,7 +58,7 @@ export type ToolCta = {
 };
 
 export type FeatureItem = {
-  icon: string;
+  icon: FeatureIconName;
   title: string;
   description: string;
   button: {
@@ -84,7 +85,8 @@ export type ToolKind =
   | "baseExtended"
   | "photoEnhancer"
   | "profileWriter"
-  | "profileReviewer";
+  | "profileReviewer"
+  | "chatAssistant";
 
 export type BaseExtendedHero = {
   before: { url: string } | null;
@@ -93,8 +95,9 @@ export type BaseExtendedHero = {
   afterCaption: string | null;
   ctaText: string | null;
   ctaSubtext: string | null;
+  ctaLink: CtaLink | null;
   socialProof: string | null;
-} | null;
+};
 
 export type HeroExample = {
   _key: string;
@@ -102,6 +105,46 @@ export type HeroExample = {
   description: string | null;
   before: { url: string } | null;
   after: { url: string } | null;
+};
+
+export type ReviewReportData = {
+  currentRating: number;
+  targetRating: number;
+  verdict: string;
+  breakdown: { label: string; score: number }[];
+  actions: string[];
+};
+
+export type ReviewComparisonItem = {
+  eyebrow: string;
+  bad: string;
+  good: string;
+  description: string;
+};
+
+export type ChatPreviewToneKey =
+  | "flirty"
+  | "feisty"
+  | "friendly"
+  | "funny"
+  | "formal";
+
+export type ChatPreviewStageKey = "open" | "reply" | "close";
+
+export type ChatPreviewToneGroup = {
+  toneKey: ChatPreviewToneKey;
+  replies: string[];
+};
+
+export type ChatPreviewStage = {
+  tabKey: ChatPreviewStageKey;
+  eyebrow: string;
+  message: string;
+  replyTones: ChatPreviewToneGroup[];
+};
+
+export type ChatPreviewData = {
+  stages: ChatPreviewStage[];
 };
 
 export type ToolPageData = {
@@ -121,17 +164,19 @@ export type ToolPageData = {
   cta: ToolCta | null;
   howItWorksHeading: string | null;
   howItWorks: HowItWorksStep[] | null;
-  howItWorksCtaSubtext: string | null;
-  featuresEyebrow: string | null;
   featuresHeading: string | null;
   features: FeatureItem[] | null;
   faqHeading: string | null;
-  faq: import("./faq").FaqItem[] | null;
+  faq: FaqItem[] | null;
   toolList: ToolListData | null;
-  extendedHero: BaseExtendedHero;
+  extendedHero: BaseExtendedHero | null;
   examplesHeading: string | null;
   examplesSubtitle: string | null;
   examples: HeroExample[] | null;
+  reportPreview: ReviewReportData | null;
+  comparisonsHeading: string | null;
+  comparisons: ReviewComparisonItem[] | null;
+  chatPreview: ChatPreviewData | null;
 };
 
 export type ToolsPageData = {

@@ -1,13 +1,13 @@
 ---
 import { t } from "@i18n/ui";
-import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import type { Locale } from "@i18n/config";
 import type { Press } from "@lib/types";
 
 interface Props {
   press: Press;
-  lang?: Locale;
+  lang: Locale;
 }
-const { press, lang = DEFAULT_LOCALE } = Astro.props;
+const { press, lang } = Astro.props;
 ---
 
 <article class="card card-body break-inside-avoid">

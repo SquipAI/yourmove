@@ -1,0 +1,55 @@
+---
+import SectionHeading from "@components/shared/SectionHeading.astro";
+import BeforeAfterGrid from "@components/shared/BeforeAfterGrid.astro";
+
+import { t } from "@i18n/ui";
+import type { Locale } from "@i18n/config";
+import type { HeroExample } from "@lib/types";
+
+interface Props {
+  heading: string;
+  subtitle: string | null;
+  examples: HeroExample[];
+  lang: Locale;
+}
+
+const { heading, subtitle, examples, lang } = Astro.props;
+
+const pairs = examples.map((ex) => {
+  if (!ex.before || !ex.after)
+    throw new Error(`Example "${ex.title}" is missing a before/after image`);
+  return { ...ex, before: ex.before, after: ex.after };
+});
+
+const labelBefore = t(lang, "beforeAfter.before").toLowerCase();
+const labelAfter = t(lang, "beforeAfter.after").toLowerCase();
+---
+
+<section class="section">
+  <SectionHeading title={heading} {subtitle} class="mb-section-xs" />
+
+  <ul class="grid grid-cols-1 md:grid-cols-2 gap-section-xs">
+    {
+      pairs.map((ex) => (
+        <li>
+          <figure class="flex flex-col bg-white overflow-hidden rounded-lg border border-subtle-lighter">
+            <BeforeAfterGrid
+              before={ex.before.url}
+              after={ex.after.url}
+              beforeAlt={`${ex.title} — ${labelBefore}`}
+              afterAlt={`${ex.title} — ${labelAfter}`}
+              {lang}
+            />
+
+            <figcaption class="flex flex-col gap-1 p-4">
+              <span class="text-subtle text-sm font-medium uppercase tracking-eyebrow">
+                {ex.title}
+              </span>
+              {ex.description && <p class="text-base">{ex.description}</p>}
+            </figcaption>
+          </figure>
+        </li>
+      ))
+    }
+  </ul>
+</section>

@@ -1,5 +1,4 @@
 ---
-import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 import type { ToolCategoryWithTools, AppWithTools } from "@lib/types";
@@ -10,10 +9,10 @@ interface Props {
   categories: ToolCategoryWithTools[];
   apps: AppWithTools[];
   totalTools: number;
-  lang?: Locale;
+  lang: Locale;
 }
 
-const { categories, apps, totalTools, lang = DEFAULT_LOCALE } = Astro.props;
+const { categories, apps, totalTools, lang } = Astro.props;
 ---
 
 <div

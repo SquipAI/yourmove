@@ -2,19 +2,36 @@
 import Base from "@layouts/Base.astro";
 
 import SchemaOrg from "@components/seo/SchemaOrg.astro";
-import BaseTemplate from "@components/tools/templates/BaseTemplate.astro";
-import BaseExtendedTemplate from "@components/tools/templates/BaseExtendedTemplate.astro";
-import PhotoEnhancerTemplate from "@components/tools/templates/PhotoEnhancerTemplate.astro";
+import ExtendedHero from "@components/tools/ExtendedHero.astro";
+import BeforeAfterSlider from "@components/tools/ui/BeforeAfterSlider.astro";
+import ChatPreview from "@components/tools/ChatPreview.astro";
+import ReviewReportPreview from "@components/tools/ReviewReportPreview.astro";
+import ReviewComparisonsSection from "@components/tools/ReviewComparisonsSection.astro";
+import PhotoExamplesSection from "@components/tools/PhotoExamplesSection.astro";
+import ToolEmbed from "@components/tools/ToolEmbed.astro";
+import FeaturesSection from "@components/tools/FeaturesSection.astro";
+import HowItWorksSection from "@components/tools/HowItWorksSection.astro";
+import ToolListSection from "@components/tools/ToolListSection.astro";
+import SocialProof from "@components/tools/ui/SocialProof.astro";
+import CtaSection from "@components/shared/CtaSection.astro";
+import FaqSection from "@components/shared/FaqSection.astro";
+import LogoRow from "@components/shared/LogoRow.astro";
+import PageHeading from "@components/shared/PageHeading.astro";
+import TestimonialsSection from "@components/testimonials/TestimonialsSection.astro";
 
 import {
   getToolPage,
   getAllToolPaths,
   getTestimonialsForTool,
+  getCompatibilityApps,
+  getPress,
 } from "@lib/queries";
 import { toolSchema } from "@lib/schema";
 import { resolveNavHref } from "@lib/links";
 import { ogImageHref } from "@lib/og/route";
-
+import { buildToolBreadcrumbs } from "@lib/toolPage";
+import { stripAccent } from "@lib/parseAccent";
+import { t } from "@i18n/ui";
 import { buildAlternateUrls } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
 
@@ -27,10 +44,11 @@ export async function getStaticPaths() {
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 const { slug } = Astro.params;
-const tool = await getToolPage(slug!, lang);
+if (!slug) throw new Error("Missing slug param");
+const tool = await getToolPage(slug, lang);
 if (!tool) throw new Error(`Tool not found: ${slug} (${lang})`);
 const pageUrl = String(Astro.url);
-const ogImage = ogImageHref(Astro.url.origin, lang, slug!);
+const ogImage = ogImageHref(Astro.url.origin, lang, slug);
 const { display: testimonials, specific } = await getTestimonialsForTool(
   tool._id,
   lang,
@@ -55,17 +73,68 @@ const ctaHref = tool.cta
       tool.cta.buttonLink.targetSlug,
       tool.cta.buttonLink.externalUrl,
       lang,
-    )!
+    )
+  : null;
+if (tool.cta && !ctaHref)
+  throw new Error(`cta button link unresolved: ${tool.slug}`);
+
+const heroCtaLink = tool.extendedHero?.ctaLink ?? null;
+const heroCtaHref = heroCtaLink
+  ? resolveNavHref(
+      heroCtaLink.targetType,
+      heroCtaLink.targetSlug,
+      heroCtaLink.externalUrl,
+      lang,
+    )
   : null;
 
-const TEMPLATES = {
-  base: BaseTemplate,
-  baseExtended: BaseExtendedTemplate,
-  photoEnhancer: PhotoEnhancerTemplate,
-  profileWriter: BaseTemplate,
-  profileReviewer: BaseTemplate,
-} as const;
-const Template = TEMPLATES[tool.kind] ?? BaseTemplate;
+// base + profileWriter get the plain heading; the rest get the two-column
+// extended hero whose visual + aside switch on tool.kind.
+const { kind } = tool;
+const isExtendedHero = kind !== "base" && kind !== "profileWriter";
+const hero = isExtendedHero ? tool.extendedHero : null;
+if (isExtendedHero && !hero)
+  throw new Error(`extendedHero missing: ${tool.slug} (${kind})`);
+
+// Hero visual data, guarded per kind.
+let slider: { before: string; after: string } | null = null;
+if (kind === "baseExtended" || kind === "photoEnhancer") {
+  if (!hero?.before || !hero?.after)
+    throw new Error(`hero before/after images missing: ${tool.slug}`);
+  slider = { before: hero.before.url, after: hero.after.url };
+}
+
+const report = kind === "profileReviewer" ? tool.reportPreview : null;
+if (kind === "profileReviewer" && !report)
+  throw new Error(`reportPreview missing: ${tool.slug}`);
+
+const chat = kind === "chatAssistant" ? tool.chatPreview : null;
+if (kind === "chatAssistant" && !chat)
+  throw new Error(`chatPreview missing: ${tool.slug}`);
+
+if (
+  kind === "photoEnhancer" &&
+  (!tool.examplesHeading || !tool.examples?.length)
+)
+  throw new Error(`examples missing: ${tool.slug}`);
+
+const toolList = tool.toolList;
+if (!toolList) throw new Error(`toolList missing: ${tool.slug}`);
+
+const breadcrumbItems = buildToolBreadcrumbs(tool, lang);
+
+// baseExtended shows press wordmarks; app-bound kinds show compatible apps.
+const usePress = kind === "baseExtended";
+const logos = usePress
+  ? (await getPress(lang)).filter((p) => !p.hidden)
+  : isExtendedHero
+    ? await getCompatibilityApps(tool.app?._id ?? null)
+    : [];
+const logosLabel = usePress
+  ? t(lang, "home.asSeenOn")
+  : tool.app
+    ? t(lang, "tools.alsoCompatibleWith")
+    : t(lang, "tools.compatibleWith");
 ---
 
 <Base
@@ -74,13 +143,164 @@ const Template = TEMPLATES[tool.kind] ?? BaseTemplate;
   {lang}
   {alternateUrls}
   {ogImage}
-  mainClass="main-split"
 >
   <SchemaOrg
     slot="head"
     schema={toolSchema(tool, schemaTestimonials, pageUrl, lang, ogImage)}
   />
-  <Template {tool} {lang} {ctaHref} {testimonials} {showTestimonials} />
 
-  <!-- <div class="lg:grid lg:grid-cols-3"></div> -->
+  {
+    !hero && (
+      <section class="section pb-0">
+        <PageHeading
+          title={tool.title}
+          subtitle={tool.description}
+          breadcrumbs={breadcrumbItems}
+          eyebrow={tool.eyebrow}
+          eyebrowVariant="pill"
+        />
+      </section>
+    )
+  }
+
+  {
+    hero && (
+      <ExtendedHero
+        {tool}
+        {breadcrumbItems}
+        ctaText={hero.ctaText}
+        ctaSubtext={hero.ctaSubtext}
+        ctaHref={heroCtaHref}
+      >
+        {slider && (
+          <BeforeAfterSlider
+            slot="visual"
+            before={slider.before}
+            after={slider.after}
+            subject={tool.title}
+            beforeCaption={hero.beforeCaption}
+            afterCaption={hero.afterCaption}
+            {lang}
+          />
+        )}
+        {report && (
+          <ReviewReportPreview
+            slot="visual"
+            currentRating={report.currentRating}
+            targetRating={report.targetRating}
+            verdict={report.verdict}
+            breakdown={report.breakdown}
+            actions={report.actions}
+            {lang}
+          />
+        )}
+        {chat && (
+          <ChatPreview
+            slot="visual"
+            stages={chat.stages}
+            ctaHref={heroCtaHref}
+            {lang}
+          />
+        )}
+        <div class="flex flex-col gap-y-6">
+          <LogoRow
+            {logos}
+            label={logosLabel}
+            kind={usePress ? "press" : "apps"}
+          />
+          <SocialProof text={hero.socialProof} />
+        </div>
+      </ExtendedHero>
+    )
+  }
+
+  {
+    tool.examples && tool.examples.length > 0 && tool.examplesHeading && (
+      <PhotoExamplesSection
+        heading={tool.examplesHeading}
+        subtitle={tool.examplesSubtitle}
+        examples={tool.examples}
+        {lang}
+      />
+    )
+  }
+
+  {
+    tool.embed?.path && (
+      <section id="tool" class="section scroll-mt-20">
+        <ToolEmbed
+          path={tool.embed.path}
+          initialHeight={tool.embed.initialHeight ?? undefined}
+          geolocation={tool.embed.geolocation ?? false}
+          title={tool.title}
+        />
+      </section>
+    )
+  }
+
+  {
+    tool.comparisons &&
+      tool.comparisons.length > 0 &&
+      tool.comparisonsHeading && (
+        <ReviewComparisonsSection
+          heading={tool.comparisonsHeading}
+          items={tool.comparisons}
+        />
+      )
+  }
+
+  {
+    tool.howItWorks && tool.howItWorks.length > 0 && tool.howItWorksHeading && (
+      <HowItWorksSection
+        steps={tool.howItWorks}
+        heading={tool.howItWorksHeading}
+        {lang}
+      />
+    )
+  }
+
+  {
+    tool.features && tool.features.length > 0 && tool.featuresHeading && (
+      <FeaturesSection
+        items={tool.features}
+        heading={tool.featuresHeading}
+        {lang}
+      />
+    )
+  }
+
+  {
+    showTestimonials && (
+      <TestimonialsSection
+        {testimonials}
+        heading={t(lang, "reviews.heading")}
+        {lang}
+      />
+    )
+  }
+
+  {
+    tool.cta && ctaHref && (
+      <CtaSection
+        title={tool.cta.title}
+        subtitle={tool.cta.subtitle}
+        buttonText={tool.cta.buttonText}
+        href={ctaHref}
+      />
+    )
+  }
+
+  {
+    tool.faq && tool.faq.length > 0 && (
+      <FaqSection
+        items={tool.faq}
+        heading={
+          tool.faqHeading ?? `${tool.cardTitle ?? stripAccent(tool.title)} FAQ`
+        }
+        {lang}
+      />
+    )
+  }
+
+  <ToolListSection data={toolList} {lang} />
 </Base>

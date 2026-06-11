@@ -7,6 +7,7 @@ import type {
   SiteStats,
   NavTools,
   HeaderLinks,
+  Press,
 } from "@lib/types";
 import type { FooterNavData } from "@lib/links";
 import { BODY, FAQ_ITEM_BODY, TESTIMONIAL_CARD } from "./projections";
@@ -185,7 +186,7 @@ export function getHeaderLinks(lang = DEFAULT_LOCALE) {
 // resolved via translation.metadata sibling for the current locale.
 export function getPress(lang = DEFAULT_LOCALE) {
   return cached(`getPress:${lang}`, () =>
-    sanityClient.fetch<import("@lib/types").Press[]>(
+    sanityClient.fetch<Press[]>(
       `*[_type == "pressLogo" && language == "en" && defined(logo.asset)]
         | order(coalesce(order, 9999) asc, name asc) {
           _id,

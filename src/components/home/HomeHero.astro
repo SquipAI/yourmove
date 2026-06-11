@@ -6,11 +6,7 @@ import Apple from "@assets/svg/apple.svg";
 import Google from "@assets/svg/google.svg";
 import { t } from "@i18n/ui";
 import type { Locale } from "@i18n/config";
-import type {
-  CompatibilityApp,
-  Press,
-  HeroChatCard as HeroChatCardData,
-} from "@lib/types";
+import type { Press, HeroChatCard as HeroChatCardData } from "@lib/types";
 
 interface Props {
   title: string;
@@ -20,7 +16,6 @@ interface Props {
   chatCards: HeroChatCardData[];
   appStoreUrl: string | null;
   playStoreUrl: string | null;
-  compatibilityApps: CompatibilityApp[];
   press: Press[];
   lang: Locale;
 }
@@ -33,7 +28,6 @@ const {
   chatCards,
   appStoreUrl,
   playStoreUrl,
-  compatibilityApps,
   press,
   lang,
 } = Astro.props;
@@ -105,8 +99,6 @@ const {
       ))
     }
   </ul>
-
-  <!-- <LogoRow logos={compatibilityApps} label={t(lang, "tools.compatibleWith")} /> -->
 
   <LogoRow logos={press} label={t(lang, "home.asSeenOn")} kind="press" />
 </section>

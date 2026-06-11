@@ -1,18 +1,25 @@
 ---
 import Btn from "@components/shared/Btn.astro";
 import PageHeading from "@components/shared/PageHeading.astro";
-import BeforeAfterSlider from "@components/tools/ui/BeforeAfterSlider.astro";
-import type { Locale } from "@i18n/config";
-import type { ToolPageData, BaseExtendedHero } from "@lib/types";
+import type { ToolPageData } from "@lib/types";
 
 interface Props {
   tool: ToolPageData;
-  hero: NonNullable<BaseExtendedHero>;
   breadcrumbItems: { name: string; url?: string }[];
-  lang: Locale;
+  ctaText?: string | null;
+  ctaSubtext?: string | null;
+  ctaHref?: string | null;
 }
 
-const { tool, hero, breadcrumbItems, lang } = Astro.props;
+const {
+  tool,
+  breadcrumbItems,
+  ctaText = null,
+  ctaSubtext = null,
+  ctaHref = null,
+} = Astro.props;
+
+const resolvedHref = ctaHref ?? "#tool";
 ---
 
 <section
@@ -31,31 +38,21 @@ const { tool, hero, breadcrumbItems, lang } = Astro.props;
       />
 
       {
-        hero.ctaText && (
+        ctaText && (
           <div class="w-fit flex flex-col items-center gap-2 text-center text-pretty md:items-start md:text-left">
-            <Btn href="#tool" class="btn-big">
-              {hero.ctaText}{" "}
+            <Btn href={resolvedHref} class="btn-big">
+              {ctaText}{" "}
               <span aria-hidden="true" class="ml-2">
                 →
               </span>
             </Btn>
-            {hero.ctaSubtext && (
-              <p class="text-subtle text-sm">{hero.ctaSubtext}</p>
-            )}
+            {ctaSubtext && <p class="text-subtle text-sm">{ctaSubtext}</p>}
           </div>
         )
       }
     </div>
 
-    <BeforeAfterSlider
-      before={hero.before!.url}
-      after={hero.after!.url}
-      subject={tool.title}
-      {lang}
-      beforeCaption={hero.beforeCaption}
-      afterCaption={hero.afterCaption}
-      class="max-w-2xl"
-    />
+    <slot name="visual" />
   </div>
 
   <slot />

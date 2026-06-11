@@ -1,15 +1,14 @@
 ---
-import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
 import type { PostCard as PostCardType } from "@lib/types";
 import PostCard from "@components/blog/ui/PostCard.astro";
 
 interface Props {
   posts: PostCardType[];
-  lang?: Locale;
+  lang: Locale;
 }
 
-const { posts, lang = DEFAULT_LOCALE } = Astro.props;
+const { posts, lang } = Astro.props;
 ---
 
 <ul

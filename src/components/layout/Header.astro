@@ -8,7 +8,7 @@ import ChevronDown from "@components/shared/ChevronDown.astro";
 import NavLink from "@components/shared/NavLink.astro";
 
 interface Props {
-  lang?: Locale;
+  lang: Locale;
   alternateUrls: Record<Locale, string>;
   tools: { title: string; items: NavItem[]; seeAll: NavItem };
   flatLinks: NavItem[];
@@ -16,7 +16,7 @@ interface Props {
 }
 
 const {
-  lang = DEFAULT_LOCALE,
+  lang,
   alternateUrls,
   tools,
   flatLinks,

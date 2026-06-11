@@ -1,6 +1,5 @@
 ---
 import { getRelativeLocaleUrl } from "astro:i18n";
-import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 import type { ToolCard } from "@lib/types";
@@ -9,11 +8,11 @@ import CardHeading from "@components/blog/ui/CardHeading.astro";
 
 interface Props {
   tool: ToolCard;
-  lang?: Locale;
+  lang: Locale;
   level?: 2 | 3;
 }
 
-const { tool, lang = DEFAULT_LOCALE, level = 3 } = Astro.props;
+const { tool, lang, level = 3 } = Astro.props;
 
 const href = getRelativeLocaleUrl(lang, tool.slug);
 const badge = tool.paid ? t(lang, "tools.subscription") : t(lang, "tools.free");

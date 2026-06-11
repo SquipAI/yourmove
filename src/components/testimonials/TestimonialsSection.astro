@@ -1,5 +1,5 @@
 ---
-import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import type { Locale } from "@i18n/config";
 import type { Press, Testimonial } from "@lib/types";
 import SectionHeading from "@components/shared/SectionHeading.astro";
 import TestimonialList from "@components/testimonials/TestimonialList.astro";
@@ -13,7 +13,7 @@ interface Props {
   /** Heading level for the section title. Default 2. */
   level?: 2 | 3;
   pressQuotes?: Press[];
-  lang?: Locale;
+  lang: Locale;
 }
 
 const {
@@ -23,7 +23,7 @@ const {
   subtitle,
   level = 2,
   pressQuotes = [],
-  lang = DEFAULT_LOCALE,
+  lang,
 } = Astro.props;
 ---
 

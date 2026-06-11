@@ -5,14 +5,14 @@ import type { NavItem } from "@lib/links";
 import LogoSvg from "@assets/svg/LogoSvg.astro";
 
 interface Props {
-  lang?: Locale;
+  lang: Locale;
   tagline?: string | null;
   toolsColumn: { title: string; items: NavItem[]; seeAll: NavItem };
   columns?: { title: string; items: NavItem[] }[];
 }
 
 const {
-  lang = DEFAULT_LOCALE,
+  lang,
   tagline,
   toolsColumn,
   columns = [],

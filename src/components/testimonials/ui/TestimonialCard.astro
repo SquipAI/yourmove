@@ -25,7 +25,8 @@ const sourceLabel: Record<TestimonialSource, string> = {
   productHunt: "Product Hunt",
 };
 
-const hasSourceLink = testimonial.source !== "web" && !!testimonial.sourceUrl;
+const sourceUrl =
+  testimonial.source !== "web" ? testimonial.sourceUrl : null;
 ---
 
 <article class:list={["card card-body break-inside-avoid", cls]}>
@@ -55,9 +56,9 @@ const hasSourceLink = testimonial.source !== "web" && !!testimonial.sourceUrl;
     </Tag>
 
     {
-      hasSourceLink && (
+      sourceUrl && (
         <a
-          href={testimonial.sourceUrl!}
+          href={sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`View on ${sourceLabel[testimonial.source]}`}

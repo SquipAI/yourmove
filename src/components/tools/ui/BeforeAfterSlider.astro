@@ -12,9 +12,8 @@ interface Props {
   lang: Locale;
   beforeCaption?: string | null;
   afterCaption?: string | null;
-  /** Initial divider position, 0–100. Default 50. */
+  /** Initial divider position, 0–100. Default 90 (mostly "after"). */
   initial?: number;
-  class?: string;
 }
 
 const {
@@ -25,7 +24,6 @@ const {
   beforeCaption,
   afterCaption,
   initial = 90,
-  class: cls,
 } = Astro.props;
 const labelBefore = t(lang, "beforeAfter.before");
 const labelAfter = t(lang, "beforeAfter.after");
@@ -38,10 +36,7 @@ const captionClass =
 <figure
   data-before-after
   style={`--p:${initial}%`}
-  class:list={[
-    "relative aspect-4/5 w-full overflow-hidden rounded-lg select-none has-focus-visible:outline-2 has-focus-visible:outline-offset-3 has-focus-visible:outline-brand sm:max-w-[550px]",
-    cls,
-  ]}
+  class="relative aspect-4/5 w-full overflow-hidden rounded-lg select-none has-focus-visible:outline-2 has-focus-visible:outline-offset-3 has-focus-visible:outline-brand sm:max-w-2xl"
 >
   <Image
     src={before}

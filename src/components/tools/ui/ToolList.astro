@@ -1,17 +1,16 @@
 ---
-import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
 import type { ToolCard as ToolCardType } from "@lib/types";
 import ToolCard from "@components/tools/ui/ToolCard.astro";
 
 interface Props {
   tools: ToolCardType[];
-  lang?: Locale;
+  lang: Locale;
   level?: 2 | 3;
   class?: string;
 }
 
-const { tools, lang = DEFAULT_LOCALE, level = 3, class: cls } = Astro.props;
+const { tools, lang, level = 3, class: cls } = Astro.props;
 ---
 
 <ul class:list={["grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3", cls]}>

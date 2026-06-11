@@ -1,15 +1,15 @@
 ---
-import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import type { Locale } from "@i18n/config";
 import type { ToolListData } from "@lib/types";
 import { resolveNavHref } from "@lib/links";
 import SectionHeading from "@components/shared/SectionHeading.astro";
 
 interface Props {
   data: ToolListData;
-  lang?: Locale;
+  lang: Locale;
 }
 
-const { data, lang = DEFAULT_LOCALE } = Astro.props;
+const { data, lang } = Astro.props;
 
 const colsClass =
   data.groups.length <= 2

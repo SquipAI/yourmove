@@ -5,7 +5,7 @@ import type { Locale } from "@i18n/config";
 interface Props {
   title: string;
   description: string;
-  lang?: Locale;
+  lang: Locale;
   canonical?: string;
   alternateUrls?: Partial<Record<Locale, string>>;
   ogImage?: string;
@@ -15,7 +15,7 @@ interface Props {
 const {
   title,
   description,
-  lang = DEFAULT_LOCALE,
+  lang,
   alternateUrls = {},
   ogImage,
   ogType = "website",

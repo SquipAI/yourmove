@@ -3,7 +3,6 @@ import type { FaqItem } from "@lib/types";
 import { inlineHTML, type TextBlock } from "@lib/portableText";
 import ChevronDown from "@components/shared/ChevronDown.astro";
 import SectionHeading from "@components/shared/SectionHeading.astro";
-import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
 
 interface Props {
@@ -15,7 +14,7 @@ interface Props {
   level?: 2 | 3;
   /** Horizontal alignment. Default "start". */
   align?: "center" | "start";
-  lang?: Locale;
+  lang: Locale;
 }
 
 const {
@@ -25,7 +24,7 @@ const {
   subtitle,
   level = 2,
   align = "start",
-  lang = DEFAULT_LOCALE,
+  lang,
 } = Astro.props;
 
 const wrapperAlign = align === "center" ? "items-center" : "items-start";

@@ -1,6 +1,6 @@
 ---
 import { getRelativeLocaleUrl } from "astro:i18n";
-import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import type { Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 import { getSiteStats, getAllTestimonials } from "@lib/queries";
 import type { Testimonial } from "@lib/types";
@@ -16,7 +16,7 @@ interface Props {
    */
   variant?: "snap" | "column";
   level?: 2 | 3;
-  lang?: Locale;
+  lang: Locale;
   /** Render the `interstitial` slot after this many testimonials, breaking
    *  across all CSS columns on desktop. 1-based. */
   interstitialAt?: number;
@@ -27,7 +27,7 @@ const {
   testimonials,
   variant = "snap",
   level,
-  lang = DEFAULT_LOCALE,
+  lang,
   interstitialAt,
   class: cls,
 } = Astro.props;

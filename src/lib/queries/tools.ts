@@ -127,9 +127,7 @@ export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
           null
         ),
         howItWorksHeading,
-        howItWorksCtaSubtext,
         "howItWorks": howItWorks[]{ title, text },
-        featuresEyebrow,
         featuresHeading,
         "features": features[]{
           icon, title, description,
@@ -144,7 +142,7 @@ export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
         faqHeading,
         ${FAQ_ITEMS},
         "extendedHero": select(
-          coalesce(${TOOL_EN}kind, kind) in ["baseExtended", "photoEnhancer"] => {
+          coalesce(${TOOL_EN}kind, kind) in ["baseExtended", "photoEnhancer", "profileReviewer", "chatAssistant"] => {
             "before": coalesce(
               ${TOOL_EN}heroBefore{ "url": asset->url },
               heroBefore{ "url": asset->url }
@@ -157,6 +155,10 @@ export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
             "afterCaption": heroAfterCaption,
             "ctaText": heroCtaText,
             "ctaSubtext": heroCtaSubtext,
+            "ctaLink": select(
+              defined(${TOOL_EN}heroCtaLink) => { ${linkTargetFields(`${TOOL_EN}heroCtaLink`)} },
+              null
+            ),
             "socialProof": heroSocialProof
           },
           null
@@ -176,6 +178,35 @@ export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
             after{ "url": asset->url }
           )
         },
+        "reportPreview": select(
+          kind == "profileReviewer" => {
+            "currentRating": reportCurrentRating,
+            "targetRating": reportTargetRating,
+            "verdict": reportVerdict,
+            "breakdown": reportBreakdown[]{ label, score },
+            "actions": reportActions
+          },
+          null
+        ),
+        "comparisonsHeading": select(
+          kind == "profileReviewer" => comparisonsHeading,
+          null
+        ),
+        "comparisons": select(
+          kind == "profileReviewer" => comparisons[]{ eyebrow, bad, good, description },
+          null
+        ),
+        "chatPreview": select(
+          kind == "chatAssistant" => {
+            "stages": chatPreviewStages[]{
+              tabKey,
+              eyebrow,
+              message,
+              "replyTones": replyTones[]{ toneKey, replies }
+            }
+          },
+          null
+        ),
         "toolList": coalesce(
           toolList->{
             title, subtitle,

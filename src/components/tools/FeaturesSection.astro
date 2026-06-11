@@ -1,22 +1,18 @@
 ---
-import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
-import { t } from "@i18n/ui";
+import type { Locale } from "@i18n/config";
 import type { FeatureItem } from "@lib/types";
 import { resolveNavHref } from "@lib/links";
-import Icon, { type IconName } from "@components/shared/Icon.astro";
+import Icon from "@components/shared/Icon.astro";
 import SectionHeading from "@components/shared/SectionHeading.astro";
 import Btn from "@components/shared/Btn.astro";
 
 interface Props {
   items: FeatureItem[];
   heading: string;
-  eyebrow?: string | null;
-  lang?: Locale;
+  lang: Locale;
 }
 
-const { items, heading, eyebrow, lang = DEFAULT_LOCALE } = Astro.props;
-
-// const eyebrowText = eyebrow ?? t(lang, "features.eyebrow");
+const { items, heading, lang } = Astro.props;
 ---
 
 <section data-section="features" class="section">
@@ -36,7 +32,7 @@ const { items, heading, eyebrow, lang = DEFAULT_LOCALE } = Astro.props;
             : null;
           return (
             <li class="card flex flex-col gap-3 p-5 text-left md:p-6">
-              <Icon name={item.icon as IconName} class="text-brand size-6" />
+              <Icon name={item.icon} class="text-brand size-6" />
               <h3 class="text-lg font-semibold leading-tight">{item.title}</h3>
               <p class="text-subtle">{item.description}</p>
               {item.button && href && (

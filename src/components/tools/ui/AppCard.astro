@@ -1,6 +1,5 @@
 ---
 import { getRelativeLocaleUrl } from "astro:i18n";
-import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 import type { AppWithTools } from "@lib/types";
@@ -8,11 +7,11 @@ import Eyebrow from "@components/shared/Eyebrow.astro";
 
 interface Props {
   app: AppWithTools;
-  lang?: Locale;
+  lang: Locale;
   level?: 2 | 3;
 }
 
-const { app, lang = DEFAULT_LOCALE, level = 3 } = Astro.props;
+const { app, lang, level = 3 } = Astro.props;
 const HeadingTag = `h${level}` as "h2" | "h3";
 const href = getRelativeLocaleUrl(lang, `tools/${app.slug}`);
 const initial = app.name.charAt(0).toUpperCase();

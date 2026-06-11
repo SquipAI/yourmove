@@ -1,4 +1,7 @@
-import imageUrlBuilder, { type SanityImageSource } from "@sanity/image-url";
+import {
+  createImageUrlBuilder,
+  type SanityImageSource,
+} from "@sanity/image-url";
 import { sanityClient } from "./sanity";
 
 // Builds Sanity CDN URLs with crop/resize/focal-point params.
@@ -8,5 +11,5 @@ import { sanityClient } from "./sanity";
 // Example: urlFor(post.mainImage).width(400).height(225).fit("crop").url()
 //   → https://cdn.sanity.io/.../...jpg?w=400&h=225&fit=crop
 //   (adds focalpoint params automatically when the image has a hotspot set)
-const builder = imageUrlBuilder(sanityClient);
+const builder = createImageUrlBuilder(sanityClient);
 export const urlFor = (source: SanityImageSource) => builder.image(source);

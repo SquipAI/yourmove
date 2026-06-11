@@ -12,7 +12,6 @@ import {
   getSiteStats,
   getAllTestimonials,
   getFeaturedPosts,
-  getCompatibilityApps,
   getPress,
   getToolCount,
   BLOG_FEATURED_COUNT,
@@ -27,23 +26,15 @@ export function getStaticPaths() {
 }
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
-const [
-  home,
-  siteStats,
-  allTestimonials,
-  toolCount,
-  featuredPosts,
-  compatibilityApps,
-  press,
-] = await Promise.all([
-  getHome(lang),
-  getSiteStats(),
-  getAllTestimonials(lang),
-  getToolCount(lang),
-  getFeaturedPosts(BLOG_FEATURED_COUNT, lang),
-  getCompatibilityApps(),
-  getPress(lang),
-]);
+const [home, siteStats, allTestimonials, toolCount, featuredPosts, press] =
+  await Promise.all([
+    getHome(lang),
+    getSiteStats(),
+    getAllTestimonials(lang),
+    getToolCount(lang),
+    getFeaturedPosts(BLOG_FEATURED_COUNT, lang),
+    getPress(lang),
+  ]);
 const pressLogos = press.filter((p) => !p.hidden);
 const pressQuotes = press.filter((p) => p.quote);
 const eyebrow = home.statsEyebrow
@@ -80,7 +71,6 @@ const schema = homeSchema(
     chatCards={home.chatCards}
     appStoreUrl={home.appStoreUrl}
     playStoreUrl={home.playStoreUrl}
-    compatibilityApps={compatibilityApps}
     press={pressLogos}
     {lang}
   />

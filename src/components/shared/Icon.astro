@@ -1,18 +1,24 @@
 ---
 // Lucide icon registry. SVGs live in src/assets/icons/ (one file per icon).
-// Add new icons here AND to the `options.list` in studio/schemas/tool.ts.
+// Editor-pickable feature icons are declared in @lib/icons (Studio reads the
+// same list); the assignment below fails to compile if one is missing here.
+import type { FeatureIconName } from "@lib/icons";
+
 import ArrowRight from "@assets/icons/arrow-right.svg";
 import Camera from "@assets/icons/camera.svg";
 import Check from "@assets/icons/check.svg";
 import Clock from "@assets/icons/clock.svg";
+import Copy from "@assets/icons/copy.svg";
 import Heart from "@assets/icons/heart.svg";
 import Loader from "@assets/icons/loader.svg";
 import MessageCircle from "@assets/icons/message-circle.svg";
 import PenTool from "@assets/icons/pen-tool.svg";
+import SlidersHorizontal from "@assets/icons/sliders-horizontal.svg";
 import Sparkles from "@assets/icons/sparkles.svg";
 import Star from "@assets/icons/star.svg";
 import ThumbsUp from "@assets/icons/thumbs-up.svg";
 import TrendingUp from "@assets/icons/trending-up.svg";
+import X from "@assets/icons/x.svg";
 import Zap from "@assets/icons/zap.svg";
 
 const ICONS = {
@@ -29,9 +35,15 @@ const ICONS = {
   sparkles: Sparkles,
   check: Check,
   camera: Camera,
+  copy: Copy,
+  "sliders-horizontal": SlidersHorizontal,
+  x: X,
 };
 
 export type IconName = keyof typeof ICONS;
+
+const _featureIconsRegistered: Record<FeatureIconName, unknown> = ICONS;
+void _featureIconsRegistered;
 
 interface Props {
   name: IconName;
@@ -47,7 +59,7 @@ const {
   stroke = "currentColor",
   fill = "none",
   strokeWidth = "2",
-} = Astro.props as Props;
+} = Astro.props;
 
 const Component = ICONS[name];
 ---

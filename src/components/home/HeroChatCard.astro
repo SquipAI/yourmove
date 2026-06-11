@@ -1,14 +1,14 @@
 ---
 import type { HeroChatCard } from "@lib/types";
 import { t } from "@i18n/ui";
-import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import type { Locale } from "@i18n/config";
 
 interface Props {
   card: HeroChatCard;
   index: number;
-  lang?: Locale;
+  lang: Locale;
 }
-const { card, index, lang = DEFAULT_LOCALE } = Astro.props;
+const { card, index, lang } = Astro.props;
 ---
 
 <article

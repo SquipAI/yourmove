@@ -17,24 +17,19 @@ import {
   pageTitleField,
   pageDescriptionField,
   hiddenOnNonEn,
+  hideUnlessKind,
+  docKind,
+  docLang,
+  exactLength,
+  requiredImage,
 } from "../shared";
 import { linkableTo } from "@lib/links/sanity";
+import { FEATURE_ICON_NAMES } from "@lib/icons";
 
-// Keep in sync with src/components/shared/Icon.astro IconName union.
-const ICON_OPTIONS = [
-  "trending-up",
-  "heart",
-  "pen-tool",
-  "message-circle",
-  "star",
-  "thumbs-up",
-  "loader",
-  "clock",
-  "zap",
-  "sparkles",
-  "check",
-  "camera",
-].map((value) => ({ title: value, value }));
+const ICON_OPTIONS = FEATURE_ICON_NAMES.map((value) => ({
+  title: value,
+  value,
+}));
 
 export const tool = defineType({
   name: "tool",
@@ -53,19 +48,42 @@ export const tool = defineType({
       name: "hero",
       title: "Hero",
       icon: ImagesIcon,
-      hidden: ({ document }) => {
-        const kind = (document as { kind?: string } | undefined)?.kind;
-        return kind !== "baseExtended" && kind !== "photoEnhancer";
-      },
+      hidden: hideUnlessKind(
+        "baseExtended",
+        "photoEnhancer",
+        "profileReviewer",
+        "chatAssistant",
+      ),
     },
     {
-      name: "examples",
-      title: "Examples",
+      name: "heroComparison",
+      title: "Hero — Comparison",
       icon: ImagesIcon,
-      hidden: ({ document }) => {
-        const kind = (document as { kind?: string } | undefined)?.kind;
-        return kind !== "photoEnhancer";
-      },
+      hidden: hideUnlessKind("baseExtended", "photoEnhancer"),
+    },
+    {
+      name: "photoExamples",
+      title: "Photo examples",
+      icon: ImagesIcon,
+      hidden: hideUnlessKind("photoEnhancer"),
+    },
+    {
+      name: "reviewReport",
+      title: "Review report",
+      icon: StarIcon,
+      hidden: hideUnlessKind("profileReviewer"),
+    },
+    {
+      name: "reviewComparisons",
+      title: "Review comparisons",
+      icon: OlistIcon,
+      hidden: hideUnlessKind("profileReviewer"),
+    },
+    {
+      name: "chatPreview",
+      title: "Chat preview",
+      icon: ImagesIcon,
+      hidden: hideUnlessKind("chatAssistant"),
     },
   ],
   fields: [
@@ -85,13 +103,13 @@ export const tool = defineType({
           { title: "Photo Enhancer", value: "photoEnhancer" },
           { title: "Profile Writer", value: "profileWriter" },
           { title: "Profile Reviewer", value: "profileReviewer" },
+          { title: "Chat Assistant", value: "chatAssistant" },
         ],
         layout: "dropdown",
       },
       initialValue: "base",
-      validation: (Rule) => Rule.required(),
-      readOnly: ({ document }) =>
-        (document as { language?: string } | undefined)?.language !== "en",
+      validation: (r) => r.required(),
+      readOnly: ({ document }) => docLang(document) !== "en",
     }),
     pageTitleField({ path: "/{slug}", searchWeight: 10 }),
     pageDescriptionField({ searchWeight: 5 }),
@@ -101,8 +119,8 @@ export const tool = defineType({
       type: "string",
       group: "content",
       description:
-        'Pill text above the H1. Use a separator between parts: · (middle dot), — (em dash), • (bullet), or | (pipe). Example: "Ex Remover · Free, no signup". Leave empty to hide. Max 40 chars.',
-      validation: (Rule) => Rule.max(40),
+        'Pill text above the H1. Use a separator between parts: · (middle dot), — (em dash), • (bullet), or | (pipe). Example: "Ex Remover · Free, no signup". Leave empty to hide. Keep under ~40 chars.',
+      validation: (r) => r.max(40).warning("Eyebrow is usually under 40 chars to fit in one line."),
     }),
     defineField({
       name: "cardTitle",
@@ -173,51 +191,41 @@ export const tool = defineType({
       name: "heroBefore",
       title: "Hero — Before image *",
       type: "image",
-      group: "hero",
+      group: "heroComparison",
       options: { hotspot: false },
       hidden: hiddenOnNonEn,
       description:
         "Upload at 4:5 aspect ratio (e.g. 800×1000) for optimal performance — other ratios get cropped on display and waste bandwidth. Edit on EN; locales inherit. Required when template is Base extended or Photo Enhancer.",
-      validation: (Rule) =>
-        Rule.custom((value, context) => {
-          const doc = context.document as
-            | { kind?: string; language?: string }
-            | undefined;
-          if ((doc?.language ?? "en") !== "en") return true;
-          const needsHero =
-            doc?.kind === "baseExtended" || doc?.kind === "photoEnhancer";
-          if (needsHero && !value?.asset)
-            return "Required when template uses a hero comparison";
-          return true;
-        }),
+      validation: (r) =>
+        r.custom(
+          requiredImage("Required when template uses a hero comparison", [
+            "baseExtended",
+            "photoEnhancer",
+          ]),
+        ),
     }),
     defineField({
       name: "heroAfter",
       title: "Hero — After image *",
       type: "image",
-      group: "hero",
+      group: "heroComparison",
       options: { hotspot: false },
       hidden: hiddenOnNonEn,
       description:
         "Upload at 4:5 aspect ratio (e.g. 800×1000) for optimal performance — other ratios get cropped on display and waste bandwidth. Edit on EN; locales inherit. Required when template is Base extended or Photo Enhancer.",
-      validation: (Rule) =>
-        Rule.custom((value, context) => {
-          const doc = context.document as
-            | { kind?: string; language?: string }
-            | undefined;
-          if ((doc?.language ?? "en") !== "en") return true;
-          const needsHero =
-            doc?.kind === "baseExtended" || doc?.kind === "photoEnhancer";
-          if (needsHero && !value?.asset)
-            return "Required when template uses a hero comparison";
-          return true;
-        }),
+      validation: (r) =>
+        r.custom(
+          requiredImage("Required when template uses a hero comparison", [
+            "baseExtended",
+            "photoEnhancer",
+          ]),
+        ),
     }),
     defineField({
       name: "heroBeforeCaption",
       title: "Before caption",
       type: "string",
-      group: "hero",
+      group: "heroComparison",
       description:
         'Centered caption on the BEFORE image, e.g. "before — just you, dogless". Per-locale. Empty = no caption.',
     }),
@@ -225,7 +233,7 @@ export const tool = defineType({
       name: "heroAfterCaption",
       title: "After caption",
       type: "string",
-      group: "hero",
+      group: "heroComparison",
       description:
         'Centered caption on the AFTER image, e.g. "after — you + a very good boy". Per-locale. Empty = no caption.',
     }),
@@ -235,7 +243,18 @@ export const tool = defineType({
       type: "string",
       group: "hero",
       description:
-        "Button shown under the title. Scrolls to the embed. Empty = no button.",
+        "Button shown under the title. Empty = no button. Target is set below.",
+    }),
+    defineField({
+      name: "heroCtaLink",
+      title: "Hero CTA link",
+      type: "reference",
+      group: "hero",
+      to: linkableTo({ exclude: ["privacy", "terms", "post", "tag"] }),
+      options: { disableNew: false },
+      hidden: hiddenOnNonEn,
+      description:
+        "Where the hero button goes. Pick a siteLink for external URLs, or a tool/page. Empty = scrolls to embed (#tool).",
     }),
     defineField({
       name: "heroCtaSubtext",
@@ -252,21 +271,16 @@ export const tool = defineType({
       group: "hero",
       description:
         'Pill shown under the hero. Wrap a phrase in *asterisks* to color it brand. Example: "*45,000+ AI Photos generated* on Tinder, Bumble, Hinge and more". Per-locale. Empty = hide.',
-      hidden: ({ document }) => {
-        const kind = (document as { kind?: string } | undefined)?.kind;
-        return kind !== "photoEnhancer";
-      },
     }),
     defineField({
       name: "examplesHeading",
       title: "Heading *",
       type: "string",
-      group: "examples",
+      group: "photoExamples",
       description: "Section title above the before/after examples. Per-locale.",
-      validation: (Rule) =>
-        Rule.custom((value, ctx) => {
-          const kind = (ctx.document as { kind?: string })?.kind;
-          if (kind !== "photoEnhancer") return true;
+      validation: (r) =>
+        r.custom((value, ctx) => {
+          if (docKind(ctx.document) !== "photoEnhancer") return true;
           return value ? true : "Required";
         }),
     }),
@@ -275,7 +289,7 @@ export const tool = defineType({
       title: "Subtitle",
       type: "text",
       rows: 2,
-      group: "examples",
+      group: "photoExamples",
       description:
         "Optional sentence under the heading. Per-locale. Empty = no subtitle.",
     }),
@@ -283,15 +297,13 @@ export const tool = defineType({
       name: "examples",
       title: "Examples *",
       type: "array",
-      group: "examples",
+      group: "photoExamples",
       description:
         "Side-by-side before/after pairs. Add 2–6. Images are edited on EN (locales inherit); titles + descriptions are per-locale.",
-      validation: (Rule) =>
-        Rule.custom((value, ctx) => {
-          const lang = (ctx.document as { language?: string })?.language;
-          if (lang && lang !== "en") return true;
-          const kind = (ctx.document as { kind?: string })?.kind;
-          if (kind !== "photoEnhancer") return true;
+      validation: (r) =>
+        r.custom((value, ctx) => {
+          if (docLang(ctx.document) !== "en") return true;
+          if (docKind(ctx.document) !== "photoEnhancer") return true;
           if (!Array.isArray(value) || value.length < 2)
             return "Add at least 2 examples";
           if (value.length > 6) return "Max 6 examples";
@@ -308,7 +320,7 @@ export const tool = defineType({
               type: "string",
               description:
                 'Short label above the pair (e.g. "Golden hour"). Per-locale.',
-              validation: (Rule) => Rule.required(),
+              validation: (r) => r.required(),
             }),
             defineField({
               name: "description",
@@ -324,13 +336,7 @@ export const tool = defineType({
               options: { hotspot: false },
               description: "Edit on EN; locales inherit at render.",
               hidden: hiddenOnNonEn,
-              validation: (Rule) =>
-                Rule.custom((value, ctx) => {
-                  const lang = (ctx.document as { language?: string })
-                    ?.language;
-                  if (lang && lang !== "en") return true;
-                  return value?.asset ? true : "Required";
-                }),
+              validation: (r) => r.custom(requiredImage("Required")),
             }),
             defineField({
               name: "after",
@@ -339,17 +345,248 @@ export const tool = defineType({
               options: { hotspot: false },
               description: "Edit on EN; locales inherit at render.",
               hidden: hiddenOnNonEn,
-              validation: (Rule) =>
-                Rule.custom((value, ctx) => {
-                  const lang = (ctx.document as { language?: string })
-                    ?.language;
-                  if (lang && lang !== "en") return true;
-                  return value?.asset ? true : "Required";
-                }),
+              validation: (r) => r.custom(requiredImage("Required")),
             }),
           ],
           preview: {
             select: { title: "title", subtitle: "description" },
+          },
+        }),
+      ],
+    }),
+    defineField({
+      name: "reportCurrentRating",
+      title: "Current rating",
+      type: "number",
+      group: "reviewReport",
+      description: "Rating shown on the left (out of 10). Per-locale.",
+      initialValue: 6.8,
+      validation: (r) => r.min(0).max(10),
+    }),
+    defineField({
+      name: "reportTargetRating",
+      title: "Target rating",
+      type: "number",
+      group: "reviewReport",
+      description: "Rating shown on the right (out of 10). Keep ~9.",
+      initialValue: 9.0,
+      validation: (r) => r.min(0).max(10),
+    }),
+    defineField({
+      name: "reportVerdict",
+      title: "Verdict",
+      type: "string",
+      group: "reviewReport",
+      description:
+        "One-line synthesis under the rating bar. Per-locale. Make it app-specific where it matters (e.g. mention prompts on Hinge).",
+      initialValue:
+        "Solid base — but photo #1 is quietly costing you matches.",
+    }),
+    defineField({
+      name: "reportBreakdown",
+      title: "Breakdown",
+      type: "array",
+      group: "reviewReport",
+      description: "3 axes scored out of 10. Per-locale (labels translate).",
+      initialValue: [
+        { _type: "reportBreakdownItem", label: "Photos", score: 7 },
+        { _type: "reportBreakdownItem", label: "Bio", score: 4 },
+        { _type: "reportBreakdownItem", label: "Prompts", score: 6 },
+      ],
+      of: [
+        defineArrayMember({
+          type: "object",
+          name: "reportBreakdownItem",
+          fields: [
+            defineField({
+              name: "label",
+              title: "Label",
+              type: "string",
+              validation: (r) => r.required(),
+            }),
+            defineField({
+              name: "score",
+              title: "Score (0–10)",
+              type: "number",
+              validation: (r) => r.required().min(0).max(10),
+            }),
+          ],
+          preview: {
+            select: { title: "label", subtitle: "score" },
+          },
+        }),
+      ],
+      validation: (r) => r.min(1).max(5),
+    }),
+    defineField({
+      name: "reportActions",
+      title: "Do this next",
+      type: "array",
+      group: "reviewReport",
+      description:
+        "Numbered action list under the breakdown. 3 short lines. Wrap key phrases in *asterisks* to emphasize them. Per-locale.",
+      initialValue: [
+        "Lead with your *solo, face-clear* shot — cut the group photo.",
+        'Rewrite the bio — *"Just ask 🤷"* gives a match nothing to reply to.',
+        "Swap a one-word prompt for a *specific, story-led* answer.",
+      ],
+      of: [defineArrayMember({ type: "string" })],
+      validation: (r) => r.min(1).max(5),
+    }),
+    defineField({
+      name: "chatPreviewStages",
+      title: "Stages *",
+      type: "array",
+      group: "chatPreview",
+      description:
+        "Three chat stages (Open / Reply / Close). Each stage has its own dark-card content and five tone variants × 3 replies. Per-locale.",
+      validation: (r) =>
+        r.custom((value, ctx) =>
+          docKind(ctx.document) !== "chatAssistant"
+            ? true
+            : exactLength(3, "Exactly 3 stages (Open, Reply, Close)")(value),
+        ),
+      of: [
+        defineArrayMember({
+          type: "object",
+          name: "chatPreviewStage",
+          fields: [
+            defineField({
+              name: "tabKey",
+              title: "Stage *",
+              type: "string",
+              options: {
+                list: [
+                  { title: "Open (first message)", value: "open" },
+                  { title: "Reply (mid-chat)", value: "reply" },
+                  { title: "Close (ask out / revive)", value: "close" },
+                ],
+                layout: "dropdown",
+              },
+              validation: (r) => r.required(),
+            }),
+            defineField({
+              name: "eyebrow",
+              title: "Eyebrow *",
+              type: "string",
+              description:
+                'Uppercase label on the dark card, e.g. "THEIR PROFILE" or "STALLED 4 DAYS AGO · THEIR LAST MESSAGE".',
+              validation: (r) => r.required(),
+            }),
+            defineField({
+              name: "message",
+              title: "Their message / profile *",
+              type: "text",
+              rows: 2,
+              description: "Text shown on the dark card.",
+              validation: (r) => r.required(),
+            }),
+            defineField({
+              name: "replyTones",
+              title: "Tone variants *",
+              type: "array",
+              description:
+                "Five tones (Flirty, Feisty, Friendly, Funny, Formal), 3 short replies each.",
+              validation: (r) => r.custom(exactLength(5, "Exactly 5 tones")),
+              of: [
+                defineArrayMember({
+                  type: "object",
+                  name: "chatPreviewTone",
+                  fields: [
+                    defineField({
+                      name: "toneKey",
+                      title: "Tone *",
+                      type: "string",
+                      options: {
+                        list: [
+                          { title: "Flirty 😉", value: "flirty" },
+                          { title: "Feisty 🤪", value: "feisty" },
+                          { title: "Friendly 😊", value: "friendly" },
+                          { title: "Funny 😄", value: "funny" },
+                          { title: "Formal 👔", value: "formal" },
+                        ],
+                        layout: "dropdown",
+                      },
+                      validation: (r) => r.required(),
+                    }),
+                    defineField({
+                      name: "replies",
+                      title: "Replies *",
+                      type: "array",
+                      description: "Exactly 3 short replies.",
+                      validation: (r) =>
+                        r.custom(exactLength(3, "Exactly 3 replies")),
+                      of: [defineArrayMember({ type: "string" })],
+                    }),
+                  ],
+                  preview: {
+                    select: { title: "toneKey", subtitle: "replies.0" },
+                  },
+                }),
+              ],
+            }),
+          ],
+          preview: {
+            select: { title: "tabKey", subtitle: "eyebrow" },
+          },
+        }),
+      ],
+    }),
+    defineField({
+      name: "comparisonsHeading",
+      title: "Heading",
+      type: "string",
+      group: "reviewComparisons",
+      description:
+        'Section title above the bad/good cards. Per-locale. Empty = hide section. Example: "What the review actually catches".',
+    }),
+    defineField({
+      name: "comparisons",
+      title: "Cards",
+      type: "array",
+      group: "reviewComparisons",
+      description:
+        "Bad vs good examples the reviewer catches. 3–6 cards. Per-locale.",
+      validation: (r) => r.max(6),
+      of: [
+        defineArrayMember({
+          type: "object",
+          name: "comparisonItem",
+          fields: [
+            defineField({
+              name: "eyebrow",
+              title: "Eyebrow *",
+              type: "string",
+              description:
+                'Short uppercase label, e.g. "Lead photo", "The bio".',
+              validation: (r) => r.required().max(40),
+            }),
+            defineField({
+              name: "bad",
+              title: "Bad example *",
+              type: "string",
+              description: "The mistake. Short. Keep quotes if quoting a bio.",
+              validation: (r) => r.required(),
+            }),
+            defineField({
+              name: "good",
+              title: "Good example *",
+              type: "string",
+              description: "The fix the tool surfaces. Short.",
+              validation: (r) => r.required(),
+            }),
+            defineField({
+              name: "description",
+              title: "Description *",
+              type: "text",
+              rows: 2,
+              description:
+                "One sentence on what the review does with this. Shown under the divider.",
+              validation: (r) => r.required(),
+            }),
+          ],
+          preview: {
+            select: { title: "eyebrow", subtitle: "good" },
           },
         }),
       ],
@@ -375,10 +612,10 @@ export const tool = defineType({
       group: "cta",
       initialValue: "Try YourMove AI free",
       description: "Required when CTA title is set.",
-      validation: (Rule) =>
-        Rule.custom((value, context) => {
+      validation: (r) =>
+        r.custom((value, ctx) => {
           const hasTitle = !!(
-            context.document as { ctaTitle?: string } | undefined
+            ctx.document as { ctaTitle?: string } | undefined
           )?.ctaTitle;
           if (hasTitle && !value) return "Required when CTA title is set";
           return true;
@@ -396,10 +633,10 @@ export const tool = defineType({
       },
       hidden: hiddenOnNonEn,
       description: "Required when CTA title is set.",
-      validation: (Rule) =>
-        Rule.custom((value, context) => {
+      validation: (r) =>
+        r.custom((value, ctx) => {
           const hasTitle = !!(
-            context.document as { ctaTitle?: string } | undefined
+            ctx.document as { ctaTitle?: string } | undefined
           )?.ctaTitle;
           if (hasTitle && !value) return "Required when CTA title is set";
           return true;
@@ -410,9 +647,9 @@ export const tool = defineType({
       type: "string",
       group: "howItWorks",
       description: "Required when at least one step is added.",
-      validation: (Rule) =>
-        Rule.custom((value, context) => {
-          const steps = (context.document as { howItWorks?: unknown[] })
+      validation: (r) =>
+        r.custom((value, ctx) => {
+          const steps = (ctx.document as { howItWorks?: unknown[] })
             ?.howItWorks;
           if (Array.isArray(steps) && steps.length > 0 && !value) {
             return "Heading is required when steps are added";
@@ -424,7 +661,7 @@ export const tool = defineType({
       name: "howItWorks",
       type: "array",
       group: "howItWorks",
-      validation: (Rule) => Rule.max(5),
+      validation: (r) => r.max(5),
       of: [
         defineArrayMember({
           type: "object",
@@ -434,14 +671,14 @@ export const tool = defineType({
               name: "title",
               title: "Title *",
               type: "string",
-              validation: (Rule) => Rule.required(),
+              validation: (r) => r.required(),
             }),
             defineField({
               name: "text",
               title: "Text *",
               type: "text",
               rows: 2,
-              validation: (Rule) => Rule.required(),
+              validation: (r) => r.required(),
             }),
           ],
           preview: { select: { title: "title", subtitle: "text" } },
@@ -449,27 +686,13 @@ export const tool = defineType({
       ],
     }),
     defineField({
-      name: "howItWorksCtaSubtext",
-      type: "string",
-      group: "howItWorks",
-      description:
-        "Optional small text under the CTA button (e.g. 'it takes less than 3 minutes').",
-    }),
-    defineField({
-      name: "featuresEyebrow",
-      type: "string",
-      group: "features",
-      description:
-        "Small label above the heading. Defaults to localized 'FEATURES' if empty.",
-    }),
-    defineField({
       name: "featuresHeading",
       type: "string",
       group: "features",
       description: "Required when at least one feature is added.",
-      validation: (Rule) =>
-        Rule.custom((value, context) => {
-          const features = (context.document as { features?: unknown[] })
+      validation: (r) =>
+        r.custom((value, ctx) => {
+          const features = (ctx.document as { features?: unknown[] })
             ?.features;
           if (Array.isArray(features) && features.length > 0 && !value) {
             return "Heading is required when features are added";
@@ -491,20 +714,20 @@ export const tool = defineType({
               title: "Icon *",
               type: "string",
               options: { list: ICON_OPTIONS, layout: "dropdown" },
-              validation: (Rule) => Rule.required(),
+              validation: (r) => r.required(),
             }),
             defineField({
               name: "title",
               title: "Title *",
               type: "string",
-              validation: (Rule) => Rule.required(),
+              validation: (r) => r.required(),
             }),
             defineField({
               name: "description",
               title: "Description *",
               type: "text",
               rows: 3,
-              validation: (Rule) => Rule.required(),
+              validation: (r) => r.required(),
             }),
             defineField({
               name: "button",

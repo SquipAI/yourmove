@@ -1,12 +1,12 @@
 ---
 import PressQuoteCard from "@components/shared/PressQuoteCard.astro";
 import { t } from "@i18n/ui";
-import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import type { Locale } from "@i18n/config";
 import type { Press } from "@lib/types";
 
 interface Props {
   pressQuotes: Press[];
-  lang?: Locale;
+  lang: Locale;
   /** Heading level. Default 3 (sub-heading inside a section). */
   level?: 2 | 3;
   class?: string;
@@ -14,7 +14,7 @@ interface Props {
 
 const {
   pressQuotes,
-  lang = DEFAULT_LOCALE,
+  lang,
   level = 3,
   class: cls,
 } = Astro.props;

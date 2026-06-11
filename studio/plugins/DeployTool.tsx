@@ -36,7 +36,7 @@ export function DeployTool() {
         tone="default"
         style={{ maxWidth: 480 }}
       >
-        <Stack space={5}>
+        <Stack gap={5}>
           <Heading size={2}>Deploy site</Heading>
 
           <Text muted size={1}>
@@ -69,7 +69,7 @@ export function DeployTool() {
           )}
 
           {status === "error" && (
-            <Stack space={3}>
+            <Stack gap={3}>
               <Card tone="critical" padding={3} radius={2}>
                 <Text size={1}>
                   Deploy failed: {errorMsg || "Unknown error"}
