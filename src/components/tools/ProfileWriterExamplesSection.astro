@@ -1,0 +1,77 @@
+---
+import SectionHeading from "@components/shared/SectionHeading.astro";
+import type { Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+import type { ProfileWriterApp, ProfileWriterToneKey } from "@lib/types";
+
+interface Props {
+  /** All apps configured on the tool. App-specific tools pass one; the general
+   *  generator passes several and the showcase spans them. */
+  apps: ProfileWriterApp[];
+  lang: Locale;
+}
+
+const { apps, lang } = Astro.props;
+
+const TONE_ORDER: ProfileWriterToneKey[] = ["flirty", "thoughtful", "feisty"];
+const EMOJI: Record<ProfileWriterToneKey, string> = {
+  flirty: "😉",
+  thoughtful: "💭",
+  feisty: "🔥",
+};
+
+// Curate a varied reel: one app → all its sections (same persona, every tone);
+// several apps → first + last section of each, so the showcase spans apps and
+// surfaces deeper sections (e.g. Hinge's "Dating me is like"). Tone cycles down
+// the list so all three voices appear.
+const single = apps.length === 1;
+const picks = apps.flatMap((app) => {
+  const idxs = single
+    ? app.sections.map((_, i) => i)
+    : [...new Set([0, app.sections.length - 1])];
+  return idxs.map((i) => ({ appLabel: app.app, section: app.sections[i] }));
+});
+
+const examples = picks.map((p, idx) => {
+  const toneKey = TONE_ORDER[idx % TONE_ORDER.length];
+  return {
+    appLabel: p.appLabel,
+    sectionLabel: p.section.label,
+    toneLabel: t(lang, `profileWriter.tones.${toneKey}` as const),
+    emoji: EMOJI[toneKey],
+    text: p.section[toneKey],
+  };
+});
+---
+
+<section data-section="profile-writer-examples" class="section">
+  <SectionHeading
+    title={t(lang, "profileWriterExamples.heading")}
+    subtitle={t(lang, "profileWriterExamples.subtitle")}
+    class="mb-section-xs max-w-180"
+  />
+
+  <ul class="border-subtle-lighter divide-subtle-lighter divide-y border-y">
+    {
+      examples.map((ex) => (
+        <li class="grid items-baseline gap-3 py-7 md:grid-cols-[minmax(8rem,1fr)_2.6fr] md:gap-12 md:py-9">
+          <p class="flex flex-col gap-1.5">
+            <span class="flex items-center gap-2">
+              <span aria-hidden="true" class="text-base">
+                {ex.emoji}
+              </span>
+              <span class="accent text-lg">{ex.toneLabel}</span>
+            </span>
+            <span class="text-subtle tracking-eyebrow text-[11px] font-medium uppercase">
+              {ex.appLabel} · {ex.sectionLabel}
+            </span>
+          </p>
+
+          <p class="text-mist-900 font-serif text-title-xs text-pretty italic">
+            &ldquo;{ex.text}&rdquo;
+          </p>
+        </li>
+      ))
+    }
+  </ul>
+</section>

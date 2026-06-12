@@ -1,5 +1,5 @@
 ---
-import PageHeading from "@components/shared/PageHeading.astro";
+import { parseAccent } from "@lib/parseAccent";
 import Btn from "@components/shared/Btn.astro";
 
 interface Props {
@@ -10,14 +10,61 @@ interface Props {
 }
 
 const { title, subtitle, buttonText, href } = Astro.props;
+
+const titleParts = parseAccent(title);
+const subtitleParts = parseAccent(subtitle);
 ---
 
 <section data-section="cta" class="section">
-  <div class="flex flex-col items-center text-center">
-    <PageHeading title={title} subtitle={subtitle} level={2} centered />
-    <Btn href={href} class="btn-big">
-      {buttonText}
-      <span aria-hidden="true" class="ml-2">→</span>
-    </Btn>
+  <div
+    class="bg-ink relative isolate flex flex-col items-center overflow-hidden rounded-2xl px-svw py-section-sm text-center text-white ring-1 ring-white/10 md:rounded-3xl md:px-12"
+  >
+    <div
+      aria-hidden="true"
+      class="absolute inset-0 -z-10 bg-[radial-gradient(80%_100%_at_50%_-20%,oklch(from_var(--color-brand)_45%_c_h),transparent_70%)]"
+    >
+    </div>
+
+    <div class="flex flex-col items-center gap-8">
+      <hgroup class="flex flex-col items-center *:max-w-180">
+        <h2 class="text-title-big">
+          {
+            titleParts.map((p) =>
+              p.accent ? (
+                <span class="text-brand-lighter font-serif italic">
+                  {p.text}
+                </span>
+              ) : (
+                p.text
+              ),
+            )
+          }
+        </h2>
+        {
+          subtitle && (
+            <p class="text-subtitle text-white/70">
+              {subtitleParts.map((p) =>
+                p.accent ? (
+                  <span class="text-brand-lighter font-serif italic">
+                    {p.text}
+                  </span>
+                ) : (
+                  p.text
+                ),
+              )}
+            </p>
+          )
+        }
+      </hgroup>
+
+      <Btn
+        href={href}
+        variant="inverted"
+        class="btn-big shadow-xl transition hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:w-auto sm:px-12"
+      >
+        {buttonText}
+        <span aria-hidden="true" class="ml-2">→</span>
+      </Btn>
+    </div>
   </div>
 </section>

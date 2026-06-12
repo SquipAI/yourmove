@@ -7,6 +7,7 @@
   --color-brand-darker: oklch(from var(--color-brand) 54% c h);
   --color-subtle: var(--color-mist-700);
   --color-subtle-lighter: oklch(from var(--color-subtle) 96% c h);
+  --color-ink: oklch(0.21 0.02 27);
 
   --text-title: clamp(2rem, 1.5rem + 2.5svw, 3rem);
   --text-title-xxs: clamp(1.125rem, 1.07rem + 0.27svw, 1.3125rem);
@@ -57,6 +58,10 @@
   .bg-brand {
     --focus-color: white;
     --nav-bg-active: rgb(255 255 255 / 0.1);
+  }
+
+  .bg-ink {
+    --focus-color: white;
   }
 
   /* Element resets */

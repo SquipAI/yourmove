@@ -142,7 +142,7 @@ export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
         faqHeading,
         ${FAQ_ITEMS},
         "extendedHero": select(
-          coalesce(${TOOL_EN}kind, kind) in ["baseExtended", "photoEnhancer", "profileReviewer", "chatAssistant"] => {
+          coalesce(${TOOL_EN}kind, kind) in ["baseExtended", "photoEnhancer", "profileReviewer", "chatAssistant", "profileWriter"] => {
             "before": coalesce(
               ${TOOL_EN}heroBefore{ "url": asset->url },
               heroBefore{ "url": asset->url }
@@ -203,6 +203,15 @@ export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
               eyebrow,
               message,
               "replyTones": replyTones[]{ toneKey, replies }
+            }
+          },
+          null
+        ),
+        "profileWriter": select(
+          coalesce(${TOOL_EN}kind, kind) == "profileWriter" => {
+            "apps": coalesce(profileWriterApps, ${TOOL_EN}profileWriterApps)[]{
+              app,
+              "sections": sections[]{ label, flirty, thoughtful, feisty }
             }
           },
           null

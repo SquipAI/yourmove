@@ -8,6 +8,7 @@ import {
   ThLargeIcon,
   ImagesIcon,
   HelpCircleIcon,
+  EditIcon,
 } from "@sanity/icons";
 import {
   faqArrayField,
@@ -53,7 +54,14 @@ export const tool = defineType({
         "photoEnhancer",
         "profileReviewer",
         "chatAssistant",
+        "profileWriter",
       ),
+    },
+    {
+      name: "profileWriter",
+      title: "Profile preview",
+      icon: EditIcon,
+      hidden: hideUnlessKind("profileWriter"),
     },
     {
       name: "heroComparison",
@@ -528,6 +536,87 @@ export const tool = defineType({
           ],
           preview: {
             select: { title: "tabKey", subtitle: "eyebrow" },
+          },
+        }),
+      ],
+    }),
+    defineField({
+      name: "profileWriterApps",
+      title: "Apps *",
+      type: "array",
+      group: "profileWriter",
+      description:
+        "Apps shown in the hero preview's switcher. Add one app for an app-specific tool, or several (e.g. Tinder, Hinge, Bumble) for the general generator. Each section has a Flirty, Thoughtful and Feisty variant. Edit on EN; locales inherit (leave empty to reuse EN, or fill to localize).",
+      validation: (r) =>
+        r.custom((value, ctx) => {
+          if (docLang(ctx.document) !== "en") return true;
+          if (docKind(ctx.document) !== "profileWriter") return true;
+          if (!Array.isArray(value) || value.length < 1)
+            return "Add at least 1 app";
+          return true;
+        }),
+      of: [
+        defineArrayMember({
+          type: "object",
+          name: "profileWriterApp",
+          fields: [
+            defineField({
+              name: "app",
+              title: "App name *",
+              type: "string",
+              description: 'Shown in the app dropdown, e.g. "Tinder".',
+              validation: (r) => r.required(),
+            }),
+            defineField({
+              name: "sections",
+              title: "Sections *",
+              type: "array",
+              description:
+                "Profile sections for this app (e.g. About Me, My anthem). 1–5.",
+              validation: (r) => r.min(1).max(5),
+              of: [
+                defineArrayMember({
+                  type: "object",
+                  name: "profileWriterSection",
+                  fields: [
+                    defineField({
+                      name: "label",
+                      title: "Section label *",
+                      type: "string",
+                      description: 'e.g. "About Me", "Two truths and a lie".',
+                      validation: (r) => r.required(),
+                    }),
+                    defineField({
+                      name: "flirty",
+                      title: "Flirty *",
+                      type: "text",
+                      rows: 2,
+                      validation: (r) => r.required(),
+                    }),
+                    defineField({
+                      name: "thoughtful",
+                      title: "Thoughtful *",
+                      type: "text",
+                      rows: 2,
+                      validation: (r) => r.required(),
+                    }),
+                    defineField({
+                      name: "feisty",
+                      title: "Feisty *",
+                      type: "text",
+                      rows: 2,
+                      validation: (r) => r.required(),
+                    }),
+                  ],
+                  preview: {
+                    select: { title: "label", subtitle: "flirty" },
+                  },
+                }),
+              ],
+            }),
+          ],
+          preview: {
+            select: { title: "app", subtitle: "sections.0.label" },
           },
         }),
       ],

@@ -1,7 +1,7 @@
 ---
 interface Props {
   href?: string;
-  variant?: "solid" | "outline" | "ghost";
+  variant?: "solid" | "outline" | "ghost" | "inverted";
   class?: string;
   [key: string]: unknown;
 }
@@ -18,6 +18,8 @@ const Tag = href ? "a" : "button";
     variant === "solid" && "btn-solid",
     variant === "outline" && "btn-outline",
     variant === "ghost" && "border-white/70 hover:bg-white/10",
+    variant === "inverted" &&
+      "bg-white text-brand-darker border-transparent hover:bg-brand-lighter",
     cls,
   ]}
   {...rest}

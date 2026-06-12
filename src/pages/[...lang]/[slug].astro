@@ -5,6 +5,8 @@ import SchemaOrg from "@components/seo/SchemaOrg.astro";
 import ExtendedHero from "@components/tools/ExtendedHero.astro";
 import BeforeAfterSlider from "@components/tools/ui/BeforeAfterSlider.astro";
 import ChatPreview from "@components/tools/ChatPreview.astro";
+import ProfileWriterPreview from "@components/tools/ProfileWriterPreview.astro";
+import ProfileWriterExamplesSection from "@components/tools/ProfileWriterExamplesSection.astro";
 import ReviewReportPreview from "@components/tools/ReviewReportPreview.astro";
 import ReviewComparisonsSection from "@components/tools/ReviewComparisonsSection.astro";
 import PhotoExamplesSection from "@components/tools/PhotoExamplesSection.astro";
@@ -88,10 +90,10 @@ const heroCtaHref = heroCtaLink
     )
   : null;
 
-// base + profileWriter get the plain heading; the rest get the two-column
-// extended hero whose visual + aside switch on tool.kind.
+// base gets the plain heading; the rest get the two-column extended hero
+// whose visual + aside switch on tool.kind.
 const { kind } = tool;
-const isExtendedHero = kind !== "base" && kind !== "profileWriter";
+const isExtendedHero = kind !== "base";
 const hero = isExtendedHero ? tool.extendedHero : null;
 if (isExtendedHero && !hero)
   throw new Error(`extendedHero missing: ${tool.slug} (${kind})`);
@@ -111,6 +113,10 @@ if (kind === "profileReviewer" && !report)
 const chat = kind === "chatAssistant" ? tool.chatPreview : null;
 if (kind === "chatAssistant" && !chat)
   throw new Error(`chatPreview missing: ${tool.slug}`);
+
+const profileWriter = kind === "profileWriter" ? tool.profileWriter : null;
+if (kind === "profileWriter" && !profileWriter?.apps?.length)
+  throw new Error(`profileWriter apps missing: ${tool.slug}`);
 
 if (
   kind === "photoEnhancer" &&
@@ -202,6 +208,14 @@ const logosLabel = usePress
             {lang}
           />
         )}
+        {profileWriter && (
+          <ProfileWriterPreview
+            slot="visual"
+            apps={profileWriter.apps}
+            ctaHref={heroCtaHref}
+            {lang}
+          />
+        )}
         <div class="flex flex-col gap-y-6">
           <LogoRow
             {logos}
@@ -211,6 +225,12 @@ const logosLabel = usePress
           <SocialProof text={hero.socialProof} />
         </div>
       </ExtendedHero>
+    )
+  }
+
+  {
+    profileWriter && (
+      <ProfileWriterExamplesSection apps={profileWriter.apps} {lang} />
     )
   }
 
@@ -297,6 +317,7 @@ const logosLabel = usePress
         heading={
           tool.faqHeading ?? `${tool.cardTitle ?? stripAccent(tool.title)} FAQ`
         }
+        align="center"
         {lang}
       />
     )

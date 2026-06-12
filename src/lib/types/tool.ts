@@ -147,6 +147,21 @@ export type ChatPreviewData = {
   stages: ChatPreviewStage[];
 };
 
+export type ProfileWriterToneKey = "flirty" | "thoughtful" | "feisty";
+
+export type ProfileWriterSection = {
+  label: string;
+} & Record<ProfileWriterToneKey, string>;
+
+export type ProfileWriterApp = {
+  app: string;
+  sections: ProfileWriterSection[];
+};
+
+export type ProfileWriterData = {
+  apps: ProfileWriterApp[];
+};
+
 export type ToolPageData = {
   _id: string;
   kind: ToolKind;
@@ -177,6 +192,7 @@ export type ToolPageData = {
   comparisonsHeading: string | null;
   comparisons: ReviewComparisonItem[] | null;
   chatPreview: ChatPreviewData | null;
+  profileWriter: ProfileWriterData | null;
 };
 
 export type ToolsPageData = {

@@ -1,0 +1,274 @@
+---
+import Icon from "@components/shared/Icon.astro";
+import ChevronDown from "@components/shared/ChevronDown.astro";
+import type { Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+import type { ProfileWriterApp, ProfileWriterToneKey } from "@lib/types";
+
+interface Props {
+  apps: ProfileWriterApp[];
+  ctaHref: string | null;
+  lang: Locale;
+}
+
+const { apps, ctaHref, lang } = Astro.props;
+if (apps.length === 0) throw new Error("ProfileWriterPreview: no apps");
+
+const TONES: ProfileWriterToneKey[] = ["flirty", "thoughtful", "feisty"];
+const tones = TONES.map((key) => ({
+  key,
+  label: t(lang, `profileWriter.tones.${key}` as const),
+}));
+
+const multiApp = apps.length > 1;
+const initialTone: ProfileWriterToneKey = "flirty";
+
+const selectClass =
+  "pw-select w-full appearance-none cursor-pointer rounded-md border border-subtle-lighter bg-white py-2.5 pl-4 pr-10 text-sm font-medium text-mist-800 focus-visible:outline-2 focus-visible:outline-brand";
+---
+
+<figure
+  class="profile-writer-preview flex flex-col gap-4 rounded-lg border border-subtle-lighter bg-white p-4 shadow-xl shadow-brand/10 sm:p-5"
+  data-app="0"
+  data-section="0"
+  data-tone={initialTone}
+>
+  <figcaption class="sr-only">{t(lang, "profileWriter.figcaption")}</figcaption>
+
+  <div class="flex items-center justify-between gap-3">
+    <p class="text-lg font-semibold text-mist-900">
+      {t(lang, "profileWriter.heading")}
+    </p>
+    <span
+      class="tracking-eyebrow text-[10px] font-medium uppercase text-subtle"
+      aria-hidden="true"
+    >
+      {t(lang, "profileWriter.eyebrow")}
+    </span>
+  </div>
+
+  <div class:list={["grid gap-3", multiApp && "sm:grid-cols-2"]}>
+    {
+      multiApp && (
+        <label class="relative block">
+          <span class="sr-only">{t(lang, "profileWriter.appLabel")}</span>
+          <select class={selectClass} data-role="app">
+            {apps.map((app, i) => (
+              <option value={i}>{app.app}</option>
+            ))}
+          </select>
+          <ChevronDown class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-subtle" />
+        </label>
+      )
+    }
+    <label class="relative block">
+      <span class="sr-only">{t(lang, "profileWriter.toneLabel")}</span>
+      <select class={selectClass} data-role="tone">
+        {
+          tones.map((tone) => (
+            <option value={tone.key} selected={tone.key === initialTone}>
+              {tone.label}
+            </option>
+          ))
+        }
+      </select>
+      <ChevronDown
+        class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-subtle"
+      />
+    </label>
+  </div>
+
+  <div class="flex flex-col gap-4 rounded-md border border-subtle-lighter p-4">
+    {
+      apps.map((app, ai) => (
+        <div
+          data-section-group={ai}
+          aria-hidden={ai !== 0 ? "true" : "false"}
+          class="aria-hidden:hidden"
+        >
+          <label class="relative block">
+            <span class="sr-only">
+              {t(lang, "profileWriter.sectionLabel")}
+            </span>
+            <select class={selectClass} data-role="section" data-app={ai}>
+              {app.sections.map((section, si) => (
+                <option value={si}>{section.label}</option>
+              ))}
+            </select>
+            <ChevronDown class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-subtle" />
+          </label>
+        </div>
+      ))
+    }
+
+    <div class="grid">
+      {
+        apps.flatMap((app, ai) =>
+          app.sections.flatMap((section, si) =>
+            tones.map((tone) => (
+              <p
+                data-variant
+                data-app={ai}
+                data-section={si}
+                data-tone={tone.key}
+                aria-hidden={
+                  ai === 0 && si === 0 && tone.key === initialTone
+                    ? "false"
+                    : "true"
+                }
+                class="[grid-area:1/1] min-h-24 text-pretty leading-relaxed text-mist-900 aria-hidden:invisible"
+              >
+                {section[tone.key]}
+              </p>
+            )),
+          ),
+        )
+      }
+    </div>
+
+    <div class="flex items-center justify-end gap-2">
+      <button
+        type="button"
+        class="pw-regenerate flex size-10 cursor-pointer items-center justify-center rounded-full border border-subtle-lighter text-subtle transition-colors hover:text-mist-900 motion-reduce:transition-none"
+        aria-label={t(lang, "profileWriter.regenerate")}
+      >
+        <Icon name="rotate-cw" class="size-4" />
+      </button>
+      <button
+        type="button"
+        class="pw-copy flex size-10 cursor-pointer items-center justify-center rounded-full bg-brand text-white transition-colors hover:bg-brand-darker motion-reduce:transition-none"
+        aria-label={t(lang, "profileWriter.copy")}
+      >
+        <Icon name="copy" class="size-4" />
+      </button>
+    </div>
+  </div>
+
+  <div
+    class="relative overflow-hidden rounded-md border border-subtle-lighter p-4"
+  >
+    <div
+      class="flex select-none flex-col gap-2.5 blur-[3px]"
+      aria-hidden="true"
+    >
+      <span class="h-3 w-1/3 rounded bg-mist-900/15"></span>
+      <span class="h-3 w-full rounded bg-mist-900/10"></span>
+      <span class="h-3 w-full rounded bg-mist-900/10"></span>
+      <span class="h-3 w-2/3 rounded bg-mist-900/10"></span>
+    </div>
+    <a
+      href={ctaHref ?? "#tool"}
+      class="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full border border-mist-900 bg-white px-6 py-3 text-sm font-semibold text-mist-900 shadow-sm transition-colors hover:bg-mist-900 hover:text-white motion-reduce:transition-none"
+    >
+      {t(lang, "profileWriter.unlock")}
+      <Icon name="lock-open" class="size-4" />
+    </a>
+  </div>
+
+  <span
+    class="pw-status sr-only"
+    role="status"
+    aria-live="polite"
+    data-copied-label={t(lang, "profileWriter.copied")}></span>
+</figure>
+
+<script>
+  document
+    .querySelectorAll<HTMLElement>(".profile-writer-preview")
+    .forEach((root) => {
+      const variants = Array.from(
+        root.querySelectorAll<HTMLElement>("[data-variant]"),
+      );
+      const sectionGroups = Array.from(
+        root.querySelectorAll<HTMLElement>("[data-section-group]"),
+      );
+      const appSelect = root.querySelector<HTMLSelectElement>(
+        'select[data-role="app"]',
+      );
+      const toneSelect = root.querySelector<HTMLSelectElement>(
+        'select[data-role="tone"]',
+      );
+      const sectionSelects = Array.from(
+        root.querySelectorAll<HTMLSelectElement>('select[data-role="section"]'),
+      );
+      const status = root.querySelector<HTMLElement>(".pw-status");
+
+      const sectionSelectFor = (app: string) =>
+        sectionSelects.find((s) => s.dataset.app === app) ?? null;
+
+      function sync() {
+        const { app, section, tone } = root.dataset;
+        variants.forEach((v) => {
+          const on =
+            v.dataset.app === app &&
+            v.dataset.section === section &&
+            v.dataset.tone === tone;
+          v.setAttribute("aria-hidden", on ? "false" : "true");
+        });
+        sectionGroups.forEach((g) => {
+          g.setAttribute(
+            "aria-hidden",
+            g.dataset.sectionGroup === app ? "false" : "true",
+          );
+        });
+      }
+
+      appSelect?.addEventListener("change", () => {
+        const app = appSelect.value;
+        root.dataset.app = app;
+        const sel = sectionSelectFor(app);
+        if (sel) {
+          sel.selectedIndex = 0;
+          root.dataset.section = sel.value;
+        }
+        sync();
+      });
+
+      sectionSelects.forEach((sel) => {
+        sel.addEventListener("change", () => {
+          if (sel.dataset.app !== root.dataset.app) return;
+          root.dataset.section = sel.value;
+          sync();
+        });
+      });
+
+      toneSelect?.addEventListener("change", () => {
+        root.dataset.tone = toneSelect.value;
+        sync();
+      });
+
+      root
+        .querySelector<HTMLButtonElement>(".pw-regenerate")
+        ?.addEventListener("click", () => {
+          if (!toneSelect) return;
+          const next =
+            (toneSelect.selectedIndex + 1) % toneSelect.options.length;
+          toneSelect.selectedIndex = next;
+          root.dataset.tone = toneSelect.value;
+          sync();
+        });
+
+      root
+        .querySelector<HTMLButtonElement>(".pw-copy")
+        ?.addEventListener("click", async () => {
+          const current = variants.find(
+            (v) => v.getAttribute("aria-hidden") === "false",
+          );
+          const text = current?.textContent?.trim() ?? "";
+          if (!text) return;
+          try {
+            await navigator.clipboard.writeText(text);
+            if (status) {
+              status.textContent = status.dataset.copiedLabel ?? "";
+              setTimeout(() => {
+                if (status) status.textContent = "";
+              }, 1500);
+            }
+          } catch {
+            /* clipboard not available */
+          }
+        });
+
+      sync();
+    });
+</script>
