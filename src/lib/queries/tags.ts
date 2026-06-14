@@ -46,7 +46,7 @@ export function getTagPosts(tagSlug: string, lang = DEFAULT_LOCALE) {
 export function getTagBySlug(slug: string, lang = DEFAULT_LOCALE) {
   return cached(`getTagBySlug:${slug}:${lang}`, () =>
     sanityClient.fetch<TagPageData>(
-      `${coalesceLang("tag", "slug.current == $slug")}{ _id, title, "slug": slug.current, metaTitle, metaDescription, ${ALTERNATES} }`,
+      `${coalesceLang("tag", "slug.current == $slug")}{ _id, title, description, "slug": slug.current, metaTitle, metaDescription, downloadHeading, ${ALTERNATES} }`,
       { slug, lang },
     ),
   );

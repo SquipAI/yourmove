@@ -5,6 +5,7 @@ import type {
   BlogPageData,
   BlogSubPageData,
   SiteStats,
+  AppDownload,
   NavTools,
   HeaderLinks,
   Press,
@@ -25,6 +26,7 @@ export function getHome(lang = DEFAULT_LOCALE) {
       `${coalesceLang("home")}{
         title, navLabel, description, metaTitle, metaDescription,
         statsEyebrow, blogHeading,
+        downloadHeading,
         "cta": {
           "label": heroCta.label,
           "url": *[_type == "home" && language == "en"][0].heroCta.link->url
@@ -112,7 +114,7 @@ export function getLegalPage(type: "privacy" | "terms", lang = DEFAULT_LOCALE) {
 export function getBlogPage(lang = DEFAULT_LOCALE) {
   return cached(`getBlogPage:${lang}`, () =>
     sanityClient.fetch<BlogPageData>(
-      `${coalesceLang("blog")}{ title, description, metaTitle, metaDescription }`,
+      `${coalesceLang("blog")}{ title, description, metaTitle, metaDescription, downloadHeading }`,
       { lang },
     ),
   );
@@ -130,7 +132,7 @@ export function getBlogPostsPage(lang = DEFAULT_LOCALE) {
 export function getBlogTagsPage(lang = DEFAULT_LOCALE) {
   return cached(`getBlogTagsPage:${lang}`, () =>
     sanityClient.fetch<BlogSubPageData>(
-      `${coalesceLang("blog-tags")}{ title, description, metaTitle, metaDescription }`,
+      `${coalesceLang("blog-tags")}{ title, description, metaTitle, metaDescription, downloadHeading }`,
       { lang },
     ),
   );
@@ -139,6 +141,11 @@ export function getBlogTagsPage(lang = DEFAULT_LOCALE) {
 // Affiliate external link — stable Sanity id, editor changes url/title in
 // Studio, the id stays.
 const AFFILIATE_SITELINK_ID = "77b2b26c-8ffc-4534-8dce-22ccb8c92e86";
+
+// Social / support links — same pattern as app store IDs.
+const INSTAGRAM_SITELINK_ID = "469bab81-c3fc-4f5c-9c94-edba4425d4ee";
+const TIKTOK_SITELINK_ID = "bda114b9-483b-4738-885e-9f016b6ba34f";
+const SUPPORT_EMAIL_SITELINK_ID = "80997e6d-d270-4f14-8387-ecd6bcfd2046";
 
 // Tools dropdown content — shared by header and footer.
 export function getNavTools(lang = DEFAULT_LOCALE) {
@@ -170,12 +177,16 @@ export function getHeaderLinks(lang = DEFAULT_LOCALE) {
           "label": coalesce(title[$lang], title.en),
           url
         },
-        "ctaUrl": *[_id == $startId][0].url
+        "ctaUrl": *[_id == $startId][0].url,
+        "appStoreUrl": *[_id == $appStoreId][0].url,
+        "playStoreUrl": *[_id == $playStoreId][0].url
       }`,
       {
         lang,
         affiliateId: AFFILIATE_SITELINK_ID,
         startId: START_SITELINK_ID,
+        appStoreId: APP_STORE_SITELINK_ID,
+        playStoreId: GOOGLE_PLAY_SITELINK_ID,
       },
     ),
   );
@@ -213,6 +224,22 @@ export function getSiteStats() {
   );
 }
 
+// Store badge urls + stats for <AppDownloadSection>. The per-page
+// `downloadHeading` lives on each page document.
+export function getAppDownload() {
+  return cached("getAppDownload", () =>
+    sanityClient.fetch<AppDownload>(
+      `{
+        "appStoreUrl": *[_id == $appStoreId][0].url,
+        "playStoreUrl": *[_id == $playStoreId][0].url,
+        "userCount": *[_type == "siteStats" && _id == "site-stats"][0].userCount,
+        "userRating": *[_type == "siteStats" && _id == "site-stats"][0].userRating
+      }`,
+      { appStoreId: APP_STORE_SITELINK_ID, playStoreId: GOOGLE_PLAY_SITELINK_ID },
+    ),
+  );
+}
+
 export function getFooterNav(lang = DEFAULT_LOCALE) {
   return cached(`getFooterNav:${lang}`, () =>
     sanityClient.fetch<FooterNavData | null>(
@@ -235,9 +262,17 @@ export function getFooterNav(lang = DEFAULT_LOCALE) {
             "targetSlug": slug.current,
             "externalUrl": select(_type == "siteLink" => url)
           }
-        }
+        },
+        "instagramUrl": *[_id == $instagramId][0].url,
+        "tiktokUrl": *[_id == $tiktokId][0].url,
+        "supportUrl": *[_id == $supportId][0].url
       }`,
-      { lang },
+      {
+        lang,
+        instagramId: INSTAGRAM_SITELINK_ID,
+        tiktokId: TIKTOK_SITELINK_ID,
+        supportId: SUPPORT_EMAIL_SITELINK_ID,
+      },
     ),
   );
 }

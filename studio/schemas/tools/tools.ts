@@ -7,6 +7,8 @@ import {
   pageTitleField,
   pageDescriptionField,
   navLabelField,
+  downloadHeadingField,
+  downloadCtaGroup,
   singletonPagePreview,
 } from "../shared";
 
@@ -18,11 +20,12 @@ export const tools = defineType({
   type: "document",
   icon: ControlsIcon,
   __experimental_omnisearch_visibility: false,
-  groups: standardGroups,
+  groups: [...standardGroups, downloadCtaGroup],
   fields: [
     pageTitleField({ path: "/tools", initialValue: "Tools" }),
     pageDescriptionField(),
     navLabelField("Tools"),
+    downloadHeadingField(),
     ...seoMetaFields,
     { ...languageField, group: "meta" },
   ],

@@ -46,6 +46,7 @@ function makeLegalPage(name: string, title: string, icon: ComponentType) {
             },
           }),
         ],
+        validation: (r) => r.required(),
       }),
       ...seoMetaFields,
       { ...languageField, group: "meta" },

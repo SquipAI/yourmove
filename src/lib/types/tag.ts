@@ -8,8 +8,10 @@ export type Tag = {
 };
 
 export type TagPageData = Tag & {
+  description: string | null;
   metaTitle: string;
   metaDescription: string;
+  downloadHeading: string;
   alternates: AlternateSlug[] | null;
 };
 

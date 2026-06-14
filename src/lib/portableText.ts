@@ -84,7 +84,7 @@ export function inlineHTML(
           const extras = newTab
             ? ' target="_blank" rel="noopener noreferrer"'
             : "";
-          html = `<a href="${escape(href)}"${extras} class="text-brand underline">${html}</a>`;
+          html = `<a href="${escape(href)}"${extras} class="text-brand underline transition-colors">${html}</a>`;
         } else if (mark === "strong") html = `<strong>${html}</strong>`;
         else if (mark === "em") html = `<em>${html}</em>`;
         else if (mark === "underline") html = `<u>${html}</u>`;

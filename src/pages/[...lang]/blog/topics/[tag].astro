@@ -4,11 +4,13 @@ import PostList from "@components/blog/ui/PostList.astro";
 import TagList from "@components/blog/ui/TagList.astro";
 import PageHeading from "@components/shared/PageHeading.astro";
 import SectionHeading from "@components/shared/SectionHeading.astro";
+import AppDownloadSection from "@components/shared/AppDownloadSection.astro";
 import {
   getAllTagsWithCount,
   getAllTagPaths,
   getTagBySlug,
   getTagPosts,
+  getAppDownload,
 } from "@lib/queries";
 import { ogImageHref } from "@lib/og/route";
 import { buildAlternateUrls } from "@i18n/utils";
@@ -24,10 +26,11 @@ export async function getStaticPaths() {
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 const { tag: slug } = Astro.params;
-const [tag, posts, allTags] = await Promise.all([
+const [tag, posts, allTags, appDownload] = await Promise.all([
   getTagBySlug(slug!, lang),
   getTagPosts(slug!, lang),
   getAllTagsWithCount(lang),
+  getAppDownload(),
 ]);
 const otherTags = allTags.filter((t) => t.slug !== slug);
 const count =
@@ -50,8 +53,9 @@ const alternateUrls = buildAlternateUrls(
 >
   <section class="section">
     <PageHeading
-      title={tag.title ?? t(lang, "blog.topics")}
-      subtitle={`${posts.length} ${count}`}
+      title={`${tag.title}: *${tag.metaTitle}*`}
+      eyebrow={`${posts.length} ${count}`}
+      subtitle={tag.description}
     />
 
     <PostList {posts} {lang} priorityCount={2} />
@@ -66,4 +70,6 @@ const alternateUrls = buildAlternateUrls(
 
     <TagList tags={otherTags} {lang} />
   </section>
+
+  <AppDownloadSection heading={tag.downloadHeading} {...appDownload} {lang} />
 </Base>

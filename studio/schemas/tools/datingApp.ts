@@ -5,6 +5,8 @@ import {
   seoMetaFields,
   pageTitleField,
   pageDescriptionField,
+  downloadHeadingField,
+  downloadCtaGroup,
   slugField,
   hiddenOnNonEn,
 } from "../shared";
@@ -18,6 +20,7 @@ export const datingApp = defineType({
   groups: [
     { name: "content", title: "Content", default: true, icon: EditIcon },
     { name: "seo", title: "SEO", icon: SearchIcon },
+    downloadCtaGroup,
   ],
   fields: [
     defineField({
@@ -71,6 +74,7 @@ export const datingApp = defineType({
       hidden: hiddenOnNonEn,
     }),
     slugField({ source: "name" }),
+    downloadHeadingField(),
     ...seoMetaFields,
     languageField,
   ],

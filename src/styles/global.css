@@ -2,12 +2,16 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --color-brand: oklch(0.6 0.2 27);
+  --color-brand: oklch(0.58 0.2 27);
   --color-brand-lighter: oklch(from var(--color-brand) 84% c h);
-  --color-brand-darker: oklch(from var(--color-brand) 54% c h);
-  --color-subtle: var(--color-mist-700);
+  --color-brand-darker: oklch(from var(--color-brand) 50% c h);
+  --color-brand-darkest: oklch(from var(--color-brand) 40% c h);
+
+  --color-dark: var(--color-zinc-900);
+  --color-subtle: var(--color-zinc-700);
   --color-subtle-lighter: oklch(from var(--color-subtle) 96% c h);
   --color-ink: oklch(0.21 0.02 27);
+  --color-gold: var(--color-amber-300);
 
   --text-title: clamp(2rem, 1.5rem + 2.5svw, 3rem);
   --text-title-xxs: clamp(1.125rem, 1.07rem + 0.27svw, 1.3125rem);
@@ -27,6 +31,7 @@
   --spacing-section-xs: calc(var(--spacing-section) / 3);
 
   --breakpoint-xs: 30rem;
+  --default-transition-duration: 300ms;
 }
 
 @layer base {
@@ -102,10 +107,6 @@
     @apply text-subtle text-pretty;
   }
 
-  hgroup {
-    @apply text-balance;
-  }
-
   /* Layout: section / header / footer container */
   .section,
   #header,
@@ -115,8 +116,16 @@
     }
   }
 
+  #footer {
+    @apply pt-section pb-section-sm lg:pt-section-sm lg:pb-section-xs;
+
+    [href] {
+      @apply transition-colors hover:text-brand-lighter;
+    }
+  }
+
   .section {
-    @apply py-section first-of-type:pt-section-sm lg:py-section-sm;
+    @apply py-section lg:py-section-sm first-of-type:pt-section-sm;
   }
 
   .main-split {
@@ -134,23 +143,27 @@
   /* Chat bubble — shape, padding, size. Tail corner auto-flips by sibling
      order (odd = their, even = ours). Background/text colors stay per-context. */
   .chat-bubble {
-    @apply w-fit max-w-4/5 rounded-xl px-3 py-2 text-sm;
+    @apply w-fit max-w-4/5 rounded-2xl px-3 py-2 text-sm;
 
     &:nth-of-type(odd) {
-      @apply rounded-bl-xs;
+      @apply rounded-bl-sm;
     }
 
     &:nth-of-type(even) {
-      @apply rounded-br-xs;
+      @apply rounded-br-sm;
     }
   }
 
   /* Section layout: heading (top-left) + See all link (top-right) + listing content (full-width row 2). */
   .listing-grid {
-    @apply grid md:grid-cols-[1fr_auto] md:items-baseline;
+    @apply grid sm:grid-cols-[1fr_auto] sm:items-baseline;
 
     > *:nth-child(2) {
-      @apply max-md:mb-9 md:col-span-2 md:row-start-2;
+      @apply max-sm:mb-9 sm:col-span-2 sm:row-start-2;
+    }
+
+    > *:last-child {
+      @apply sm:col-start-2 sm:row-start-1 sm:justify-self-end;
     }
   }
 
@@ -158,7 +171,7 @@
   #header {
     /* Dropdowns */
     details > ul {
-      @apply absolute top-full left-0 rounded-lg bg-white text-black shadow-lg ring-1 ring-black/5;
+      @apply absolute top-full left-0 rounded-lg bg-white text-dark shadow-lg ring-1 ring-dark/5;
       --nav-bg-active: oklch(from var(--color-brand) l c h / 0.09);
     }
 
@@ -206,12 +219,43 @@
      UA-detect script tags <html> with the matching OS class. */
   .store-btn {
     display: none;
+    @apply transition hover:-translate-y-px hover:shadow-md active:translate-y-0 active:shadow-sm;
   }
 
   @media (max-width: 1023px) {
     html.os-ios .store-btn[data-os="ios"],
     html.os-android .store-btn[data-os="android"] {
-      @apply inline-flex bg-black;
+      @apply inline-flex bg-dark;
+    }
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .showcase-card {
+        grid-template-rows: max-content 0fr max-content max-content;
+        animation: showcase-rows linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 40%;
+      }
+
+      .showcase-card > :nth-child(2) {
+        opacity: 0;
+        animation: showcase-fade linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 40%;
+      }
+
+      @keyframes showcase-rows {
+        to {
+          grid-template-rows: max-content 1fr max-content max-content;
+        }
+      }
+
+      @keyframes showcase-fade {
+        to {
+          opacity: 1;
+        }
+      }
     }
   }
 
@@ -227,18 +271,21 @@
   }
 }
 
-@utility card {
-  @apply relative h-full overflow-hidden rounded-lg shadow-xs ring-1 ring-black/5 bg-white md:rounded-xl;
+.prose a:hover {
+  color: var(--color-brand-darkest);
+}
 
-  /* Elevate on hover only when the whole card is clickable. */
+.card {
+  @apply relative h-full overflow-hidden bg-(--card-bg,white) rounded-lg border border-dark/9 shadow-xl shadow-dark/9 md:rounded-xl;
+
   &:has(.card-link) {
-    @apply transition-shadow hover:ring-black/10 hover:shadow-sm;
+    @apply transition-all hover:border-dark/18 hover:shadow-sm;
   }
 }
 
 /* Padded content area of a card. Used on the card root for plain cards and on
    the inner text wrapper of cards with edge-to-edge content (e.g. images). */
-@utility card-body {
+.card-body {
   @apply flex flex-col p-svw gap-4 md:p-6;
 }
 
@@ -250,23 +297,7 @@
 
 /* Inline accent applied to *asterisk*-wrapped spans by parseAccent. */
 @utility accent {
-  @apply font-serif text-brand italic;
-}
-
-@utility btn {
-  @apply border-brand flex w-fit cursor-pointer justify-center rounded-md border px-3 py-1 font-medium transition-colors;
-}
-
-@utility btn-solid {
-  @apply bg-brand hover:bg-brand-darker border-transparent text-white;
-}
-
-@utility btn-outline {
-  @apply hover:bg-brand hover:text-white;
-}
-
-@utility btn-big {
-  @apply w-full py-3 tracking-wider uppercase;
+  @apply font-serif font-normal text-brand italic;
 }
 
 @utility nav-item {

@@ -1,10 +1,13 @@
 import { defineType } from "sanity";
-import { TagIcon, EditIcon, SearchIcon } from "@sanity/icons";
+import { TagIcon } from "@sanity/icons";
 import {
+  standardGroups,
   languageField,
   seoFields,
   pageTitleField,
   pageDescriptionField,
+  downloadHeadingField,
+  downloadCtaGroup,
   singletonPagePreview,
 } from "../shared";
 
@@ -14,15 +17,13 @@ export const tag = defineType({
   type: "document",
   icon: TagIcon,
   __experimental_omnisearch_visibility: false,
-  groups: [
-    { name: "content", title: "Content", default: true, icon: EditIcon },
-    { name: "seo", title: "SEO", icon: SearchIcon },
-  ],
+  groups: [...standardGroups, downloadCtaGroup],
   fields: [
     pageTitleField({ path: "/blog/topics/{slug}" }),
     pageDescriptionField(),
+    downloadHeadingField(),
     ...seoFields,
-    languageField,
+    { ...languageField, group: "meta" },
   ],
   preview: singletonPagePreview(),
 });

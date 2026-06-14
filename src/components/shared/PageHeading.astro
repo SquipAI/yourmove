@@ -45,19 +45,21 @@ const hasExtras = !!eyebrow || !!subtitle;
   hasExtras ? (
     <hgroup
       class:list={[
-        "flex flex-col not-last:mb-section-xs *:max-w-180 lg:not-last:mb-svw",
+        "flex flex-col not-last:mb-section-xs lg:not-last:mb-svw md:*:max-w-210",
         centered && "items-center text-center",
         cls,
       ]}
     >
       {eyebrow && <Eyebrow variant={eyebrowVariant}>{eyebrow}</Eyebrow>}
-      <Tag class:list={[isBig ? "text-title-big" : "text-title"]}>
+      <Tag
+        class:list={[isBig ? "text-title-big" : "text-title", "font-semibold"]}
+      >
         {titleParts.map((p) =>
           p.accent ? <span class="accent">{p.text}</span> : p.text,
         )}
       </Tag>
       {subtitle && (
-        <p class="text-subtitle">
+        <p class="text-subtitle text-balance">
           {subtitleParts.map((p) =>
             p.accent ? <span class="accent">{p.text}</span> : p.text,
           )}
@@ -68,7 +70,7 @@ const hasExtras = !!eyebrow || !!subtitle;
     <Tag
       class:list={[
         isBig ? "text-title-big" : "text-title",
-        "mb-section-xs max-w-180 lg:mb-svw",
+        "mb-section-xs max-w-210 lg:mb-svw font-semibold",
         centered && "mx-auto text-center",
         cls,
       ]}

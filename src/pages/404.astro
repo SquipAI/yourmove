@@ -1,10 +1,11 @@
 ---
 import Base from "@layouts/Base.astro";
+import Btn from "@components/shared/Btn.astro";
 import PageHeading from "@components/shared/PageHeading.astro";
 ---
 
 <Base
-  title="Page Not Found | YourMove.ai"
+  title="Page Not Found | YourMove AI"
   description="The page you're looking for doesn't exist."
 >
   <meta name="robots" content="noindex" slot="head" />
@@ -15,6 +16,6 @@ import PageHeading from "@components/shared/PageHeading.astro";
       subtitle="The page you're looking for doesn't exist or has been moved."
     />
     <p class="text-title-big text-subtle -order-1 mb-4 font-bold">404</p>
-    <a href="/" class="btn btn-solid">Go Home</a>
+    <Btn href="/">Go Home</Btn>
   </section>
 </Base>

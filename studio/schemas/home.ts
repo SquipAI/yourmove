@@ -6,6 +6,7 @@ import {
   RocketIcon,
   BookIcon,
   HelpCircleIcon,
+  EditIcon,
 } from "@sanity/icons";
 import {
   seoMetaFields,
@@ -15,16 +16,20 @@ import {
   pageDescriptionField,
   faqItemMember,
   navLabelField,
+  downloadHeadingField,
+  downloadCtaGroup,
   singletonPagePreview,
   hiddenOnNonEn,
 } from "./shared";
 
 const homeGroups: FieldGroupDefinition[] = [
-  { name: "hero", title: "Hero", default: true, icon: HomeIcon },
+  { name: "content", title: "Content", default: true, icon: EditIcon },
+  { name: "hero", title: "Hero", icon: HomeIcon },
   { name: "tools", title: "Tools", icon: RocketIcon },
   { name: "reviews", title: "Reviews", icon: StarIcon },
   { name: "blog", title: "Blog", icon: BookIcon },
   { name: "faq", title: "FAQ", icon: HelpCircleIcon },
+  downloadCtaGroup,
   ...standardGroups.filter((g) => g.name === "seo" || g.name === "meta"),
 ];
 
@@ -221,8 +226,8 @@ export const home = defineType({
   __experimental_omnisearch_visibility: false,
   groups: homeGroups,
   fields: [
-    pageTitleField({ path: "/", initialValue: "Home", group: "hero" }),
-    pageDescriptionField({ group: "hero" }),
+    pageTitleField({ path: "/", initialValue: "Home" }),
+    pageDescriptionField(),
     navLabelField("Home", "hero"),
     defineField({
       name: "statsEyebrow",
@@ -234,6 +239,7 @@ export const home = defineType({
       initialValue: "{count} daters · {rating} ★★★★★",
       validation: (r) => r.required(),
     }),
+    downloadHeadingField(),
     defineField({
       name: "heroChatCards",
       title: "Hero Chat Cards",

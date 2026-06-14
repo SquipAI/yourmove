@@ -7,6 +7,8 @@ import {
   pageTitleField,
   pageDescriptionField,
   navLabelField,
+  downloadHeadingField,
+  downloadCtaGroup,
   singletonPagePreview,
 } from "./shared";
 
@@ -18,11 +20,12 @@ export const reviewsPage = defineType({
   type: "document",
   icon: CommentIcon,
   __experimental_omnisearch_visibility: false,
-  groups: standardGroups,
+  groups: [...standardGroups, downloadCtaGroup],
   fields: [
     pageTitleField({ path: "/reviews", initialValue: "Reviews" }),
     pageDescriptionField(),
     navLabelField("Reviews"),
+    downloadHeadingField(),
     ...seoMetaFields,
     { ...languageField, group: "meta" },
   ],

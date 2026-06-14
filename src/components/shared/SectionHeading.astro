@@ -1,6 +1,7 @@
 ---
 import Eyebrow from "@components/shared/Eyebrow.astro";
 import { linkifyOwnEmails } from "@lib/linkifyOwnEmails";
+import { parseAccent } from "@lib/parseAccent";
 
 interface Props {
   title: string;
@@ -22,8 +23,9 @@ const {
 
 const HeadingTag = `h${level}` as "h2" | "h3";
 const hasExtras = !!eyebrow || !!subtitle;
+const titleParts = parseAccent(title);
 const titleClass = size === "sm" ? "text-title-sm" : "text-title";
-const mb = size === "sm" ? "mb-[.75em]" : "mb-section-xs";
+const mb = size === "sm" ? "mb-section-xs md:mb-8" : "mb-section-xs";
 const subtitleHtml = subtitle
   ? linkifyOwnEmails(subtitle, new URL(Astro.site!).hostname)
   : null;
@@ -33,10 +35,20 @@ const subtitleHtml = subtitle
   hasExtras ? (
     <hgroup class:list={[mb, cls]}>
       {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-      <HeadingTag class={titleClass}>{title}</HeadingTag>
-      {subtitleHtml && <p class="text-lg" set:html={subtitleHtml} />}
+      <HeadingTag class={titleClass}>
+        {titleParts.map((p) =>
+          p.accent ? <span class="accent">{p.text}</span> : p.text,
+        )}
+      </HeadingTag>
+      {subtitleHtml && (
+        <p class="text-lg text-balance" set:html={subtitleHtml} />
+      )}
     </hgroup>
   ) : (
-    <HeadingTag class:list={[titleClass, mb, cls]}>{title}</HeadingTag>
+    <HeadingTag class:list={[titleClass, mb, cls]}>
+      {titleParts.map((p) =>
+        p.accent ? <span class="accent">{p.text}</span> : p.text,
+      )}
+    </HeadingTag>
   )
 }

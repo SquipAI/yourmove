@@ -3,18 +3,19 @@ import type { ShowcaseDemo } from "@lib/types";
 
 interface Props {
   demo: Extract<ShowcaseDemo, { _type: "openersDemo" }>;
+  class?: string;
 }
-const { demo } = Astro.props;
+const { demo, class: cls } = Astro.props;
 ---
 
-<ul class="flex flex-col gap-2">
+<ul class:list={["flex flex-col gap-2", cls]}>
   {
     demo.items.map((item) => (
-      <li class="rounded-md bg-white px-3 py-2">
-        <span class="text-subtle tracking-eyebrow block text-xs uppercase">
+      <li class="flex flex-col gap-1">
+        <span class="tracking-eyebrow text-xs uppercase opacity-60">
           {item.tag}
         </span>
-        <p class="text-sm">{item.text}</p>
+        <p class="rounded-xl bg-white px-3 py-2.5 text-sm text-dark">{item.text}</p>
       </li>
     ))
   }

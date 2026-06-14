@@ -16,6 +16,7 @@ export type ReviewsPageData = {
   description: string | null;
   metaTitle: string;
   metaDescription: string;
+  downloadHeading: string;
 };
 
 export type TestimonialBuckets = {

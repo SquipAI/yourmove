@@ -54,6 +54,7 @@ const pageUrl = String(Astro.url);
 const localePath = localePathFor(lang);
 const blogUrl = `${origin}${localePath("blog")}`;
 const firstTag = post.tags[0];
+if (!firstTag) throw new Error(`Post has no tags: ${slug} (${lang})`);
 const tagUrl = `${origin}${localePath(`blog/topics/${firstTag.slug}`)}`;
 const ogImage = ogImageHref(origin, lang, `blog/${slug}`);
 

@@ -13,6 +13,7 @@ export function getStaticPaths() {
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 const page = await getLegalPage("privacy", lang);
+if (!page) throw new Error(`Privacy page not found (${lang})`);
 ---
 
 <Base
@@ -25,7 +26,7 @@ const page = await getLegalPage("privacy", lang);
     <PageHeading title={page.title} />
 
     <div class="prose">
-      {page?.body && <PortableText body={page.body} {lang} />}
+      {page.body && <PortableText body={page.body} {lang} />}
     </div>
   </article>
 </Base>

@@ -1,6 +1,11 @@
 import { defineField, defineArrayMember } from "sanity";
 import type { FieldGroupDefinition } from "sanity";
-import { EditIcon, SearchIcon, CogIcon } from "@sanity/icons";
+import {
+  EditIcon,
+  SearchIcon,
+  CogIcon,
+  DownloadIcon,
+} from "@sanity/icons";
 import { linkableTo } from "@lib/links/sanity";
 
 export const standardGroups: FieldGroupDefinition[] = [
@@ -8,6 +13,13 @@ export const standardGroups: FieldGroupDefinition[] = [
   { name: "seo", title: "SEO", icon: SearchIcon },
   { name: "meta", title: "Meta", icon: CogIcon },
 ];
+
+// Spread into any page schema that renders <AppDownloadSection>.
+export const downloadCtaGroup: FieldGroupDefinition = {
+  name: "downloadCta",
+  title: "Download CTA",
+  icon: DownloadIcon,
+};
 
 // Reusable inline-link annotation. Used in `post.body`, `post.faq[].answer`,
 // and any other portable-text array that needs the same link picker.
@@ -178,6 +190,20 @@ export function pageTitleField({
     ...(searchWeight !== undefined && {
       options: { search: { weight: searchWeight } },
     }),
+  });
+}
+
+// Editable heading for <AppDownloadSection>; eyebrow + subtext are i18n.
+export function downloadHeadingField(group = downloadCtaGroup.name) {
+  return defineField({
+    name: "downloadHeading",
+    title: "App download heading",
+    type: "string",
+    group,
+    description:
+      "Heading of the app-download section. Wrap a phrase in *asterisks* to color it brand.",
+    initialValue: "Turn *more swipes* into matches and matches *into dates.*",
+    validation: (r) => r.required(),
   });
 }
 

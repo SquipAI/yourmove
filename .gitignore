@@ -40,3 +40,12 @@ scripts/
 
 # Claude auto-memory (local notes, not for sharing)
 memory/
+
+# Claude project instructions (local-only)
+CLAUDE.md
+
+# Cloudflare Bulk Redirects source (imported manually, not part of build)
+redirects.csv
+
+# Node version pin (local toolchain)
+.node-version

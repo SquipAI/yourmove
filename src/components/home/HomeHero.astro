@@ -67,7 +67,7 @@ const {
           href={appStoreUrl}
           data-os="ios"
           class="store-btn"
-          aria-label="Download on the App Store"
+          aria-label={t(lang, "store.appStore")}
         >
           <Apple aria-hidden="true" />
         </a>
@@ -79,7 +79,7 @@ const {
           href={playStoreUrl}
           data-os="android"
           class="store-btn"
-          aria-label="Get it on Google Play"
+          aria-label={t(lang, "store.playStore")}
         >
           <Google aria-hidden="true" />
         </a>

@@ -4,11 +4,12 @@ import Base from "@layouts/Base.astro";
 import PageHeading from "@components/shared/PageHeading.astro";
 import SectionHeading from "@components/shared/SectionHeading.astro";
 import ListingSection from "@components/shared/ListingSection.astro";
-import FeaturedSection from "@components/blog/ui/FeaturedSection.astro";
-import LatestSection from "@components/blog/ui/LatestSection.astro";
+import FeaturedList from "@components/blog/ui/FeaturedList.astro";
+import LatestList from "@components/blog/ui/LatestList.astro";
 import PostCard from "@components/blog/ui/PostCard.astro";
 import SeeAllLink from "@components/blog/ui/SeeAllLink.astro";
 import TagList from "@components/blog/ui/TagList.astro";
+import AppDownloadSection from "@components/shared/AppDownloadSection.astro";
 
 import {
   getBlogPage,
@@ -17,6 +18,7 @@ import {
   getTagsWithPostPreview,
   getAllTagsWithCount,
   getPostCount,
+  getAppDownload,
   BLOG_LATEST_COUNT,
   BLOG_FEATURED_COUNT,
 } from "@lib/queries";
@@ -32,7 +34,7 @@ export function getStaticPaths() {
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 
-const [page, latest, featured, tagSections, allTags, postCount] =
+const [page, latest, featured, tagSections, allTags, postCount, appDownload] =
   await Promise.all([
     getBlogPage(lang),
     getLatestPosts(BLOG_LATEST_COUNT, lang),
@@ -40,6 +42,7 @@ const [page, latest, featured, tagSections, allTags, postCount] =
     getTagsWithPostPreview(lang),
     getAllTagsWithCount(lang),
     getPostCount(lang),
+    getAppDownload(),
   ]);
 
 const localePath = localePathFor(lang);
@@ -51,27 +54,28 @@ const localePath = localePathFor(lang);
   {lang}
   ogImage={ogImageHref(Astro.url.origin, lang, "blog")}
 >
-  <header class="section pb-section-sm">
+  <header class="section pb-section-sm md:pb-svw">
     <PageHeading title={page.title} subtitle={page.description} size="big" />
   </header>
 
   <section class="section pt-0">
     <h2 class="sr-only">{t(lang, "blog.featured")}</h2>
-    <FeaturedSection posts={featured} {lang} />
+    <FeaturedList posts={featured} {lang} />
   </section>
 
   <ListingSection
     title={t(lang, "blog.latest")}
+    size="sm"
     seeAllHref={localePath("blog/posts")}
     seeAllCount={postCount}
     {lang}
     class="bg-subtle-lighter"
   >
-    <LatestSection posts={latest} {lang} />
+    <LatestList posts={latest} {lang} />
   </ListingSection>
 
   <section class="section">
-    <SectionHeading title={t(lang, "blog.topics")} />
+    <SectionHeading title={t(lang, "blog.topics")} size="sm" />
     <TagList tags={allTags} {lang} class="mb-section-xs" />
 
     <ul
@@ -79,8 +83,10 @@ const localePath = localePathFor(lang);
     >
       {
         tagSections.map((section) => (
-          <li>
-            <h3 class="text-title-sm mb-[.66em]">{section.title}</h3>
+          <li class="listing-grid">
+            <h3 class="text-title-xs mb-[.66em] sm:mb-[1em]">
+              {section.title}
+            </h3>
             <ul class="mb-4 flex flex-col gap-4 sm:max-md:flex-row">
               {section.posts.map((post) => (
                 <li>
@@ -107,4 +113,6 @@ const localePath = localePathFor(lang);
       }
     </ul>
   </section>
+
+  <AppDownloadSection heading={page.downloadHeading} {...appDownload} {lang} />
 </Base>

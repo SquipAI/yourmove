@@ -1,13 +1,13 @@
 ---
 import { getRelativeLocaleUrl } from "astro:i18n";
 import type { Locale } from "@i18n/config";
-import { t } from "@i18n/ui";
 import type { ShowcaseCard } from "@lib/types";
-import BeforeAfterGrid from "@components/shared/BeforeAfterGrid.astro";
+import Btn from "@components/shared/Btn.astro";
+import BeforeAfterDemo from "@components/home/showcase/BeforeAfterDemo.astro";
+import BioDemo from "@components/home/showcase/BioDemo.astro";
 import ChatDemo from "@components/home/showcase/ChatDemo.astro";
 import OpenersDemo from "@components/home/showcase/OpenersDemo.astro";
 import ReviewDemo from "@components/home/showcase/ReviewDemo.astro";
-import BioDemo from "@components/home/showcase/BioDemo.astro";
 
 interface Props {
   card: ShowcaseCard;
@@ -15,42 +15,18 @@ interface Props {
 }
 const { card, lang } = Astro.props;
 
-// Demo `_type` → { component, card palette, button palette }. Single source of
-// truth for rendering and styling. `beforeAfterDemo` reuses the shared
-// BeforeAfterGrid directly — its prop shape differs, handled inline below.
 const REGISTRY = {
-  chatDemo: {
-    Component: ChatDemo,
-    card: "bg-brand text-white",
-    button: "bg-white text-mist-900 hover:bg-mist-100",
-  },
-  openersDemo: {
-    Component: OpenersDemo,
-    card: "bg-[oklch(0.86_0.1_115)] text-mist-900",
-    button: "bg-mist-900 text-white hover:bg-mist-800",
-  },
-  reviewDemo: {
-    Component: ReviewDemo,
-    card: "bg-[oklch(0.82_0.04_75)] text-mist-900",
-    button: "bg-mist-900 text-white hover:bg-mist-800",
-  },
-  bioDemo: {
-    Component: BioDemo,
-    card: "bg-mist-900 text-white",
-    button: "bg-white text-mist-900 hover:bg-mist-100",
-  },
+  chatDemo: { Component: ChatDemo, brand: undefined },
+  openersDemo: { Component: OpenersDemo, brand: "var(--color-yellow-700)" },
+  reviewDemo: { Component: ReviewDemo, brand: "var(--color-rose-950)" },
+  bioDemo: { Component: BioDemo, brand: "var(--color-subtle)" },
   beforeAfterDemo: {
-    Component: null,
-    card: "bg-subtle-lighter text-mist-900",
-    button: "bg-mist-900 text-white hover:bg-mist-800",
+    Component: BeforeAfterDemo,
+    brand: "var(--color-slate-800)",
   },
 } as const;
 
-const FALLBACK = {
-  Component: null,
-  card: "bg-white text-mist-900 ring-1 ring-black/5",
-  button: "bg-mist-900 text-white hover:bg-mist-800",
-};
+const FALLBACK = { Component: null, brand: "var(--color-zinc-700)" };
 
 const variant = card.demo ? REGISTRY[card.demo._type] : FALLBACK;
 // `as any`: TS can't link `_type` to matching Component props through the registry.
@@ -64,34 +40,29 @@ const linkAttrs = card.external
 ---
 
 <article
-  class:list={["p-svw flex flex-col gap-4 rounded-xl md:p-6", variant.card]}
+  class:list={[
+    "showcase-card grid grid-cols-1 gap-4 bg-linear-150 from-brand-darker text-white",
+  ]}
+  style={variant.brand ? `--color-brand-darker: ${variant.brand}` : undefined}
 >
   <h3 class="text-title-sm">{card.title}</h3>
   {
-    card.demo &&
-      (card.demo._type === "beforeAfterDemo"
-        ? card.demo.example && (
-            <BeforeAfterGrid
-              before={card.demo.example.before.url}
-              after={card.demo.example.after.url}
-              beforeAlt={t(lang, "beforeAfter.altBefore")}
-              afterAlt={t(lang, "beforeAfter.altAfter")}
-              {lang}
-              class="rounded-md overflow-clip"
-            />
-          )
-        : Demo && <Demo demo={card.demo} />)
+    Demo && (
+      <Demo
+        demo={card.demo}
+        {lang}
+        class="min-h-0 overflow-clip rounded-lg bg-white/6 p-4"
+      />
+    )
   }
-  {card.description && <p class="text-base">{card.description}</p>}
-  <a
-    {href}
-    class:list={[
-      "mt-auto inline-flex w-fit items-center gap-2 rounded-md px-4 py-2 font-medium transition-colors",
-      variant.button,
-    ]}
+  {card.description && <p>{card.description}</p>}
+  <Btn
+    href={href}
+    variant="inverted"
+    class="mt-auto gap-2 px-4 py-2 text-dark hover:bg-brand-darker hover:border-white/18 hover:shadow-white/12 hover:shadow-md"
     {...linkAttrs}
   >
     {card.buttonText}
     <span aria-hidden="true">→</span>
-  </a>
+  </Btn>
 </article>

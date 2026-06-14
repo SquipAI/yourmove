@@ -55,6 +55,8 @@ const chrome = await buildSiteChrome(lang);
       tools={chrome.toolsColumn}
       flatLinks={chrome.flatLinks}
       ctaUrl={chrome.ctaUrl}
+      appStoreUrl={chrome.appStoreUrl}
+      playStoreUrl={chrome.playStoreUrl}
     />
     <main id="main" class:list={["flex-1", mainClass]}>
       <slot />
@@ -64,6 +66,9 @@ const chrome = await buildSiteChrome(lang);
       tagline={chrome.footer.tagline}
       toolsColumn={chrome.toolsColumn}
       columns={chrome.footer.columns}
+      instagramUrl={chrome.footer.instagramUrl}
+      tiktokUrl={chrome.footer.tiktokUrl}
+      supportUrl={chrome.footer.supportUrl}
     />
   </body>
 </html>

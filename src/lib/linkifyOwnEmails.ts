@@ -6,6 +6,7 @@ export function linkifyOwnEmails(text: string, domain: string): string {
   const re = new RegExp(`[\\w.+-]+@${escapeRegex(domain)}\\b`, "gi");
   return text.replace(
     re,
-    (m) => `<a href="mailto:${m}" class="text-brand underline">${m}</a>`,
+    (m) =>
+      `<a href="mailto:${m}" class="text-brand underline transition-colors hover:text-brand-darker">${m}</a>`,
   );
 }

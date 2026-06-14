@@ -1,9 +1,7 @@
 ---
 import { getRelativeLocaleUrl } from "astro:i18n";
 import type { Locale } from "@i18n/config";
-import { t } from "@i18n/ui";
 import type { ToolCard } from "@lib/types";
-import Eyebrow from "@components/shared/Eyebrow.astro";
 import CardHeading from "@components/blog/ui/CardHeading.astro";
 
 interface Props {
@@ -15,7 +13,6 @@ interface Props {
 const { tool, lang, level = 3 } = Astro.props;
 
 const href = getRelativeLocaleUrl(lang, tool.slug);
-const badge = tool.paid ? t(lang, "tools.subscription") : t(lang, "tools.free");
 const title = tool.cardTitle ?? tool.title;
 const description = tool.cardDescription ?? tool.description;
 ---
@@ -28,6 +25,4 @@ const description = tool.cardDescription ?? tool.description;
     {level}
     size="sm"
   />
-
-  <Eyebrow class="mt-auto">{badge}</Eyebrow>
 </article>

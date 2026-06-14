@@ -22,6 +22,7 @@ export type AppPageData = DatingApp & {
   description: string | null;
   metaTitle: string;
   metaDescription: string;
+  downloadHeading: string;
   alternates: AlternateSlug[] | null;
   tools: ToolCard[];
 };
@@ -200,6 +201,7 @@ export type ToolsPageData = {
   description: string | null;
   metaTitle: string;
   metaDescription: string;
+  downloadHeading: string;
 };
 
 export type ToolCategoryWithTools = {

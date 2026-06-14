@@ -3,12 +3,19 @@ import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
 import type { NavItem } from "@lib/links";
 import LogoSvg from "@assets/svg/LogoSvg.astro";
+import InstagramIcon from "@assets/svg/instagram-icon.svg";
+import TikTokIcon from "@assets/svg/tiktok-icon.svg";
+import EmailIcon from "@assets/svg/email-icon.svg";
+import { t } from "@i18n/ui";
 
 interface Props {
   lang: Locale;
   tagline?: string | null;
   toolsColumn: { title: string; items: NavItem[]; seeAll: NavItem };
   columns?: { title: string; items: NavItem[] }[];
+  instagramUrl: string;
+  tiktokUrl: string;
+  supportUrl: string;
 }
 
 const {
@@ -16,6 +23,9 @@ const {
   tagline,
   toolsColumn,
   columns = [],
+  instagramUrl,
+  tiktokUrl,
+  supportUrl,
 } = Astro.props;
 const year = new Date().getFullYear();
 
@@ -26,10 +36,20 @@ const allColumns = [
   },
   ...columns,
 ];
+
+const socialLinks = [
+  {
+    href: instagramUrl,
+    label: t(lang, "social.instagram"),
+    Icon: InstagramIcon,
+  },
+  { href: tiktokUrl, label: t(lang, "social.tiktok"), Icon: TikTokIcon },
+  { href: supportUrl, label: t(lang, "social.email"), Icon: EmailIcon },
+];
 ---
 
-<footer id="footer" class="bg-brand/9">
-  <div class="grid grid-cols-1 gap-10 py-12 sm:grid-cols-[auto_1fr] sm:gap-16">
+<footer id="footer" class="bg-dark text-white">
+  <div class="flex flex-col gap-10 sm:flex-row sm:justify-between">
     <!-- Brand -->
     <div class="flex flex-col gap-3">
       <a
@@ -40,15 +60,32 @@ const allColumns = [
         <LogoSvg />
       </a>
       {tagline && <p class="text-sm">{tagline}</p>}
-      <p class="text-sm opacity-40">© {year} YourMove AI</p>
+      <p class="text-sm opacity-90">© {year} YourMove AI</p>
+      <address class="not-italic">
+        <div class="flex gap-1">
+          {
+            socialLinks.map(({ href, label, Icon }) => (
+              <a
+                href={href}
+                aria-label={label}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="size-[44px] -translate-x-1/5 inline-flex flex-1 items-center justify-center rounded-lg opacity-80"
+              >
+                <Icon class="size-4/5" aria-hidden="true" />
+              </a>
+            ))
+          }
+        </div>
+      </address>
     </div>
 
-    <!-- Columns -->
-    <div class="flex flex-wrap gap-x-12 gap-y-8">
+    <!-- Nav -->
+    <nav aria-label="Footer navigation" class="flex flex-col gap-8 sm:contents">
       {
-        allColumns.map((col) => (
-          <nav aria-label={col.title}>
-            <p class="mb-3 text-xs font-semibold tracking-widest uppercase opacity-50">
+        allColumns.map((col, i) => (
+          <div class:list={[i === 0 && "sm:order-last"]}>
+            <p class="mb-3 text-xs font-semibold tracking-widest uppercase opacity-80">
               {col.title}
             </p>
             <ul class="flex flex-col gap-2">
@@ -56,7 +93,7 @@ const allColumns = [
                 <li>
                   <a
                     href={item.href}
-                    class="text-sm opacity-75 transition-opacity hover:opacity-100"
+                    class="block leading-loose text-sm opacity-90"
                     {...(item.external
                       ? { target: "_blank", rel: "noopener noreferrer" }
                       : {})}
@@ -66,9 +103,9 @@ const allColumns = [
                 </li>
               ))}
             </ul>
-          </nav>
+          </div>
         ))
       }
-    </div>
+    </nav>
   </div>
 </footer>

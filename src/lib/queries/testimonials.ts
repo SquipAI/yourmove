@@ -17,7 +17,7 @@ const TESTIMONIAL_ORDER = "order(featured desc, coalesce(order, 0) asc, _id asc)
 export function getReviewsPage(lang = DEFAULT_LOCALE) {
   return cached(`getReviewsPage:${lang}`, () =>
     sanityClient.fetch<ReviewsPageData | null>(
-      `${coalesceLang("reviewsPage")}{ title, description, metaTitle, metaDescription }`,
+      `${coalesceLang("reviewsPage")}{ title, description, metaTitle, metaDescription, downloadHeading }`,
       { lang },
     ),
   );

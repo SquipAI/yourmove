@@ -44,7 +44,7 @@ const TOOL_LIST_ORDER = /* groq */ `order(
 export function getToolsPage(lang = DEFAULT_LOCALE) {
   return cached(`getToolsPage:${lang}`, () =>
     sanityClient.fetch<ToolsPageData>(
-      `${coalesceLang("tools")}{ title, description, metaTitle, metaDescription }`,
+      `${coalesceLang("tools")}{ title, description, metaTitle, metaDescription, downloadHeading }`,
       { lang },
     ),
   );
@@ -89,7 +89,7 @@ export function getAppPage(slug: string, lang = DEFAULT_LOCALE) {
   return cached(`getAppPage:${slug}:${lang}`, () =>
     sanityClient.fetch<AppPageData | null>(
       `${coalesceLang("datingApp", "slug.current == $slug")}{
-        _id, name, title, description, metaTitle, metaDescription,
+        _id, name, title, description, metaTitle, metaDescription, downloadHeading,
         "slug": slug.current, brandColor,
         ${ALTERNATES},
         "tools": *[_type == "tool" && language == $lang && references(^._id)] | ${TOOL_LIST_ORDER} ${TOOL_CARD}

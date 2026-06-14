@@ -86,7 +86,12 @@ const seeAllHeading = t(lang, "reviews.joinDaters").replace(
   }
   {
     showSeeAll && (
-      <li class:list={[liClass, "card card-body"]}>
+      <li
+        class:list={[
+          liClass,
+          "card card-body text-white transition-colors [--card-bg:var(--color-brand)] has-[a:hover]:[--card-bg:var(--color-brand-darker)]",
+        ]}
+      >
         <div class="flex -space-x-2">
           {avatars.map((url) => (
             <img
@@ -99,7 +104,7 @@ const seeAllHeading = t(lang, "reviews.joinDaters").replace(
         </div>
 
         <div
-          class="text-amber-500 text-xl leading-none tracking-widest"
+          class="text-gold text-xl leading-none tracking-widest"
           aria-label={`${stars} out of 5 stars`}
         >
           {"★".repeat(stars)}
@@ -111,7 +116,7 @@ const seeAllHeading = t(lang, "reviews.joinDaters").replace(
 
         <a
           href={seeAllHref}
-          class="card-link text-brand mt-auto w-fit font-medium underline underline-offset-4 hover:no-underline"
+          class="card-link mt-auto w-fit font-medium underline underline-offset-4"
         >
           {seeAllLabel} →
         </a>

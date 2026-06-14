@@ -1,12 +1,19 @@
 ---
 interface Props {
   href?: string;
-  variant?: "solid" | "outline" | "ghost" | "inverted";
+  variant?: "solid" | "outline" | "ghost" | "inverted" | "custom";
+  big?: boolean;
   class?: string;
   [key: string]: unknown;
 }
 
-const { href, variant = "solid", class: cls, ...rest } = Astro.props;
+const {
+  href,
+  variant = "solid",
+  big = false,
+  class: cls,
+  ...rest
+} = Astro.props;
 
 const Tag = href ? "a" : "button";
 ---
@@ -14,12 +21,14 @@ const Tag = href ? "a" : "button";
 <Tag
   href={href}
   class:list={[
-    "btn",
-    variant === "solid" && "btn-solid",
-    variant === "outline" && "btn-outline",
+    "inline-flex items-center justify-center w-fit font-medium border rounded-md transition cursor-pointer ",
+    variant !== "custom" && " border-brand px-3 py-1.5 hover:bg-brand-darker",
+    variant === "solid" && "bg-brand text-white",
+    variant === "outline" && "hover:text-white",
     variant === "ghost" && "border-white/70 hover:bg-white/10",
     variant === "inverted" &&
-      "bg-white text-brand-darker border-transparent hover:bg-brand-lighter",
+      "bg-white text-brand border-white hover:text-white",
+    big && "w-full py-3 tracking-wider uppercase",
     cls,
   ]}
   {...rest}

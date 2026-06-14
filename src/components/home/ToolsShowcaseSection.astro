@@ -1,41 +1,77 @@
 ---
 import SectionHeading from "@components/shared/SectionHeading.astro";
 import ToolsShowcaseCard from "@components/home/ToolsShowcaseCard.astro";
+import LogoRow from "@components/shared/LogoRow.astro";
 import type { Locale } from "@i18n/config";
 import { localePathFor } from "@i18n/utils";
-import type { HomeTools } from "@lib/types";
+import { parseAccent } from "@lib/parseAccent";
+import type { CompatibilityApp, HomeTools } from "@lib/types";
 
 interface Props {
   tools: HomeTools;
   toolCount: number;
+  appLogos: CompatibilityApp[];
+  appLogosLabel: string;
   lang: Locale;
   class?: string;
 }
 
-const { tools, toolCount, lang, class: cls } = Astro.props;
+const { tools, toolCount, appLogos, appLogosLabel, lang, class: cls } =
+  Astro.props;
 const lp = localePathFor(lang);
 const ctaLabel = tools.ctaLabel.replace("{count}", String(toolCount));
+const ctaLabelParts = parseAccent(ctaLabel);
 const cards = tools.showcaseCards ?? [];
 ---
 
 <section class:list={["section", cls]}>
-  <div class="grid gap-section-xs md:grid-cols-2 md:items-start md:gap-12">
-    <SectionHeading
-      title={tools.heading}
-      eyebrow={tools.eyebrow}
-      subtitle={tools.subtitle}
-      class="md:sticky md:top-24"
-    />
-    <div class="flex flex-col gap-6">
+  <div
+    class="grid gap-section-xs md:grid-cols-[1fr_1.5fr] md:grid-rows-[1fr_auto] md:items-start md:gap-12"
+  >
+    <div class="md:col-start-1 md:row-start-1 md:self-stretch">
+      <SectionHeading
+        title={tools.heading}
+        eyebrow={tools.eyebrow}
+        subtitle={tools.subtitle}
+        class="md:sticky md:top-24"
+      />
+    </div>
+
+    <div
+      class="flex flex-col gap-6 *:rounded-lg *:p-svw md:col-start-2 md:row-span-2 md:*:rounded-2xl md:*:p-6"
+    >
       {cards.map((card) => <ToolsShowcaseCard {card} {lang} />)}
-      <a href={lp("tools")} class="card card-body card-link">
-        <span class="text-title-sm">{ctaLabel}</span>
+      <a
+        href={lp("tools")}
+        class="group flex items-center justify-between gap-6 bg-zinc-950 text-white border border-white/20 transition-shadow shadow-lg/6 shadow-white hover:shadow-lg/18"
+      >
+        <span class="text-lg font-medium leading-tight sm:text-title-sm">
+          {
+            ctaLabelParts.map((p) =>
+              p.accent ? (
+                <span class="font-serif italic text-brand-lighter">
+                  {p.text}
+                </span>
+              ) : (
+                p.text
+              ),
+            )
+          }
+        </span>
         <span
           aria-hidden="true"
-          class="mt-auto self-end text-title-sm transition-transform"
+          class="flex size-[48px] shrink-0 items-center justify-center rounded-full bg-brand text-2xl text-white transition-colors group-hover:bg-brand-darker sm:size-[60px] sm:text-3xl"
           >→</span
         >
       </a>
     </div>
+
+    <LogoRow
+      logos={appLogos}
+      label={appLogosLabel}
+      level={3}
+      kind="apps"
+      class="md:col-start-1 md:row-start-2 md:items-start md:self-end md:[&>ul]:justify-start"
+    />
   </div>
 </section>

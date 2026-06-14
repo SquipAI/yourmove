@@ -6,6 +6,8 @@ import {
   languageField,
   pageTitleField,
   pageDescriptionField,
+  downloadHeadingField,
+  downloadCtaGroup,
   singletonPagePreview,
 } from "../shared";
 
@@ -15,10 +17,11 @@ export const blogTags = defineType({
   type: "document",
   icon: FilterIcon,
   __experimental_omnisearch_visibility: false,
-  groups: standardGroups,
+  groups: [...standardGroups, downloadCtaGroup],
   fields: [
     pageTitleField({ path: "/blog/topics", initialValue: "Topics" }),
     pageDescriptionField(),
+    downloadHeadingField(),
     ...seoMetaFields,
     { ...languageField, group: "meta" },
   ],

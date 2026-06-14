@@ -81,8 +81,9 @@ export type HomeData = {
   faq: HomeFaq;
   cta: { label: string; url: string };
   chatCards: HeroChatCard[];
-  appStoreUrl: string | null;
-  playStoreUrl: string | null;
+  appStoreUrl: string;
+  playStoreUrl: string;
+  downloadHeading: string;
 };
 
 export type LegalPageData = {
@@ -97,6 +98,7 @@ export type BlogPageData = {
   description: string | null;
   metaTitle: string;
   metaDescription: string;
+  downloadHeading: string;
 };
 
 export type BlogSubPageData = {
@@ -104,9 +106,18 @@ export type BlogSubPageData = {
   description: string | null;
   metaTitle: string;
   metaDescription: string;
+  downloadHeading: string;
 };
 
 export type SiteStats = {
+  userCount: string;
+  userRating: string;
+};
+
+// Store badges + stats eyebrow for <AppDownloadSection>.
+export type AppDownload = {
+  appStoreUrl: string;
+  playStoreUrl: string;
   userCount: string;
   userRating: string;
 };
@@ -124,4 +135,6 @@ export type HeaderLinks = {
   reviewsLabel: string;
   affiliate: { label: string; url: string } | null;
   ctaUrl: string;
+  appStoreUrl: string;
+  playStoreUrl: string;
 };

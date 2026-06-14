@@ -3,11 +3,12 @@ import type { ShowcaseDemo } from "@lib/types";
 
 interface Props {
   demo: Extract<ShowcaseDemo, { _type: "chatDemo" }>;
+  class?: string;
 }
-const { demo } = Astro.props;
+const { demo, class: cls } = Astro.props;
 ---
 
-<div class="flex flex-col gap-2">
+<div class:list={["flex flex-col gap-2", cls]}>
   <p class="chat-bubble self-start bg-white/15">
     <span class="sr-only">Match: </span>
     {demo.theirMessage}

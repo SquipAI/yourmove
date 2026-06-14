@@ -6,7 +6,8 @@ import ToolsShowcaseSection from "@components/home/ToolsShowcaseSection.astro";
 import FaqSection from "@components/shared/FaqSection.astro";
 import ListingSection from "@components/shared/ListingSection.astro";
 import TestimonialsSection from "@components/testimonials/TestimonialsSection.astro";
-import FeaturedSection from "@components/blog/ui/FeaturedSection.astro";
+import AppDownloadSection from "@components/shared/AppDownloadSection.astro";
+import FeaturedList from "@components/blog/ui/FeaturedList.astro";
 import {
   getHome,
   getSiteStats,
@@ -14,8 +15,10 @@ import {
   getFeaturedPosts,
   getPress,
   getToolCount,
+  getCompatibilityApps,
   BLOG_FEATURED_COUNT,
 } from "@lib/queries";
+import { t } from "@i18n/ui";
 import { homeSchema } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
 import { getAllLocalePaths, localePathFor } from "@i18n/utils";
@@ -26,15 +29,23 @@ export function getStaticPaths() {
 }
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
-const [home, siteStats, allTestimonials, toolCount, featuredPosts, press] =
-  await Promise.all([
-    getHome(lang),
-    getSiteStats(),
-    getAllTestimonials(lang),
-    getToolCount(lang),
-    getFeaturedPosts(BLOG_FEATURED_COUNT, lang),
-    getPress(lang),
-  ]);
+const [
+  home,
+  siteStats,
+  allTestimonials,
+  toolCount,
+  featuredPosts,
+  press,
+  appLogos,
+] = await Promise.all([
+  getHome(lang),
+  getSiteStats(),
+  getAllTestimonials(lang),
+  getToolCount(lang),
+  getFeaturedPosts(BLOG_FEATURED_COUNT, lang),
+  getPress(lang),
+  getCompatibilityApps(),
+]);
 const pressLogos = press.filter((p) => !p.hidden);
 const pressQuotes = press.filter((p) => p.quote);
 const eyebrow = home.statsEyebrow
@@ -78,8 +89,10 @@ const schema = homeSchema(
   <ToolsShowcaseSection
     tools={home.tools}
     {toolCount}
+    appLogos={appLogos}
+    appLogosLabel={t(lang, "tools.compatibleWith")}
     {lang}
-    class="bg-subtle-lighter"
+    class="bg-zinc-900 text-white [&_h2+p]:text-white sm:[&_h2+p]:text-balance"
   />
 
   <TestimonialsSection
@@ -93,12 +106,8 @@ const schema = homeSchema(
 
   {
     featuredPosts.length > 0 && (
-      <ListingSection
-        title={home.blogHeading}
-        seeAllHref={lp("blog")}
-        {lang}
-      >
-        <FeaturedSection posts={featuredPosts} {lang} />
+      <ListingSection title={home.blogHeading} seeAllHref={lp("blog")} {lang}>
+        <FeaturedList posts={featuredPosts} {lang} />
       </ListingSection>
     )
   }
@@ -109,6 +118,14 @@ const schema = homeSchema(
     eyebrow={home.faq.eyebrow}
     subtitle={home.faq.subtitle}
     align="center"
+    {lang}
+  />
+
+  <AppDownloadSection
+    heading={home.downloadHeading}
+    {...siteStats}
+    appStoreUrl={home.appStoreUrl}
+    playStoreUrl={home.playStoreUrl}
     {lang}
   />
 </Base>

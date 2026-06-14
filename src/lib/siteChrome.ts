@@ -20,13 +20,16 @@ function resolveNavItems(raw: NavItemRaw[] | null, lang: Locale): NavItem[] {
 }
 
 function resolveFooterColumns(data: FooterNavData | null, lang: Locale) {
-  if (!data) return { tagline: null, columns: [] };
+  if (!data) return { tagline: null, columns: [], instagramUrl: "", tiktokUrl: "", supportUrl: "" };
   return {
     tagline: data.tagline ?? null,
     columns: data.columns.map((col) => ({
       title: col.title,
       items: resolveNavItems(col.items, lang),
     })),
+    instagramUrl: data.instagramUrl,
+    tiktokUrl: data.tiktokUrl,
+    supportUrl: data.supportUrl,
   };
 }
 
@@ -61,5 +64,12 @@ export async function buildSiteChrome(lang: Locale) {
       : []),
   ];
   const footer = resolveFooterColumns(footerNav, lang);
-  return { toolsColumn, flatLinks, footer, ctaUrl: headerLinks.ctaUrl };
+  return {
+    toolsColumn,
+    flatLinks,
+    footer,
+    ctaUrl: headerLinks.ctaUrl,
+    appStoreUrl: headerLinks.appStoreUrl,
+    playStoreUrl: headerLinks.playStoreUrl,
+  };
 }

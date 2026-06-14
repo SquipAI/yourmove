@@ -46,4 +46,7 @@ export type FooterColumn = {
 export type FooterNavData = {
   tagline: string | null;
   columns: FooterColumn[];
+  instagramUrl: string;
+  tiktokUrl: string;
+  supportUrl: string;
 };

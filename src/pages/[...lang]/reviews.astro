@@ -4,11 +4,13 @@ import PageHeading from "@components/shared/PageHeading.astro";
 import SchemaOrg from "@components/seo/SchemaOrg.astro";
 import TestimonialList from "@components/testimonials/TestimonialList.astro";
 import PressQuotesRow from "@components/shared/PressQuotesRow.astro";
+import AppDownloadSection from "@components/shared/AppDownloadSection.astro";
 import {
   getReviewsPage,
   getAllTestimonials,
   getHome,
   getPress,
+  getAppDownload,
 } from "@lib/queries";
 import { reviewsPageSchema } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
@@ -22,10 +24,11 @@ export function getStaticPaths() {
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 const page = await getReviewsPage(lang);
 if (!page) throw new Error(`Reviews page not found (${lang})`);
-const [testimonials, home, press] = await Promise.all([
+const [testimonials, home, press, appDownload] = await Promise.all([
   getAllTestimonials(lang),
   getHome(lang),
   getPress(lang),
+  getAppDownload(),
 ]);
 const pressQuotes = press.filter((p) => p.quote);
 
@@ -76,4 +79,6 @@ const schema = reviewsPageSchema(
       />
     </TestimonialList>
   </section>
+
+  <AppDownloadSection heading={page.downloadHeading} {...appDownload} {lang} />
 </Base>

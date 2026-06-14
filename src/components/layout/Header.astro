@@ -4,8 +4,11 @@ import type { Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 import type { NavItem } from "@lib/links";
 import LogoSvg from "@assets/svg/LogoSvg.astro";
+import Btn from "@components/shared/Btn.astro";
 import ChevronDown from "@components/shared/ChevronDown.astro";
 import NavLink from "@components/shared/NavLink.astro";
+import AppleIcon from "@assets/svg/apple-icon.svg";
+import AndroidIcon from "@assets/svg/android-icon.svg";
 
 interface Props {
   lang: Locale;
@@ -13,6 +16,8 @@ interface Props {
   tools: { title: string; items: NavItem[]; seeAll: NavItem };
   flatLinks: NavItem[];
   ctaUrl: string;
+  appStoreUrl: string;
+  playStoreUrl: string;
 }
 
 const {
@@ -21,6 +26,8 @@ const {
   tools,
   flatLinks,
   ctaUrl,
+  appStoreUrl,
+  playStoreUrl,
 } = Astro.props;
 
 const currentPath = Astro.url.pathname;
@@ -29,7 +36,7 @@ function isActive(href: string) {
 }
 ---
 
-<header id="header" class="sticky top-0 z-10 bg-brand text-white">
+<header id="header" class="sticky top-0 z-10 bg-brand text-white shadow-xl">
   <div
     class="py-[12px] flex flex-wrap items-center justify-between gap-x-svw gap-y-4 sm:gap-x-6"
   >
@@ -120,6 +127,28 @@ function isActive(href: string) {
         }
       </ul>
 
+      <!-- App store links mobile -->
+      <div class="flex gap-2 md:hidden">
+        <a
+          href={appStoreUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={t(lang, "store.appStore")}
+          class="inline-flex items-center justify-center size-11 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
+        >
+          <AppleIcon aria-hidden="true" class="size-5" />
+        </a>
+        <a
+          href={playStoreUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={t(lang, "store.playStore")}
+          class="inline-flex items-center justify-center size-11 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
+        >
+          <AndroidIcon aria-hidden="true" class="size-5" />
+        </a>
+      </div>
+
       <!-- Language switcher mobile -->
       <ul
         class="mt-auto flex md:hidden"
@@ -154,7 +183,7 @@ function isActive(href: string) {
           "{lang}",
           lang.toUpperCase(),
         )}
-        class="gap-[5px] rounded-md px-2 py-1 transition-colors hover:bg-white/12"
+        class="nav-item gap-[5px]"
       >
         <svg
           class="size-5"
@@ -195,14 +224,13 @@ function isActive(href: string) {
     </details>
 
     <!-- CTA -->
-    <a
+    <Btn
       href={ctaUrl}
-      class="nav-item bg-white text-brand whitespace-nowrap
-             max-md:ms-auto max-md:translate-x-svw
-             hover:bg-brand hover:text-white"
+      variant="inverted"
+      class="whitespace-nowrap max-md:ms-auto max-md:translate-x-svw"
     >
       {t(lang, "header.cta")}
-    </a>
+    </Btn>
 
     <!-- Burger -->
     <button

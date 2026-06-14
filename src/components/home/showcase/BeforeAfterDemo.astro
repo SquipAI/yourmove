@@ -1,0 +1,27 @@
+---
+import type { Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+import type { ShowcaseDemo } from "@lib/types";
+import BeforeAfterGrid from "@components/shared/BeforeAfterGrid.astro";
+
+interface Props {
+  demo: Extract<ShowcaseDemo, { _type: "beforeAfterDemo" }>;
+  lang: Locale;
+  class?: string;
+}
+
+const { demo, lang, class: cls } = Astro.props;
+---
+
+{
+  demo.example && (
+    <BeforeAfterGrid
+      before={demo.example.before.url}
+      after={demo.example.after.url}
+      beforeAlt={t(lang, "beforeAfter.altBefore")}
+      afterAlt={t(lang, "beforeAfter.altAfter")}
+      {lang}
+      class:list={["overflow-clip", cls]}
+    />
+  )
+}

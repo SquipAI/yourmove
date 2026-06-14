@@ -3,22 +3,23 @@ import type { ShowcaseDemo } from "@lib/types";
 
 interface Props {
   demo: Extract<ShowcaseDemo, { _type: "reviewDemo" }>;
+  class?: string;
 }
-const { demo } = Astro.props;
+const { demo, class: cls } = Astro.props;
 const pct = Math.min(
   100,
   Math.max(0, Math.round((demo.scoreFrom / demo.scoreTo) * 100)),
 );
 ---
 
-<div class="flex flex-col gap-3">
+<div class:list={["flex flex-col gap-3", cls]}>
   <div>
     <div class="tracking-eyebrow mb-1 flex items-baseline justify-between text-xs uppercase">
       <span>Score {demo.scoreFrom}</span>
       <span aria-hidden="true">{demo.scoreTo}</span>
     </div>
     <div
-      class="h-1 overflow-hidden rounded-full bg-black/10"
+      class="h-1 overflow-hidden rounded-full bg-dark/10"
       role="progressbar"
       aria-valuemin="0"
       aria-valuemax={demo.scoreTo}
@@ -31,7 +32,7 @@ const pct = Math.min(
     {
       demo.items.map((item) => (
         <li class="flex items-baseline gap-2 text-sm">
-          <span class="tracking-eyebrow shrink-0 rounded-sm bg-black/10 px-1.5 py-0.5 text-xs uppercase">
+          <span class="tracking-eyebrow shrink-0 rounded-sm bg-dark/10 px-1.5 py-0.5 text-xs uppercase">
             {item.tag}
           </span>
           <span>{item.text}</span>

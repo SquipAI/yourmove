@@ -2,7 +2,8 @@
 import Base from "@layouts/Base.astro";
 import PageHeading from "@components/shared/PageHeading.astro";
 import TagCard from "@components/blog/ui/TagCard.astro";
-import { getAllTagsWithCount, getBlogTagsPage } from "@lib/queries";
+import AppDownloadSection from "@components/shared/AppDownloadSection.astro";
+import { getAllTagsWithCount, getBlogTagsPage, getAppDownload } from "@lib/queries";
 import { ogImageHref } from "@lib/og/route";
 import { getAllLocalePaths } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
@@ -13,9 +14,10 @@ export function getStaticPaths() {
 }
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
-const [tags, page] = await Promise.all([
+const [tags, page, appDownload] = await Promise.all([
   getAllTagsWithCount(lang),
   getBlogTagsPage(lang),
+  getAppDownload(),
 ]);
 ---
 
@@ -35,4 +37,6 @@ const [tags, page] = await Promise.all([
       {tags.map((tag) => <TagCard {tag} {lang} />)}
     </ul>
   </section>
+
+  <AppDownloadSection heading={page.downloadHeading} {...appDownload} {lang} />
 </Base>

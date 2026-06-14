@@ -5,12 +5,14 @@ import SectionHeading from "@components/shared/SectionHeading.astro";
 import AppCard from "@components/tools/ui/AppCard.astro";
 import ToolList from "@components/tools/ui/ToolList.astro";
 import ToolsHero from "@components/tools/ui/ToolsHero.astro";
+import AppDownloadSection from "@components/shared/AppDownloadSection.astro";
 
 import {
   getToolsPage,
   getFeaturedTools,
   getCategoriesWithTools,
   getAppsWithTools,
+  getAppDownload,
 } from "@lib/queries";
 
 import { ogImageHref } from "@lib/og/route";
@@ -24,11 +26,12 @@ export function getStaticPaths() {
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 
-const [page, featured, categories, apps] = await Promise.all([
+const [page, featured, categories, apps, appDownload] = await Promise.all([
   getToolsPage(lang),
   getFeaturedTools(lang),
   getCategoriesWithTools(lang),
   getAppsWithTools(lang),
+  getAppDownload(),
 ]);
 ---
 
@@ -42,34 +45,41 @@ const [page, featured, categories, apps] = await Promise.all([
 
   {
     featured.length > 0 && (
-      <section class="section">
+      <section class="section pt-section-sm lg:pt-section-xs">
         <h2 class="sr-only">{t(lang, "tools.top")}</h2>
         <ToolList tools={featured} {lang} level={2} />
       </section>
     )
   }
 
-  {
-    apps.length > 0 && (
-      <section id="by-app" class="section bg-subtle-lighter">
-        <SectionHeading title={t(lang, "tools.browseByApp")} />
-        <ul class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {apps.map((app) => (
-            <li>
-              <AppCard {app} {lang} level={3} />
-            </li>
-          ))}
-        </ul>
-      </section>
-    )
-  }
+  <section id="by-app" class="section bg-subtle-lighter">
+    <SectionHeading title={t(lang, "tools.browseByApp")} />
+    <ul class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {
+        apps.map((app) => (
+          <li>
+            <AppCard {app} {lang} level={3} />
+          </li>
+        ))
+      }
+    </ul>
+  </section>
 
   {
     categories.map((cat) => (
-      <section id={`category-${cat._id}`} class="section">
-        <SectionHeading title={cat.title} subtitle={cat.description} />
+      <section
+        id={`category-${cat._id}`}
+        class="section not-last:pb-section-xs"
+      >
+        <SectionHeading
+          title={cat.title}
+          subtitle={cat.description}
+          size="sm"
+        />
         <ToolList tools={cat.tools} {lang} level={3} />
       </section>
     ))
   }
+
+  <AppDownloadSection heading={page.downloadHeading} {...appDownload} {lang} />
 </Base>

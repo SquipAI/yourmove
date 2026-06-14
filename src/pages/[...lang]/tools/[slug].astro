@@ -2,7 +2,8 @@
 import Base from "@layouts/Base.astro";
 import PageHeading from "@components/shared/PageHeading.astro";
 import ToolList from "@components/tools/ui/ToolList.astro";
-import { getAppPage, getAllAppPaths } from "@lib/queries";
+import AppDownloadSection from "@components/shared/AppDownloadSection.astro";
+import { getAppPage, getAllAppPaths, getAppDownload } from "@lib/queries";
 import { ogImageHref } from "@lib/og/route";
 import { buildAlternateUrls } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
@@ -17,7 +18,10 @@ export async function getStaticPaths() {
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 const { slug } = Astro.params;
-const app = await getAppPage(slug!, lang);
+const [app, appDownload] = await Promise.all([
+  getAppPage(slug!, lang),
+  getAppDownload(),
+]);
 if (!app) throw new Error(`App not found: ${slug} (${lang})`);
 const count =
   app.tools.length === 1 ? t(lang, "tools.tool") : t(lang, "tools.tools");
@@ -45,4 +49,6 @@ const alternateUrls = buildAlternateUrls(
 
     <ToolList tools={app.tools} {lang} level={2} />
   </section>
+
+  <AppDownloadSection heading={app.downloadHeading} {...appDownload} {lang} />
 </Base>

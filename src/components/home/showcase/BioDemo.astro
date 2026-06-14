@@ -3,12 +3,11 @@ import type { ShowcaseDemo } from "@lib/types";
 
 interface Props {
   demo: Extract<ShowcaseDemo, { _type: "bioDemo" }>;
+  class?: string;
 }
-const { demo } = Astro.props;
+const { demo, class: cls } = Astro.props;
 ---
 
-<blockquote
-  class="rounded-xl border border-white/15 px-4 py-3 text-sm leading-relaxed"
->
+<blockquote class:list={["text-sm leading-relaxed", cls]}>
   &ldquo;{demo.text}&rdquo;
 </blockquote>
