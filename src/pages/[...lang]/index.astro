@@ -6,7 +6,7 @@ import ToolsShowcaseSection from "@components/home/ToolsShowcaseSection.astro";
 import FaqSection from "@components/shared/FaqSection.astro";
 import ListingSection from "@components/shared/ListingSection.astro";
 import TestimonialsSection from "@components/testimonials/TestimonialsSection.astro";
-import AppDownloadSection from "@components/shared/AppDownloadSection.astro";
+import CtaSection from "@components/shared/CtaSection.astro";
 import FeaturedList from "@components/blog/ui/FeaturedList.astro";
 import {
   getHome,
@@ -92,7 +92,7 @@ const schema = homeSchema(
     appLogos={appLogos}
     appLogosLabel={t(lang, "tools.compatibleWith")}
     {lang}
-    class="bg-zinc-900 text-white [&_h2+p]:text-white sm:[&_h2+p]:text-balance"
+    class="bg-dark text-white [&_h2+p]:text-white sm:[&_h2+p]:text-balance"
   />
 
   <TestimonialsSection
@@ -121,7 +121,7 @@ const schema = homeSchema(
     {lang}
   />
 
-  <AppDownloadSection
+  <CtaSection
     heading={home.downloadHeading}
     {...siteStats}
     appStoreUrl={home.appStoreUrl}

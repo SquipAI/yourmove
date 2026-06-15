@@ -1,71 +1,138 @@
 ---
-import { parseAccent } from "@lib/parseAccent";
-import Btn from "@components/shared/Btn.astro";
+import SectionHeading from "@components/shared/SectionHeading.astro";
+import { t } from "@i18n/ui";
+import Apple from "@assets/svg/apple.svg";
+import Google from "@assets/svg/google.svg";
+import type { Locale } from "@i18n/config";
 
 interface Props {
-  title: string;
+  /** download — store badges + shared subtext (listing/content pages).
+   *  promo — per-tool conversion button + one OS-aware store button. */
+  variant?: "download" | "promo";
+  heading: string;
+  /** Optional sentence under the heading. Shown only when set. */
   subtitle?: string | null;
-  buttonText: string;
-  href: string;
+  userCount: string;
+  userRating: string;
+  appStoreUrl: string;
+  playStoreUrl: string;
+  /** Text under the buttons. Defaults to the shared store line on `download`. */
+  subtext?: string | null;
+  /** promo only — primary conversion button. */
+  buttonText?: string;
+  href?: string;
+  lang: Locale;
+  class?: string;
 }
 
-const { title, subtitle, buttonText, href } = Astro.props;
+const {
+  variant = "download",
+  heading,
+  subtitle,
+  userCount,
+  userRating,
+  appStoreUrl,
+  playStoreUrl,
+  subtext,
+  buttonText,
+  href,
+  lang,
+  class: cls,
+} = Astro.props;
 
-const titleParts = parseAccent(title);
-const subtitleParts = parseAccent(subtitle);
+const isPromo = variant === "promo";
+
+// Stats eyebrow — shown on both variants. Split the ★ run so it tints gold.
+const eyebrow = t(lang, "download.eyebrow")
+  .replace("{count}", userCount)
+  .replace("{rating}", userRating);
+const eyebrowParts = eyebrow.split(/(★+)/);
+
+// Under-button line: explicit subtext, else the shared store line on download.
+const footer = subtext ?? (isPromo ? null : t(lang, "download.subtext"));
 ---
 
-<section data-section="cta" class="section">
+{
+  isPromo && (
+    <script is:inline>
+      if (/Android/i.test(navigator.userAgent))
+      document.documentElement.classList.add("os-android");
+    </script>
+  )
+}
+
+<section
+  data-section={isPromo ? "cta" : undefined}
+  class:list={["section", cls]}
+>
   <div
-    class="bg-ink relative isolate flex flex-col items-center overflow-hidden rounded-2xl px-svw py-section-sm text-center text-white ring-1 ring-white/10 md:rounded-3xl md:px-12"
+    class="flex flex-col items-center px-svw py-section text-center text-white bg-radial-[ellipse_110%_90%_at_50%_89%] from-brand-darkest via-brand-darker to-brand rounded-xl md:rounded-3xl md:py-section-sm"
   >
-    <div
-      aria-hidden="true"
-      class="absolute inset-0 -z-10 bg-[radial-gradient(80%_100%_at_50%_-20%,oklch(from_var(--color-brand)_45%_c_h),transparent_70%)]"
-    >
-    </div>
+    <p class="tracking-eyebrow text-xs font-medium uppercase opacity-80 mb-2">
+      {
+        eyebrowParts.map((part) =>
+          part.includes("★") ? <span class="text-gold">{part}</span> : part,
+        )
+      }
+    </p>
 
-    <div class="flex flex-col items-center gap-8">
-      <hgroup class="flex flex-col items-center *:max-w-180">
-        <h2 class="text-title-big">
-          {
-            titleParts.map((p) =>
-              p.accent ? (
-                <span class="text-brand-lighter font-serif italic">
-                  {p.text}
-                </span>
-              ) : (
-                p.text
-              ),
-            )
-          }
-        </h2>
-        {
-          subtitle && (
-            <p class="text-subtitle text-white/70">
-              {subtitleParts.map((p) =>
-                p.accent ? (
-                  <span class="text-brand-lighter font-serif italic">
-                    {p.text}
-                  </span>
-                ) : (
-                  p.text
-                ),
-              )}
-            </p>
-          )
-        }
-      </hgroup>
+    <SectionHeading
+      title={heading}
+      {subtitle}
+      class="max-w-3xl [--color-brand-darker:var(--color-gold)] [--color-subtle:#f1f0f0]"
+    />
 
-      <Btn
-        href={href}
-        variant="inverted"
-        big
-        class="shadow-xl transition hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:w-auto sm:px-12"
-      >
-        {buttonText}
-        <span aria-hidden="true" class="ml-2">→</span>
-      </Btn>
-    </div>
+    {
+      isPromo ? (
+        <div class="mb-2 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row">
+          <a
+            href={href}
+            class="text-brand hover:bg-brand-darker inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-white px-6 font-medium transition-colors hover:text-white sm:w-auto sm:min-w-45"
+          >
+            {buttonText}
+            <span aria-hidden="true">→</span>
+          </a>
+          {appStoreUrl && (
+            <a
+              href={appStoreUrl}
+              class="border-white/35 hover:bg-white/10 inline-flex h-12 w-full items-center justify-center rounded-lg border px-6 font-medium text-white transition-colors sm:w-auto [html.os-android_&]:hidden"
+            >
+              {t(lang, "store.getOnIos")}
+            </a>
+          )}
+          {playStoreUrl && (
+            <a
+              href={playStoreUrl}
+              class="border-white/35 hover:bg-white/10 hidden h-12 w-full items-center justify-center rounded-lg border px-6 font-medium text-white transition-colors sm:w-auto [html.os-android_&]:inline-flex"
+            >
+              {t(lang, "store.getOnAndroid")}
+            </a>
+          )}
+        </div>
+      ) : (
+        <div class="mb-2 flex flex-wrap justify-center items-center gap-4 [&_svg]:h-11 [&_svg]:w-auto">
+          <a
+            href={appStoreUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={t(lang, "store.appStore")}
+            class="inline-flex items-center transition hover:-translate-y-px hover:shadow-md active:translate-y-0 active:shadow-sm"
+          >
+            <Apple aria-hidden="true" />
+          </a>
+          <a
+            href={playStoreUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={t(lang, "store.playStore")}
+            class="inline-flex items-center transition hover:-translate-y-px hover:shadow-md active:translate-y-0 active:shadow-sm"
+          >
+            <Google aria-hidden="true" />
+          </a>
+        </div>
+      )
+    }
+
+    {footer && <p class="text-sm opacity-80">{footer}</p>}
   </div>
 </section>

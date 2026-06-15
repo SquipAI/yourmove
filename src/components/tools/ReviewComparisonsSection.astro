@@ -14,7 +14,7 @@ const { heading, items } = Astro.props;
 <section data-section="comparisons" class="section">
   <SectionHeading title={heading} class="mb-section-xs" />
 
-  <ul class="flex flex-col gap-4">
+  <ul class="grid gap-4 md:grid-cols-2">
     {
       items.map((item) => (
         <li class="card flex flex-col gap-4 p-5 sm:p-6">

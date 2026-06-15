@@ -27,6 +27,7 @@
 
   --spacing-svw: min(3svw, 45px);
   --spacing-section: max(90px, calc(var(--spacing-svw) * 4));
+  --spacing-section-md: calc(var(--spacing-section) / 1.5);
   --spacing-section-sm: calc(var(--spacing-section) / 2);
   --spacing-section-xs: calc(var(--spacing-section) / 3);
 
@@ -100,7 +101,18 @@
   h4,
   h5,
   h6 {
-    @apply not-last:mb-[.27em] leading-[1.1] font-medium text-balance;
+    @apply not-last:mb-[.27em] leading-[1.1] text-balance;
+  }
+
+  h2 {
+    @apply font-semibold;
+  }
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-medium;
   }
 
   :is(h1, h2, h3) + p {
@@ -125,7 +137,7 @@
   }
 
   .section {
-    @apply py-section lg:py-section-sm first-of-type:pt-section-sm;
+    @apply py-section-md lg:py-section-sm first-of-type:pt-section-sm;
   }
 
   .main-split {
@@ -271,8 +283,20 @@
   }
 }
 
-.prose a:hover {
-  color: var(--color-brand-darkest);
+.prose {
+  --tw-prose-bullets: var(--color-dark);
+  --tw-prose-counters: var(--color-dark);
+
+  ul,
+  ol {
+    list-style-position: inside;
+    padding-inline-start: 0;
+  }
+
+  li,
+  dd {
+    padding-inline-start: 0;
+  }
 }
 
 .card {
@@ -297,7 +321,7 @@
 
 /* Inline accent applied to *asterisk*-wrapped spans by parseAccent. */
 @utility accent {
-  @apply font-serif font-normal text-brand italic;
+  @apply font-serif font-normal text-brand-darker italic;
 }
 
 @utility nav-item {

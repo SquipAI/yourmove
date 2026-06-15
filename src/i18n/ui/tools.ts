@@ -14,6 +14,7 @@ export const tools = {
     "tools.tools": "tools",
     "tools.apps": "dating apps",
     "tools.exploreAppTools": "Explore {name} tools →",
+    "tools.moreTools": "More tools for *your dating life*",
     "features.eyebrow": "Features",
     "howItWorks.stepLabel": "Step",
     "beforeAfter.before": "Before",
@@ -59,9 +60,6 @@ export const tools = {
     "profileWriter.tones.flirty": "Flirty",
     "profileWriter.tones.thoughtful": "Thoughtful",
     "profileWriter.tones.feisty": "Feisty",
-    "profileWriterExamples.heading": "One you. Every tone.",
-    "profileWriterExamples.subtitle":
-      "The same you, written three ways — pick the voice that actually sounds like you.",
   },
   es: {
     "tools.top": "Mejores herramientas",
@@ -76,6 +74,7 @@ export const tools = {
     "tools.tools": "herramientas",
     "tools.apps": "apps de citas",
     "tools.exploreAppTools": "Explorar herramientas de {name} →",
+    "tools.moreTools": "Más herramientas para *tus citas*",
     "features.eyebrow": "Funciones",
     "howItWorks.stepLabel": "Paso",
     "beforeAfter.before": "Antes",
@@ -121,9 +120,6 @@ export const tools = {
     "profileWriter.tones.flirty": "Coqueto",
     "profileWriter.tones.thoughtful": "Sincero",
     "profileWriter.tones.feisty": "Atrevido",
-    "profileWriterExamples.heading": "Tú, en cada tono.",
-    "profileWriterExamples.subtitle":
-      "La misma persona, escrita de tres formas — elige la voz que suena a ti.",
   },
   de: {
     "tools.top": "Top-Tools",
@@ -138,6 +134,7 @@ export const tools = {
     "tools.tools": "Tools",
     "tools.apps": "Dating-Apps",
     "tools.exploreAppTools": "{name}-Tools entdecken →",
+    "tools.moreTools": "Mehr Tools für *dein Dating*",
     "features.eyebrow": "Funktionen",
     "howItWorks.stepLabel": "Schritt",
     "beforeAfter.before": "Vorher",
@@ -183,8 +180,5 @@ export const tools = {
     "profileWriter.tones.flirty": "Flirty",
     "profileWriter.tones.thoughtful": "Tiefgründig",
     "profileWriter.tones.feisty": "Frech",
-    "profileWriterExamples.heading": "Ein Du. Jeder Ton.",
-    "profileWriterExamples.subtitle":
-      "Dieselbe Person, dreimal geschrieben — wähl die Stimme, die nach dir klingt.",
   },
 } satisfies Record<Locale, Record<string, string>>;

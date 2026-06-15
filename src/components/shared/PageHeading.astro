@@ -13,7 +13,6 @@ interface Props {
   /** Breadcrumbs rendered above the heading. */
   breadcrumbs?: BreadcrumbItem[];
   subtitle?: string | null;
-  level?: 1 | 2;
   size?: "default" | "big";
   /** Center the eyebrow/title/subtitle horizontally. */
   centered?: boolean;
@@ -26,14 +25,10 @@ const {
   eyebrowVariant = "default",
   breadcrumbs,
   subtitle,
-  level = 1,
-  size = "default",
   centered = false,
   class: cls,
 } = Astro.props;
 
-const Tag = `h${level}` as "h1" | "h2";
-const isBig = size === "big";
 const titleParts = parseAccent(title);
 const subtitleParts = parseAccent(subtitle);
 const hasExtras = !!eyebrow || !!subtitle;
@@ -51,13 +46,11 @@ const hasExtras = !!eyebrow || !!subtitle;
       ]}
     >
       {eyebrow && <Eyebrow variant={eyebrowVariant}>{eyebrow}</Eyebrow>}
-      <Tag
-        class:list={[isBig ? "text-title-big" : "text-title", "font-semibold"]}
-      >
+      <h1 class="text-title font-bold">
         {titleParts.map((p) =>
           p.accent ? <span class="accent">{p.text}</span> : p.text,
         )}
-      </Tag>
+      </h1>
       {subtitle && (
         <p class="text-subtitle text-balance">
           {subtitleParts.map((p) =>
@@ -67,10 +60,9 @@ const hasExtras = !!eyebrow || !!subtitle;
       )}
     </hgroup>
   ) : (
-    <Tag
+    <h1
       class:list={[
-        isBig ? "text-title-big" : "text-title",
-        "mb-section-xs max-w-210 lg:mb-svw font-semibold",
+        "text-title mb-section-xs max-w-210 lg:mb-svw font-bold",
         centered && "mx-auto text-center",
         cls,
       ]}
@@ -78,6 +70,6 @@ const hasExtras = !!eyebrow || !!subtitle;
       {titleParts.map((p) =>
         p.accent ? <span class="accent">{p.text}</span> : p.text,
       )}
-    </Tag>
+    </h1>
   )
 }

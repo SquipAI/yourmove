@@ -27,6 +27,7 @@ import {
   getTestimonialsForTool,
   getCompatibilityApps,
   getPress,
+  getAppDownload,
 } from "@lib/queries";
 import { toolSchema } from "@lib/schema";
 import { resolveNavHref } from "@lib/links";
@@ -55,6 +56,10 @@ const { display: testimonials, specific } = await getTestimonialsForTool(
   tool._id,
   lang,
 );
+const [pressLogos, appDownload] = await Promise.all([
+  getPress(lang).then((logos) => logos.filter((p) => !p.hidden)),
+  getAppDownload(),
+]);
 const alternateUrls = buildAlternateUrls(
   Astro.url.origin,
   lang,
@@ -88,6 +93,19 @@ const heroCtaHref = heroCtaLink
       heroCtaLink.externalUrl,
       lang,
     )
+  : null;
+
+// Features-block CTA link: an explicit target, or fall back to the embed anchor.
+const featuresCtaLink = tool.featuresCta?.link ?? null;
+const featuresCtaHref = tool.featuresCta
+  ? (featuresCtaLink
+      ? resolveNavHref(
+          featuresCtaLink.targetType,
+          featuresCtaLink.targetSlug,
+          featuresCtaLink.externalUrl,
+          lang,
+        )
+      : "#tool")
   : null;
 
 // base gets the plain heading; the rest get the two-column extended hero
@@ -132,7 +150,7 @@ const breadcrumbItems = buildToolBreadcrumbs(tool, lang);
 // baseExtended shows press wordmarks; app-bound kinds show compatible apps.
 const usePress = kind === "baseExtended";
 const logos = usePress
-  ? (await getPress(lang)).filter((p) => !p.hidden)
+  ? pressLogos
   : isExtendedHero
     ? await getCompatibilityApps(tool.app?._id ?? null)
     : [];
@@ -230,7 +248,12 @@ const logosLabel = usePress
 
   {
     profileWriter && (
-      <ProfileWriterExamplesSection apps={profileWriter.apps} {lang} />
+      <ProfileWriterExamplesSection
+        apps={profileWriter.apps}
+        heading={profileWriter.examplesHeading}
+        subtitle={profileWriter.examplesSubtitle}
+        {lang}
+      />
     )
   }
 
@@ -284,6 +307,9 @@ const logosLabel = usePress
       <FeaturesSection
         items={tool.features}
         heading={tool.featuresHeading}
+        subtitle={tool.featuresSubtitle}
+        ctaText={tool.featuresCta?.text}
+        ctaHref={featuresCtaHref}
         {lang}
       />
     )
@@ -294,18 +320,8 @@ const logosLabel = usePress
       <TestimonialsSection
         {testimonials}
         heading={t(lang, "reviews.heading")}
+        {pressLogos}
         {lang}
-      />
-    )
-  }
-
-  {
-    tool.cta && ctaHref && (
-      <CtaSection
-        title={tool.cta.title}
-        subtitle={tool.cta.subtitle}
-        buttonText={tool.cta.buttonText}
-        href={ctaHref}
       />
     )
   }
@@ -318,6 +334,20 @@ const logosLabel = usePress
           tool.faqHeading ?? `${tool.cardTitle ?? stripAccent(tool.title)} FAQ`
         }
         align="center"
+        {lang}
+      />
+    )
+  }
+
+  {
+    tool.cta && ctaHref && (
+      <CtaSection
+        variant="promo"
+        heading={tool.cta.title}
+        subtitle={tool.cta.subtitle}
+        buttonText={tool.cta.buttonText}
+        href={ctaHref}
+        {...appDownload}
         {lang}
       />
     )

@@ -9,6 +9,7 @@ import {
   ImagesIcon,
   HelpCircleIcon,
   EditIcon,
+  BlockquoteIcon,
 } from "@sanity/icons";
 import {
   faqArrayField,
@@ -61,6 +62,12 @@ export const tool = defineType({
       name: "profileWriter",
       title: "Profile preview",
       icon: EditIcon,
+      hidden: hideUnlessKind("profileWriter"),
+    },
+    {
+      name: "profileWriterExamples",
+      title: "Profile examples",
+      icon: BlockquoteIcon,
       hidden: hideUnlessKind("profileWriter"),
     },
     {
@@ -541,6 +548,28 @@ export const tool = defineType({
       ],
     }),
     defineField({
+      name: "profileWriterExamplesHeading",
+      title: "Examples heading *",
+      type: "string",
+      group: "profileWriterExamples",
+      description:
+        'Heading for the "every tone" examples reel below the hero. Per-locale. Wrap a phrase in *asterisks* to accent it. Required for Profile Writer tools.',
+      validation: (r) =>
+        r.custom((value, ctx) => {
+          if (docKind(ctx.document) !== "profileWriter") return true;
+          return value ? true : "Required";
+        }),
+    }),
+    defineField({
+      name: "profileWriterExamplesSubtitle",
+      title: "Examples subtitle",
+      type: "text",
+      rows: 2,
+      group: "profileWriterExamples",
+      description:
+        "Optional sentence under the examples heading. Per-locale. Wrap a phrase in *asterisks* to accent it.",
+    }),
+    defineField({
       name: "profileWriterApps",
       title: "Apps *",
       type: "array",
@@ -788,6 +817,34 @@ export const tool = defineType({
           }
           return true;
         }),
+    }),
+    defineField({
+      name: "featuresSubtitle",
+      title: "Subtitle",
+      type: "text",
+      rows: 2,
+      group: "features",
+      description:
+        "Optional sentence under the heading (left column). Per-locale. Empty = no subtitle.",
+    }),
+    defineField({
+      name: "featuresCtaText",
+      title: "CTA link text",
+      type: "string",
+      group: "features",
+      description:
+        'Optional text link under the heading, e.g. "Try it free". Per-locale. Empty = no link. Target is set below.',
+    }),
+    defineField({
+      name: "featuresCtaLink",
+      title: "CTA link target",
+      type: "reference",
+      group: "features",
+      to: linkableTo({ exclude: ["privacy", "terms", "post", "tag"] }),
+      options: { disableNew: false },
+      hidden: hiddenOnNonEn,
+      description:
+        "Where the features CTA link goes. Pick a siteLink for external URLs, or a tool/page. Empty = scrolls to embed (#tool).",
     }),
     defineField({
       name: "features",

@@ -9,7 +9,7 @@ import LatestList from "@components/blog/ui/LatestList.astro";
 import PostCard from "@components/blog/ui/PostCard.astro";
 import SeeAllLink from "@components/blog/ui/SeeAllLink.astro";
 import TagList from "@components/blog/ui/TagList.astro";
-import AppDownloadSection from "@components/shared/AppDownloadSection.astro";
+import CtaSection from "@components/shared/CtaSection.astro";
 
 import {
   getBlogPage,
@@ -114,5 +114,5 @@ const localePath = localePathFor(lang);
     </ul>
   </section>
 
-  <AppDownloadSection heading={page.downloadHeading} {...appDownload} {lang} />
+  <CtaSection heading={page.downloadHeading} {...appDownload} {lang} />
 </Base>

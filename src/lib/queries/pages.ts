@@ -224,7 +224,7 @@ export function getSiteStats() {
   );
 }
 
-// Store badge urls + stats for <AppDownloadSection>. The per-page
+// Store badge urls + stats for <CtaSection>. The per-page
 // `downloadHeading` lives on each page document.
 export function getAppDownload() {
   return cached("getAppDownload", () =>

@@ -2,7 +2,7 @@
 import Base from "@layouts/Base.astro";
 import PageHeading from "@components/shared/PageHeading.astro";
 import TagCard from "@components/blog/ui/TagCard.astro";
-import AppDownloadSection from "@components/shared/AppDownloadSection.astro";
+import CtaSection from "@components/shared/CtaSection.astro";
 import { getAllTagsWithCount, getBlogTagsPage, getAppDownload } from "@lib/queries";
 import { ogImageHref } from "@lib/og/route";
 import { getAllLocalePaths } from "@i18n/utils";
@@ -38,5 +38,5 @@ const [tags, page, appDownload] = await Promise.all([
     </ul>
   </section>
 
-  <AppDownloadSection heading={page.downloadHeading} {...appDownload} {lang} />
+  <CtaSection heading={page.downloadHeading} {...appDownload} {lang} />
 </Base>

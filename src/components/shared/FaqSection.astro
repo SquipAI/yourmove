@@ -10,8 +10,6 @@ interface Props {
   heading: string;
   eyebrow?: string | null;
   subtitle?: string | null;
-  /** Heading level for the section title. Default 2. */
-  level?: 2 | 3;
   /** Horizontal alignment. Default "start". */
   align?: "center" | "start";
   lang: Locale;
@@ -22,7 +20,6 @@ const {
   heading,
   eyebrow,
   subtitle,
-  level = 2,
   align = "start",
   lang,
 } = Astro.props;
@@ -37,14 +34,14 @@ const headingAlign = align === "center" ? "text-center" : undefined;
       title={heading}
       {eyebrow}
       {subtitle}
-      {level}
       class={headingAlign}
+      size="sm"
     />
     <ul class="flex flex-col w-full sm:max-w-156">
       {
         items.map((item) => (
           <li>
-            <details class="px-2 border-b border-subtle">
+            <details class="px-2 border-b border-subtle/30">
               <summary class="justify-between gap-4 font-medium text-pretty py-svw sm:py-4 hover:text-brand-darker">
                 <h3 class="mb-0">{item.question}</h3>
                 <ChevronDown />

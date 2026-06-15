@@ -9,10 +9,11 @@ import { TESTIMONIAL_CARD } from "./projections";
 import { cached } from "./cache";
 import { DEFAULT_LOCALE } from "@i18n/config";
 
-export const TESTIMONIALS_TOOL_COUNT = 6;
+export const TESTIMONIALS_TOOL_COUNT = 5;
 
 // Stable sort: featured first, then order asc, then _id as tiebreaker.
-const TESTIMONIAL_ORDER = "order(featured desc, coalesce(order, 0) asc, _id asc)";
+const TESTIMONIAL_ORDER =
+  "order(featured desc, coalesce(order, 0) asc, _id asc)";
 
 export function getReviewsPage(lang = DEFAULT_LOCALE) {
   return cached(`getReviewsPage:${lang}`, () =>

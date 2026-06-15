@@ -4,7 +4,7 @@ import PostList from "@components/blog/ui/PostList.astro";
 import TagList from "@components/blog/ui/TagList.astro";
 import PageHeading from "@components/shared/PageHeading.astro";
 import SectionHeading from "@components/shared/SectionHeading.astro";
-import AppDownloadSection from "@components/shared/AppDownloadSection.astro";
+import CtaSection from "@components/shared/CtaSection.astro";
 import {
   getAllTagsWithCount,
   getAllTagPaths,
@@ -71,5 +71,5 @@ const alternateUrls = buildAlternateUrls(
     <TagList tags={otherTags} {lang} />
   </section>
 
-  <AppDownloadSection heading={tag.downloadHeading} {...appDownload} {lang} />
+  <CtaSection heading={tag.downloadHeading} {...appDownload} {lang} />
 </Base>

@@ -25,6 +25,9 @@ export type AppPageData = DatingApp & {
   downloadHeading: string;
   alternates: AlternateSlug[] | null;
   tools: ToolCard[];
+  toolCount: number;
+  /** Curated app-agnostic tools shown in the "More tools" section. */
+  universalTools: ToolCard[];
 };
 
 export type ToolCard = {
@@ -160,6 +163,8 @@ export type ProfileWriterApp = {
 };
 
 export type ProfileWriterData = {
+  examplesHeading: string;
+  examplesSubtitle: string | null;
   apps: ProfileWriterApp[];
 };
 
@@ -181,6 +186,8 @@ export type ToolPageData = {
   howItWorksHeading: string | null;
   howItWorks: HowItWorksStep[] | null;
   featuresHeading: string | null;
+  featuresSubtitle: string | null;
+  featuresCta: { text: string; link: CtaLink | null } | null;
   features: FeatureItem[] | null;
   faqHeading: string | null;
   faq: FaqItem[] | null;

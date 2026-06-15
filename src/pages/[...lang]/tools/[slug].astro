@@ -2,7 +2,7 @@
 import Base from "@layouts/Base.astro";
 import PageHeading from "@components/shared/PageHeading.astro";
 import ToolList from "@components/tools/ui/ToolList.astro";
-import AppDownloadSection from "@components/shared/AppDownloadSection.astro";
+import CtaSection from "@components/shared/CtaSection.astro";
 import { getAppPage, getAllAppPaths, getAppDownload } from "@lib/queries";
 import { ogImageHref } from "@lib/og/route";
 import { buildAlternateUrls } from "@i18n/utils";
@@ -50,5 +50,5 @@ const alternateUrls = buildAlternateUrls(
     <ToolList tools={app.tools} {lang} level={2} />
   </section>
 
-  <AppDownloadSection heading={app.downloadHeading} {...appDownload} {lang} />
+  <CtaSection heading={app.downloadHeading} {...appDownload} {lang} />
 </Base>

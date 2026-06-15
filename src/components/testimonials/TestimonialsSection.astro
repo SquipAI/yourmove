@@ -4,15 +4,17 @@ import type { Press, Testimonial } from "@lib/types";
 import SectionHeading from "@components/shared/SectionHeading.astro";
 import TestimonialList from "@components/testimonials/TestimonialList.astro";
 import PressQuotesRow from "@components/shared/PressQuotesRow.astro";
+import LogoRow from "@components/shared/LogoRow.astro";
+import { t } from "@i18n/ui";
 
 interface Props {
   testimonials: Testimonial[];
   heading: string;
   eyebrow?: string | null;
   subtitle?: string | null;
-  /** Heading level for the section title. Default 2. */
-  level?: 2 | 3;
   pressQuotes?: Press[];
+  /** "as seen on" wordmark strip shown under the list. Empty = hidden. */
+  pressLogos?: Press[];
   lang: Locale;
 }
 
@@ -21,16 +23,22 @@ const {
   heading,
   eyebrow,
   subtitle,
-  level = 2,
   pressQuotes = [],
+  pressLogos = [],
   lang,
 } = Astro.props;
 ---
 
 <section data-section="testimonials" class="section">
   <div>
-    <SectionHeading title={heading} {eyebrow} {subtitle} {level} />
-    <TestimonialList {testimonials} {lang} class="mb-section-sm" />
+    <SectionHeading title={heading} {eyebrow} {subtitle} />
+    <TestimonialList {testimonials} {lang} class="mb-section-xs" />
     <PressQuotesRow {pressQuotes} {lang} />
+    <LogoRow
+      logos={pressLogos}
+      label={t(lang, "home.asSeenOn")}
+      level={3}
+      kind="press"
+    />
   </div>
 </section>

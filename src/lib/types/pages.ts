@@ -114,7 +114,7 @@ export type SiteStats = {
   userRating: string;
 };
 
-// Store badges + stats eyebrow for <AppDownloadSection>.
+// Store badges + stats eyebrow for <CtaSection>.
 export type AppDownload = {
   appStoreUrl: string;
   playStoreUrl: string;

@@ -9,49 +9,80 @@ import Btn from "@components/shared/Btn.astro";
 interface Props {
   items: FeatureItem[];
   heading: string;
+  subtitle?: string | null;
+  ctaText?: string | null;
+  ctaHref?: string | null;
   lang: Locale;
 }
 
-const { items, heading, lang } = Astro.props;
+const { items, heading, subtitle, ctaText, ctaHref, lang } = Astro.props;
+const showCta = !!ctaText && !!ctaHref;
 ---
 
 <section data-section="features" class="section">
-  <div class="grid items-start lg:grid-cols-[1fr_1.6fr] lg:gap-x-section-xs">
-    <SectionHeading title={heading} class="lg:sticky lg:top-24" />
+  <div
+    class="rounded-2xl bg-dark px-svw py-section-sm text-white md:rounded-3xl md:p-12"
+  >
+    <div
+      class="grid gap-section-xs md:grid-cols-[1fr_1.5fr] md:grid-rows-[auto_1fr] md:items-start md:gap-y-0"
+    >
+      <SectionHeading
+        title={heading}
+        {subtitle}
+        size="sm"
+        class="[--color-brand:var(--color-gold)] [--color-subtle:#ffffffa6] md:col-start-1 md:row-start-1"
+      />
 
-    <ul class="divide-y divide-dark/10">
-      {
-        items.map((item) => {
-          const href = item.button
-            ? resolveNavHref(
-                item.button.link.targetType,
-                item.button.link.targetSlug,
-                item.button.link.externalUrl,
-                lang,
-              )
-            : null;
-          return (
-            <li class="flex items-start gap-x-4 py-5 first:pt-0 last:pb-0 sm:gap-x-5">
-              <span class="bg-brand/10 text-brand-darker mt-0.5 rounded-lg p-2.5">
-                <Icon name={item.icon} class="size-5" />
-              </span>
-              <div class="flex flex-col items-start gap-3">
-                <div>
-                  <h3 class="text-lg font-semibold leading-tight">
-                    {item.title}
-                  </h3>
-                  <p class="text-subtle">{item.description}</p>
+      <ul class="divide-white/10 divide-y md:col-start-2 md:row-span-2">
+        {
+          items.map((item) => {
+            const href = item.button
+              ? resolveNavHref(
+                  item.button.link.targetType,
+                  item.button.link.targetSlug,
+                  item.button.link.externalUrl,
+                  lang,
+                )
+              : null;
+            return (
+              <li class="flex items-start gap-x-4 py-5 first:pt-0 last:pb-0 sm:gap-x-5">
+                <span class="bg-white/10 text-brand-lighter mt-0.5 rounded-lg p-2.5">
+                  <Icon name={item.icon} class="size-5" />
+                </span>
+                <div class="flex flex-col items-start gap-3">
+                  <div>
+                    <h3 class="text-lg font-semibold leading-tight">
+                      {item.title}
+                    </h3>
+                    <p class="text-white/60">{item.description}</p>
+                  </div>
+                  {item.button && href && (
+                    <Btn href={href} variant="outline">
+                      {item.button.text}
+                    </Btn>
+                  )}
                 </div>
-                {item.button && href && (
-                  <Btn href={href} variant="outline">
-                    {item.button.text}
-                  </Btn>
-                )}
-              </div>
-            </li>
-          );
-        })
+              </li>
+            );
+          })
+        }
+      </ul>
+
+      {
+        showCta && (
+          <Btn
+            big
+            href={ctaHref}
+            variant="inverted"
+            class="md:col-start-1 md:row-start-2 md:self-start"
+          >
+            {ctaText}
+            <span aria-hidden="true" class="ml-1.5">
+              →
+            </span>
+          </Btn>
+        )
       }
-    </ul>
+    </div>
   </div>
 </section>

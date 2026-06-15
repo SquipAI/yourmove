@@ -8,10 +8,14 @@ interface Props {
   /** All apps configured on the tool. App-specific tools pass one; the general
    *  generator passes several and the showcase spans them. */
   apps: ProfileWriterApp[];
+  /** Per-tool heading/subtitle for the tone reel. Wrap a phrase in *asterisks*
+   *  to accent it. */
+  heading: string;
+  subtitle?: string | null;
   lang: Locale;
 }
 
-const { apps, lang } = Astro.props;
+const { apps, heading, subtitle, lang } = Astro.props;
 
 const TONE_ORDER: ProfileWriterToneKey[] = ["flirty", "thoughtful", "feisty"];
 const EMOJI: Record<ProfileWriterToneKey, string> = {
@@ -45,11 +49,7 @@ const examples = picks.map((p, idx) => {
 ---
 
 <section data-section="profile-writer-examples" class="section">
-  <SectionHeading
-    title={t(lang, "profileWriterExamples.heading")}
-    subtitle={t(lang, "profileWriterExamples.subtitle")}
-    class="mb-section-xs max-w-180"
-  />
+  <SectionHeading title={heading} {subtitle} class="mb-section-xs max-w-180" />
 
   <ul class="border-subtle-lighter divide-subtle-lighter divide-y border-y">
     {

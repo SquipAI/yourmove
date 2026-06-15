@@ -30,6 +30,25 @@ const TOOL_CARD = /* groq */ `{
   "app": app->{ _id, name, "slug": slug.current, brandColor }
 }`;
 
+// Canonical EN _id of the current tool — resolves regardless of locale, so a
+// fixed set of EN ids can pull the right localized variant on any locale page.
+const TOOL_EN_ID = /* groq */ `*[_type == "translation.metadata" && schemaTypes[0] == "tool" && references(^._id)][0]
+  .translations[language == "en"][0].value._ref`;
+
+// "More tools for your dating life" on app hubs — curated, app-agnostic tools.
+// Hubs with >1 attached tool already cover photos/bio/review, so they get a
+// different trio than solo hubs (which still need a photo + review angle).
+const UNIVERSAL_TOOLS_MULTI = [
+  "tool-chat-assistant",
+  "tool-remove-ex-from-photo",
+  "tool-cosmic-compatibility",
+];
+const UNIVERSAL_TOOLS_SOLO = [
+  "tool-chat-assistant",
+  "tool-ai-photos",
+  "tool-dating-profile-review",
+];
+
 // Featured first (by tool.order); then tools bound to a dating app (by app.order); then the rest (by title).
 // `coalesce(featured, false)` — GROQ sorts null FIRST for desc, so null featured would outrank true.
 // `select(... > 0 => ..., 9999)` — treats unset (null) AND zero alike as "no opinion" → end of list.
@@ -86,17 +105,37 @@ export function getAppsWithTools(
 }
 
 export function getAppPage(slug: string, lang = DEFAULT_LOCALE) {
-  return cached(`getAppPage:${slug}:${lang}`, () =>
-    sanityClient.fetch<AppPageData | null>(
+  return cached(`getAppPage:${slug}:${lang}`, async () => {
+    const app = await sanityClient.fetch<AppPageData | null>(
       `${coalesceLang("datingApp", "slug.current == $slug")}{
         _id, name, title, description, metaTitle, metaDescription, downloadHeading,
         "slug": slug.current, brandColor,
         ${ALTERNATES},
-        "tools": *[_type == "tool" && language == $lang && references(^._id)] | ${TOOL_LIST_ORDER} ${TOOL_CARD}
+        "tools": *[_type == "tool" && language == $lang && references(^._id)] | ${TOOL_LIST_ORDER} ${TOOL_CARD},
+        "toolCount": count(*[_type == "tool" && language == $lang && references(^._id)])
       }`,
       { slug, lang },
-    ),
-  );
+    );
+    if (!app) return null;
+
+    // Curated app-agnostic tools, ordered by the id list (GROQ `in` doesn't preserve order).
+    const ids =
+      app.toolCount > 1 ? UNIVERSAL_TOOLS_MULTI : UNIVERSAL_TOOLS_SOLO;
+    const universal = await sanityClient.fetch<
+      { enId: string; card: ToolCard }[]
+    >(
+      `*[_type == "tool" && language == $lang && (${TOOL_EN_ID}) in $ids]{
+        "enId": ${TOOL_EN_ID},
+        "card": ${TOOL_CARD}
+      }`,
+      { lang, ids },
+    );
+    app.universalTools = ids
+      .map((id) => universal.find((u) => u.enId === id)?.card)
+      .filter((c): c is ToolCard => Boolean(c));
+
+    return app;
+  });
 }
 
 export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
@@ -129,6 +168,17 @@ export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
         howItWorksHeading,
         "howItWorks": howItWorks[]{ title, text },
         featuresHeading,
+        featuresSubtitle,
+        "featuresCta": select(
+          defined(featuresCtaText) => {
+            "text": featuresCtaText,
+            "link": select(
+              defined(${TOOL_EN}featuresCtaLink) => { ${linkTargetFields(`${TOOL_EN}featuresCtaLink`)} },
+              null
+            )
+          },
+          null
+        ),
         "features": features[]{
           icon, title, description,
           "button": select(
@@ -209,6 +259,8 @@ export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
         ),
         "profileWriter": select(
           coalesce(${TOOL_EN}kind, kind) == "profileWriter" => {
+            "examplesHeading": profileWriterExamplesHeading,
+            "examplesSubtitle": profileWriterExamplesSubtitle,
             "apps": coalesce(profileWriterApps, ${TOOL_EN}profileWriterApps)[]{
               app,
               "sections": sections[]{ label, flirty, thoughtful, feisty }
