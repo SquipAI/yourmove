@@ -25,7 +25,7 @@
 
   --tracking-eyebrow: 0.18em;
 
-  --spacing-svw: min(3svw, 45px);
+  --spacing-svw: clamp(18px, 3svw, 45px);
   --spacing-section: max(90px, calc(var(--spacing-svw) * 4));
   --spacing-section-md: calc(var(--spacing-section) / 1.5);
   --spacing-section-sm: calc(var(--spacing-section) / 2);
@@ -244,6 +244,7 @@
   @supports (animation-timeline: view()) {
     @media (prefers-reduced-motion: no-preference) {
       .showcase-card {
+        view-timeline-name: --showcase-card;
         grid-template-rows: max-content 0fr max-content max-content;
         animation-name: showcase-rows;
         animation-timing-function: linear;
@@ -257,17 +258,36 @@
         animation-name: showcase-fade;
         animation-timing-function: linear;
         animation-fill-mode: both;
-        animation-timeline: view();
-        animation-range: entry 0% cover 40%;
+        /* animation-timeline: view(); */
+        animation-timeline: --showcase-card;
+        animation-range: entry 50% cover 40%;
+      }
+
+      /* Arrow reveal is driven by the card's view progress (not the arrow's own
+         tiny box), so it surfaces once the parent card has opened. */
+      .showcase-card .ba-arrow {
+        opacity: 0;
+        animation-name: showcase-fade;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: --showcase-card;
+        animation-range: entry 100% cover 42%;
       }
 
       @keyframes showcase-rows {
+        from {
+          grid-template-rows: max-content 0fr max-content max-content;
+        }
+
         to {
           grid-template-rows: max-content 1fr max-content max-content;
         }
       }
 
       @keyframes showcase-fade {
+        from {
+          opacity: 0;
+        }
         to {
           opacity: 1;
         }
