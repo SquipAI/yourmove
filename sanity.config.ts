@@ -9,6 +9,7 @@ import {
 } from "@studio/schemas";
 import { DeployTool } from "@studio/plugins/DeployTool";
 import { createStructure } from "@studio/structure";
+import { wrapPublishWithKindSync } from "@studio/actions/syncToolKind";
 
 const SUPPORTED_LANGUAGES = [
   { id: "en", title: "English", flag: "🇺🇸" },
@@ -32,6 +33,15 @@ const sharedConfig = {
       component: DeployTool,
     },
   ],
+  document: {
+    // On EN tool publish, mirror `kind` onto the ES/DE siblings.
+    actions: (prev: any[], context: { schemaType: string }) =>
+      context.schemaType === "tool"
+        ? prev.map((a) =>
+            a.action === "publish" ? wrapPublishWithKindSync(a) : a,
+          )
+        : prev,
+  },
 };
 
 export default defineConfig(
