@@ -196,44 +196,38 @@ const logosLabel = usePress
         ctaSubtext={hero.ctaSubtext}
         ctaHref={heroCtaHref}
       >
-        {slider && (
-          <BeforeAfterSlider
-            slot="visual"
-            before={slider.before}
-            after={slider.after}
-            subject={tool.title}
-            beforeCaption={hero.beforeCaption}
-            afterCaption={hero.afterCaption}
-            {lang}
-          />
-        )}
-        {report && (
-          <ReviewReportPreview
-            slot="visual"
-            currentRating={report.currentRating}
-            targetRating={report.targetRating}
-            verdict={report.verdict}
-            breakdown={report.breakdown}
-            actions={report.actions}
-            {lang}
-          />
-        )}
-        {chat && (
-          <ChatPreview
-            slot="visual"
-            stages={chat.stages}
-            ctaHref={heroCtaHref}
-            {lang}
-          />
-        )}
-        {profileWriter && (
-          <ProfileWriterPreview
-            slot="visual"
-            apps={profileWriter.apps}
-            ctaHref={heroCtaHref}
-            {lang}
-          />
-        )}
+        <Fragment slot="visual">
+          {slider && (
+            <BeforeAfterSlider
+              before={slider.before}
+              after={slider.after}
+              subject={tool.title}
+              beforeCaption={hero.beforeCaption}
+              afterCaption={hero.afterCaption}
+              {lang}
+            />
+          )}
+          {report && (
+            <ReviewReportPreview
+              currentRating={report.currentRating}
+              targetRating={report.targetRating}
+              verdict={report.verdict}
+              breakdown={report.breakdown}
+              actions={report.actions}
+              {lang}
+            />
+          )}
+          {chat && (
+            <ChatPreview stages={chat.stages} ctaHref={heroCtaHref} {lang} />
+          )}
+          {profileWriter && (
+            <ProfileWriterPreview
+              apps={profileWriter.apps}
+              ctaHref={heroCtaHref}
+              {lang}
+            />
+          )}
+        </Fragment>
         <div class="flex flex-col gap-y-6">
           <LogoRow
             {logos}

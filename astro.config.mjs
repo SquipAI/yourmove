@@ -51,13 +51,14 @@ export default defineConfig({
       entrypoint: "astro/assets/services/sharp",
       config: {
         webp: { effort: 6, quality: 80 },
-        avif: { effort: 9, quality: 70 },
       },
     },
   },
 
   adapter: cloudflare({
     prerenderEnvironment: "node",
-    imageService: "custom",
+    // Build: keep the tuned Sharp pipeline (runs in Node, bakes optimized webp/avif into dist).
+    // Dev: Sharp can't run in the workerd dev runner, so pass images through unoptimized.
+    imageService: process.argv.includes("build") ? "custom" : "passthrough",
   }),
 });
