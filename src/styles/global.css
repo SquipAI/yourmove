@@ -245,14 +245,18 @@
     @media (prefers-reduced-motion: no-preference) {
       .showcase-card {
         grid-template-rows: max-content 0fr max-content max-content;
-        animation: showcase-rows linear both;
+        animation-name: showcase-rows;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
         animation-timeline: view();
         animation-range: entry 0% cover 40%;
       }
 
       .showcase-card > :nth-child(2) {
         opacity: 0;
-        animation: showcase-fade linear both;
+        animation-name: showcase-fade;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
         animation-timeline: view();
         animation-range: entry 0% cover 40%;
       }
