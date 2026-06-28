@@ -9,6 +9,7 @@ import sanity from "@sanity/astro";
 export default defineConfig({
   site: "https://yourmove.ai",
   trailingSlash: "never",
+  build: { format: "file" },
 
   integrations: [
     sitemap({

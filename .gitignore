@@ -46,3 +46,6 @@ CLAUDE.md
 
 # Cloudflare Bulk Redirects source (imported manually, not part of build)
 redirects.csv
+
+# Local blog task list
+blogTasks.md
