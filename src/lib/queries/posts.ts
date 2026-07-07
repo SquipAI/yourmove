@@ -4,11 +4,28 @@ import type { LocalizedPath } from "./types";
 import { ALTERNATES, BODY, POST_CARD, POST_EN, FAQ_ITEMS, POST_VISIBLE } from "./projections";
 import { coalesceLang } from "./coalesceLang";
 import { cached } from "./cache";
+import { LOCALIZED_SLUG } from "@lib/links";
 import { DEFAULT_LOCALE } from "@i18n/config";
 
 export const BLOG_LATEST_COUNT = 4;
 export const BLOG_FEATURED_COUNT = 5;
 export const RELATED_POSTS_COUNT = 6;
+
+// Stat cards — headline figure/claim + rich description (with link annotations,
+// resolved like FAQ answers) + cited source. Rendered by PortableText at the
+// post's `statSection` marker, mirroring the FAQ field/marker split. Post-only,
+// so it stays here instead of in shared projections.
+const STAT_ITEMS = /* groq */ `stats[]{
+  _key, title, source, sourceUrl,
+  description[]{
+    ...,
+    markDefs[]{ ..., _type == "link" => {
+      ...,
+      internalLink->{ _type, _id, "slug": ${LOCALIZED_SLUG} },
+      siteLink->{ url, kind }
+    }}
+  }
+}`;
 
 export function getAllPublishedPosts(lang = DEFAULT_LOCALE) {
   return cached(`getAllPublishedPosts:${lang}`, () =>
@@ -31,7 +48,10 @@ export function getLatestPosts(n: number, lang = DEFAULT_LOCALE) {
 export function getFeaturedPosts(n: number, lang = DEFAULT_LOCALE) {
   return cached(`getFeaturedPosts:${n}:${lang}`, () =>
     sanityClient.fetch<PostCard[]>(
-      `*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE} && featured == true] | order(coalesce(createdAt, _createdAt) desc) [0...$n] ${POST_CARD}`,
+      // `featured` is an editorial flag set on the EN canonical only; locales
+      // inherit it (same as `hidden` via POST_VISIBLE) — otherwise ES/DE, whose
+      // siblings are all featured=false, would show an empty Featured block.
+      `*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE} && coalesce(${POST_EN}featured, featured) == true] | order(coalesce(createdAt, _createdAt) desc) [0...$n] ${POST_CARD}`,
       { lang, n },
     ),
   );
@@ -51,7 +71,8 @@ export function getPostBySlug(slug: string, lang = DEFAULT_LOCALE) {
         ),
         ${ALTERNATES},
         ${BODY},
-        ${FAQ_ITEMS}
+        ${FAQ_ITEMS},
+        ${STAT_ITEMS}
       }`,
       { slug, lang },
     ),
@@ -65,24 +86,22 @@ export function getRelatedPosts(
   n = RELATED_POSTS_COUNT,
 ) {
   return cached(`getRelatedPosts:${postId}:${lang}`, async () => {
+    // Score + order over cheap doc fields, slice to N, THEN apply the heavy
+    // POST_CARD projection (mainImage translation.metadata subquery + tag deref)
+    // to only the N survivors — same as getLatestPosts/getFeaturedPosts. Scoring
+    // before the projection keeps cost O(posts) per page instead of projecting
+    // every post of the language just to drop all but N.
     const result = await sanityClient.fetch<PostCard[] | null>(
-      `*[_type == "post" && language == $lang && defined(slug.current) && ${POST_VISIBLE} && _id != $postId] {
-        _id, title, summary,
-        "slug": slug.current,
-        "mainImage": coalesce(
-          ${POST_EN}mainImage{ asset, hotspot, crop, alt },
-          mainImage{ asset, hotspot, crop, alt }
-        ),
-        readingTime,
-        "tags": tags[]->{ "slug": slug.current, title },
-        "_score": select(
-          featured == true && count((tags[]._ref)[@ in $tagIds]) > 0 => 3,
-          featured == true => 2,
-          count((tags[]._ref)[@ in $tagIds]) > 0 => 1,
-          0
-        ),
-        "_sortDate": coalesce(createdAt, _createdAt)
-      } | order(_score desc, _sortDate desc) [0...$n]`,
+      `*[_type == "post" && language == $lang && defined(slug.current) && ${POST_VISIBLE} && _id != $postId]
+        | order(
+            select(
+              featured == true && count((tags[]._ref)[@ in $tagIds]) > 0 => 3,
+              featured == true => 2,
+              count((tags[]._ref)[@ in $tagIds]) > 0 => 1,
+              0
+            ) desc,
+            coalesce(createdAt, _createdAt) desc
+          ) [0...$n] ${POST_CARD}`,
       { postId, tagIds, lang, n },
     );
     return result ?? [];

@@ -4,10 +4,10 @@ interface Props {
 }
 
 const { schema } = Astro.props;
+
+// Escape `<` so a literal `</script>` in CMS/review text can't break out of the
+// tag (XSS) or invalidate the JSON-LD. Browsers parse `<` back to `<`.
+const json = JSON.stringify(schema).replace(/</g, "\\u003c");
 ---
 
-<script
-  is:inline
-  type="application/ld+json"
-  set:html={JSON.stringify(schema)}
-/>
+<script is:inline type="application/ld+json" set:html={json} />

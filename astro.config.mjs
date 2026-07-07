@@ -4,7 +4,6 @@ import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import cloudflare from "@astrojs/cloudflare";
 import react from "@astrojs/react";
-import sanity from "@sanity/astro";
 
 export default defineConfig({
   site: "https://yourmove.ai",
@@ -23,13 +22,6 @@ export default defineConfig({
       },
     }),
     react(),
-    sanity({
-      projectId: "jdxzhhce",
-      dataset: "production",
-      apiVersion: "2026-05-07",
-      useCdn: false,
-      studioBasePath: "/studio",
-    }),
   ],
 
   vite: {

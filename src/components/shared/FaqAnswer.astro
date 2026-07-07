@@ -1,0 +1,37 @@
+---
+// Renders a FAQ answer (inlineRichTextField): paragraphs plus bullet/numbered
+// lists. Shared by FaqSection.astro (tool/home) and PortableText.astro's
+// faqSection branch (blog posts) so both render answer lists identically.
+import {
+  groupAnswerBlocks,
+  inlineHTML,
+  type TextBlock,
+} from "@lib/portableText";
+import type { Locale } from "@i18n/config";
+
+interface Props {
+  answer: unknown[] | null | undefined;
+  lang: Locale;
+}
+
+const { answer, lang } = Astro.props;
+const chunks = groupAnswerBlocks(answer as TextBlock[] | undefined);
+---
+
+{
+  chunks.map((chunk) => {
+    if (chunk.kind === "list") {
+      const Tag = chunk.listItem === "bullet" ? "ul" : "ol";
+      const marker = chunk.listItem === "bullet" ? "list-disc" : "list-decimal";
+      return (
+        <Tag class:list={[marker, "list-inside space-y-1"]}>
+          {chunk.items.map((item) => (
+            <li set:html={inlineHTML(item.children, item.markDefs, lang)} />
+          ))}
+        </Tag>
+      );
+    }
+    const { block } = chunk;
+    return <p set:html={inlineHTML(block.children, block.markDefs, lang)} />;
+  })
+}

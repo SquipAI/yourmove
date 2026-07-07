@@ -47,7 +47,9 @@ export function escape(text: unknown): string {
   return String(text)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 // External links (http/https) open in a new tab; internal paths and
@@ -68,6 +70,34 @@ export function resolveHref(
   return { href, newTab: isExternalHref(href) };
 }
 
+export type AnswerChunk =
+  | { kind: "block"; block: TextBlock }
+  | { kind: "list"; listItem: "bullet" | "number"; items: TextBlock[] };
+
+// Group a flat FAQ-answer block array into paragraphs and runs of list items,
+// so a renderer can wrap consecutive bullets/numbers in a single <ul>/<ol>.
+// FAQ answers use inlineRichTextField (no images/embeds), so only `block`s and
+// list runs are produced — no other block types to account for.
+export function groupAnswerBlocks(
+  blocks: TextBlock[] | null | undefined,
+): AnswerChunk[] {
+  const chunks: AnswerChunk[] = [];
+  for (const b of blocks ?? []) {
+    if (b?._type !== "block") continue;
+    if (b.listItem) {
+      const last = chunks.at(-1);
+      if (last?.kind === "list" && last.listItem === b.listItem) {
+        last.items.push(b);
+      } else {
+        chunks.push({ kind: "list", listItem: b.listItem, items: [b] });
+      }
+    } else {
+      chunks.push({ kind: "block", block: b });
+    }
+  }
+  return chunks;
+}
+
 export function inlineHTML(
   children: PTSpan[] | null | undefined,
   markDefs: PTLink[] | null | undefined,
@@ -75,7 +105,13 @@ export function inlineHTML(
 ): string {
   return (children ?? [])
     .map((span) => {
-      let html = escape(span.text);
+      // Standalone \n span = hard break; leading/trailing \n elsewhere = strip.
+      // Guard against malformed spans (missing or non-string text from bad
+      // migration data) so a single corrupt block can't crash the build.
+      const raw = typeof span.text === "string" ? span.text : "";
+      let html = /^\n+$/.test(raw)
+        ? "<br>"
+        : escape(raw.replace(/^\n+|\n+$/g, "")).replace(/\n/g, "<br>");
 
       for (const mark of span.marks ?? []) {
         const link = (markDefs ?? []).find((m) => m._key === mark);

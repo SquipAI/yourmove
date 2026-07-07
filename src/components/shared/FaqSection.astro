@@ -1,6 +1,6 @@
 ---
 import type { FaqItem } from "@lib/types";
-import { inlineHTML, type TextBlock } from "@lib/portableText";
+import FaqAnswer from "@components/shared/FaqAnswer.astro";
 import ChevronDown from "@components/shared/ChevronDown.astro";
 import SectionHeading from "@components/shared/SectionHeading.astro";
 import type { Locale } from "@i18n/config";
@@ -47,18 +47,7 @@ const headingAlign = align === "center" ? "text-center" : undefined;
                 <ChevronDown />
               </summary>
               <div class="flex flex-col gap-3 pb-svw sm:pb-4">
-                {(item.answer as TextBlock[] | undefined)?.map((block) => {
-                  if (block._type !== "block") return null;
-                  return (
-                    <p
-                      set:html={inlineHTML(
-                        block.children,
-                        block.markDefs,
-                        lang,
-                      )}
-                    />
-                  );
-                })}
+                <FaqAnswer answer={item.answer} {lang} />
               </div>
             </details>
           </li>

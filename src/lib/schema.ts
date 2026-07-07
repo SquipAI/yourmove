@@ -1,6 +1,7 @@
 import type { Locale } from "@i18n/config";
 import { stripAccent } from "./parseAccent";
 import { urlFor } from "./sanity-image";
+import { inlineHTML, groupAnswerBlocks, type TextBlock } from "./portableText";
 import type {
   FaqItem,
   Post,
@@ -76,7 +77,7 @@ const AUTHOR = {
   url: SITE,
 };
 
-export type BreadcrumbItem = { name: string; url: string };
+export type BreadcrumbItem = { name: string; url?: string };
 
 export function buildBreadcrumb(items: BreadcrumbItem[], id: string) {
   return {
@@ -86,12 +87,18 @@ export function buildBreadcrumb(items: BreadcrumbItem[], id: string) {
       "@type": "ListItem",
       position: i + 1,
       name: item.name,
-      item: item.url,
+      // Last crumb (current page) may omit its URL — valid for BreadcrumbList.
+      ...(item.url ? { item: item.url } : {}),
     })),
   };
 }
 
-export function faqPageSchema(items: FaqItem[], pageUrl: string) {
+export function faqPageSchema(
+  items: FaqItem[],
+  pageUrl: string,
+  lang: Locale,
+) {
+  const origin = new URL(pageUrl).origin;
   return {
     "@type": "FAQPage",
     "@id": `${pageUrl}#faq`,
@@ -100,7 +107,9 @@ export function faqPageSchema(items: FaqItem[], pageUrl: string) {
       name: item.question,
       acceptedAnswer: {
         "@type": "Answer",
-        text: portableTextToPlain(item.answer),
+        // Google's FAQ rich result allows HTML in the answer (a, ul/ol/li,
+        // strong/em, br…), so render links/formatting/lists instead of plain text.
+        text: answerToHtml(item.answer, lang, origin),
       },
     })),
   };
@@ -150,7 +159,7 @@ export function articleSchema(
   ];
 
   if (post.faq?.length) {
-    graph.push(faqPageSchema(post.faq, url));
+    graph.push(faqPageSchema(post.faq, url, lang));
   }
 
   return { "@context": "https://schema.org", "@graph": graph };
@@ -162,11 +171,12 @@ export function toolSchema(
   url: string,
   lang: Locale,
   ogImage: string,
+  breadcrumbs: BreadcrumbItem[],
 ) {
   const graph: unknown[] = [orgNode(lang), WEBSITE];
 
   if (tool.faq?.length) {
-    graph.push(faqPageSchema(tool.faq, url));
+    graph.push(faqPageSchema(tool.faq, url, lang));
   }
 
   const app: Record<string, unknown> = {
@@ -193,8 +203,10 @@ export function toolSchema(
     name: tool.metaTitle,
     description: tool.metaDescription,
     isPartOf: { "@id": SITE_ID },
+    breadcrumb: { "@id": `${url}#breadcrumb` },
     image: ogImage,
   });
+  graph.push(buildBreadcrumb(breadcrumbs, `${url}#breadcrumb`));
 
   return { "@context": "https://schema.org", "@graph": graph };
 }
@@ -275,7 +287,7 @@ export function homeSchema(
     ...pressQuotes.map((p) => quotationNode(p, lang)),
   ];
 
-  if (faq.length) graph.push(faqPageSchema(faq, url));
+  if (faq.length) graph.push(faqPageSchema(faq, url, lang));
 
   return { "@context": "https://schema.org", "@graph": graph };
 }
@@ -329,14 +341,26 @@ function aggregateRatingNode(testimonials: Testimonial[]) {
   };
 }
 
-function portableTextToPlain(blocks: unknown[]): string {
-  if (!Array.isArray(blocks)) return "";
-  return blocks
-    .map((block) => {
-      const b = block as { _type?: string; children?: { text?: string }[] };
-      if (b._type !== "block" || !b.children) return "";
-      return b.children.map((c) => c.text ?? "").join("");
+// Render a FAQ answer (inlineRichTextField) to HTML for schema.org's
+// acceptedAnswer.text: paragraphs, bullet/numbered lists, inline links and
+// emphasis. Root-relative links are made absolute for structured data.
+function answerToHtml(
+  blocks: unknown[] | null | undefined,
+  lang: Locale,
+  origin: string,
+): string {
+  const chunks = groupAnswerBlocks(blocks as TextBlock[] | undefined);
+  const html = chunks
+    .map((chunk) => {
+      if (chunk.kind === "list") {
+        const tag = chunk.listItem === "bullet" ? "ul" : "ol";
+        const items = chunk.items
+          .map((it) => `<li>${inlineHTML(it.children, it.markDefs, lang)}</li>`)
+          .join("");
+        return `<${tag}>${items}</${tag}>`;
+      }
+      return `<p>${inlineHTML(chunk.block.children, chunk.block.markDefs, lang)}</p>`;
     })
-    .filter(Boolean)
-    .join("\n\n");
+    .join("");
+  return html.replace(/href="\//g, `href="${origin}/`);
 }

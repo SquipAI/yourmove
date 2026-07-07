@@ -18,8 +18,9 @@ export async function getStaticPaths() {
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 const { slug } = Astro.params;
+if (!slug) throw new Error("Missing slug param");
 const [app, appDownload] = await Promise.all([
-  getAppPage(slug!, lang),
+  getAppPage(slug, lang),
   getAppDownload(),
 ]);
 if (!app) throw new Error(`App not found: ${slug} (${lang})`);

@@ -59,11 +59,22 @@ export const linkAnnotation = () =>
         initialValue: false,
       }),
     ],
+    // A link with no target silently renders as href="#" on the frontend — require
+    // at least one of internalLink / siteLink / href.
+    validation: (r) =>
+      r.custom((value) => {
+        const v = value as
+          | { internalLink?: unknown; siteLink?: unknown; href?: unknown }
+          | undefined;
+        return v?.internalLink || v?.siteLink || v?.href
+          ? true
+          : "Pick an internal page, a site link, or enter a URL";
+      }),
   });
 
 // Inline portable-text used inside FAQ answers and similar short-form fields.
-// Plain paragraphs only (no headings, no images, no embeds), with the same
-// strong/em/underline decorators and link annotation as body content.
+// Paragraphs + bullet/numbered lists (no headings, no images, no embeds), with
+// the same strong/em/underline decorators and link annotation as body content.
 export const inlineRichTextField = (name: string, title?: string) =>
   defineField({
     name,
@@ -73,7 +84,10 @@ export const inlineRichTextField = (name: string, title?: string) =>
       defineArrayMember({
         type: "block",
         styles: [{ title: "Normal", value: "normal" }],
-        lists: [],
+        lists: [
+          { title: "Bullet", value: "bullet" },
+          { title: "Numbered", value: "number" },
+        ],
         marks: {
           decorators: [
             { title: "Bold", value: "strong" },

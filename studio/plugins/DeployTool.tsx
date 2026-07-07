@@ -15,7 +15,13 @@ export function DeployTool() {
     try {
       const res = await fetch(
         "https://yourmove.damirakyan.workers.dev/api/deploy",
-        { method: "POST" },
+        {
+          method: "POST",
+          headers: {
+            "x-deploy-secret":
+              import.meta.env.SANITY_STUDIO_DEPLOY_SECRET ?? "",
+          },
+        },
       );
       const json = (await res.json()) as { ok: boolean; error?: string };
       if (!json.ok) throw new Error(json.error ?? `HTTP ${res.status}`);

@@ -30,6 +30,7 @@ const [testimonials, home, press, appDownload] = await Promise.all([
   getPress(lang),
   getAppDownload(),
 ]);
+if (!home) throw new Error(`Home document not found (${lang})`);
 const pressQuotes = press.filter((p) => p.quote);
 
 const localePath = localePathFor(lang);

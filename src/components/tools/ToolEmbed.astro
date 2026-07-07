@@ -17,6 +17,7 @@ const src = `${TOOLS_HOST}${path}`;
     class="block w-full overflow-hidden border-0"
     src={src}
     title={title}
+    loading="lazy"
     style={`height: ${initialHeight}px`}
     allow={geolocation ? "geolocation" : undefined}
     data-tools-host={TOOLS_HOST}

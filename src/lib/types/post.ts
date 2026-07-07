@@ -1,5 +1,6 @@
 import type { SanityImageSource } from "@sanity/image-url";
 import type { FaqItem } from "./faq";
+import type { StatItem } from "./stat";
 import type { AlternateSlug } from "./tool";
 
 export type PostMainImage = SanityImageSource;
@@ -28,6 +29,7 @@ export type Post = {
   mainImage: PostMainImage;
   body: unknown[] | null;
   faq: FaqItem[] | null;
+  stats: StatItem[] | null;
   tagIds: string[];
   tags: { slug: string; title: string }[];
   alternates: AlternateSlug[] | null;

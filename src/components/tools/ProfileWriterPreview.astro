@@ -57,7 +57,7 @@ const selectClass =
               <option value={i}>{app.app}</option>
             ))}
           </select>
-          <ChevronDown class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-subtle" />
+          <ChevronDown variant="select" />
         </label>
       )
     }
@@ -72,9 +72,7 @@ const selectClass =
           ))
         }
       </select>
-      <ChevronDown
-        class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-subtle"
-      />
+      <ChevronDown variant="select" />
     </label>
   </div>
 
@@ -95,7 +93,7 @@ const selectClass =
                 <option value={si}>{section.label}</option>
               ))}
             </select>
-            <ChevronDown class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-subtle" />
+            <ChevronDown variant="select" />
           </label>
         </div>
       ))

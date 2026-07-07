@@ -11,6 +11,7 @@ import type {
   Press,
 } from "@lib/types";
 import type { FooterNavData } from "@lib/links";
+import { LOCALIZED_SLUG } from "@lib/links";
 import { BODY, FAQ_ITEM_BODY, TESTIMONIAL_CARD } from "./projections";
 import { coalesceLang } from "./coalesceLang";
 import { cached } from "./cache";
@@ -22,7 +23,7 @@ const GOOGLE_PLAY_SITELINK_ID = "a3c746b7-d6a9-45f3-a3a5-6e2bbd3f6ea9";
 
 export function getHome(lang = DEFAULT_LOCALE) {
   return cached(`getHome:${lang}`, () =>
-    sanityClient.fetch<HomeData>(
+    sanityClient.fetch<HomeData | null>(
       `${coalesceLang("home")}{
         title, navLabel, description, metaTitle, metaDescription,
         statsEyebrow, blogHeading,
@@ -259,7 +260,7 @@ export function getFooterNav(lang = DEFAULT_LOCALE) {
               title
             ),
             "targetType": _type,
-            "targetSlug": slug.current,
+            "targetSlug": ${LOCALIZED_SLUG},
             "externalUrl": select(_type == "siteLink" => url)
           }
         },

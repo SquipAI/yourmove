@@ -3,6 +3,8 @@
 // file (e.g. TOOL_CARD in tools.ts) — keep this file focused on truly shared
 // shapes, not "every projection in the project".
 
+import { LOCALIZED_SLUG } from "@lib/links";
+
 export const BODY = /* groq */ `body[]{
   ...,
   _type == "block" => {
@@ -10,7 +12,7 @@ export const BODY = /* groq */ `body[]{
       ...,
       _type == "link" => {
         ...,
-        internalLink->{ _type, _id, "slug": slug.current },
+        internalLink->{ _type, _id, "slug": ${LOCALIZED_SLUG} },
         siteLink->{ url, kind }
       }
     }
@@ -20,6 +22,10 @@ export const BODY = /* groq */ `body[]{
     "url": asset->url,
     "width": asset->metadata.dimensions.width,
     "height": asset->metadata.dimensions.height
+  },
+  _type == "embed" => {
+    ...,
+    doc->{ _type, title, "slug": ${LOCALIZED_SLUG} }
   }
 }`;
 
@@ -73,7 +79,7 @@ export const FAQ_ITEM_BODY = /* groq */ `{
     ...,
     markDefs[]{ ..., _type == "link" => {
       ...,
-      internalLink->{ _type, _id, "slug": slug.current },
+      internalLink->{ _type, _id, "slug": ${LOCALIZED_SLUG} },
       siteLink->{ url, kind }
     }}
   }

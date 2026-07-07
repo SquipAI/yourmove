@@ -46,6 +46,7 @@ const [
   getPress(lang),
   getCompatibilityApps(),
 ]);
+if (!home) throw new Error(`Home document not found (${lang})`);
 const pressLogos = press.filter((p) => !p.hidden);
 const pressQuotes = press.filter((p) => p.quote);
 const eyebrow = home.statsEyebrow

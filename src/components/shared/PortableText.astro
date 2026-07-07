@@ -2,7 +2,12 @@
 import { Image } from "astro:assets";
 import { YouTube } from "@astro-community/astro-embed-youtube";
 import { inlineHTML, type TextBlock } from "@lib/portableText";
+import { resolveNavHref } from "@lib/links";
+import FaqAnswer from "@components/shared/FaqAnswer.astro";
+import MixcloudEmbed from "@components/shared/MixcloudEmbed.astro";
 import type { Locale } from "@i18n/config";
+import type { SanityImageSource } from "@sanity/image-url";
+import { t } from "@i18n/ui";
 
 // ── Block types specific to body rendering ────────────────────────────────────
 
@@ -34,6 +39,14 @@ type FaqSectionBlock = {
   _key: string;
   _type: "faqSection";
   heading?: string;
+  subheading?: string;
+};
+
+type StatSectionBlock = {
+  _key: string;
+  _type: "statSection";
+  heading?: string;
+  subheading?: string;
 };
 
 type Block =
@@ -41,7 +54,8 @@ type Block =
   | ImageBlock
   | EmbedBlock
   | HtmlEmbedBlock
-  | FaqSectionBlock;
+  | FaqSectionBlock
+  | StatSectionBlock;
 
 type Chunk =
   | { kind: "block"; block: TextBlock }
@@ -49,7 +63,8 @@ type Chunk =
   | { kind: "image"; block: ImageBlock }
   | { kind: "embed"; block: EmbedBlock }
   | { kind: "htmlEmbed"; block: HtmlEmbedBlock }
-  | { kind: "faqSection"; block: FaqSectionBlock };
+  | { kind: "faqSection"; block: FaqSectionBlock }
+  | { kind: "statSection"; block: StatSectionBlock };
 
 type FaqItem = {
   _key: string;
@@ -57,13 +72,24 @@ type FaqItem = {
   answer: unknown[];
 };
 
+type StatItem = {
+  _key: string;
+  title: string;
+  description?: unknown[] | null;
+  source?: string | null;
+  sourceUrl?: string | null;
+};
+
 interface Props {
   body: unknown[];
   faq?: FaqItem[] | null;
+  stats?: StatItem[] | null;
+  postTitle?: string;
+  postImage?: SanityImageSource;
   lang: Locale;
 }
 
-const { body, faq, lang } = Astro.props;
+const { body, faq, stats, postTitle, postImage, lang } = Astro.props;
 
 // ── Embed helpers ─────────────────────────────────────────────────────────────
 
@@ -88,6 +114,8 @@ for (const raw of body as Block[]) {
     chunks.push({ kind: "htmlEmbed", block: raw });
   } else if (raw._type === "faqSection") {
     chunks.push({ kind: "faqSection", block: raw });
+  } else if (raw._type === "statSection") {
+    chunks.push({ kind: "statSection", block: raw });
   } else if (raw._type === "block" && raw.listItem) {
     const last = chunks.at(-1);
     if (last?.kind === "list" && last.listItem === raw.listItem) {
@@ -114,8 +142,8 @@ for (const raw of body as Block[]) {
           height={block.height}
           loading="lazy"
           class:list={[
-            "h-auto rounded-lg",
-            !block.fullWidth && "max-w-[400px]",
+            "h-auto w-full max-w-full rounded-lg",
+            !block.fullWidth && "min-[450px]:max-w-[400px]",
           ]}
         />
       );
@@ -123,6 +151,16 @@ for (const raw of body as Block[]) {
 
     if (chunk.kind === "embed") {
       const { block } = chunk;
+      // Source media (YouTube/Mixcloud/Slides) is only prepared in EN —
+      // ES/DE posts don't have a localized version of the embed itself.
+      if (
+        lang !== "en" &&
+        (block.kind === "youtube" ||
+          block.kind === "mixcloud" ||
+          block.kind === "googleSlides")
+      ) {
+        return null;
+      }
       if (block.kind === "youtube" && block.source) {
         const id = youtubeId(block.source);
         if (!id) return null;
@@ -130,20 +168,20 @@ for (const raw of body as Block[]) {
         // loads the real player iframe on click — keeps these posts fast.
         return (
           <div class="not-prose my-6 overflow-hidden rounded-lg">
-            <YouTube id={id} title="YouTube video" />
+            <YouTube id={id} title="YouTube video" class="w-full max-w-none!" />
           </div>
         );
       }
       if (block.kind === "mixcloud" && block.source) {
+        // Click-to-load facade — the real widget grabs the Media Session
+        // (headphone play/pause/skip) the moment its iframe mounts, even
+        // unplayed, so it must not load until the reader opts in.
         return (
-          <div class="not-prose my-6">
-            <iframe
-              src={`https://www.mixcloud.com/widget/iframe/?feed=${encodeURIComponent(block.source)}`}
-              title="Mixcloud"
-              loading="lazy"
-              class="h-32 w-full"
-            />
-          </div>
+          <MixcloudEmbed
+            feed={block.source}
+            title={postTitle}
+            image={postImage}
+          />
         );
       }
       if (block.kind === "googleSlides" && block.source) {
@@ -160,10 +198,8 @@ for (const raw of body as Block[]) {
         );
       }
       if (block.kind === "document" && block.doc?.slug) {
-        const href =
-          block.doc._type === "post"
-            ? `/blog/${block.doc.slug}`
-            : `/${block.doc.slug}`;
+        const href = resolveNavHref(block.doc._type, block.doc.slug, null, lang);
+        if (!href) return null;
         return (
           <a href={href} class="card not-prose my-6 p-4">
             <span class="text-subtle text-sm tracking-eyebrow uppercase">
@@ -183,29 +219,62 @@ for (const raw of body as Block[]) {
     if (chunk.kind === "faqSection") {
       // Marker block — pulls the document's faq[] items in here so the
       // heading sits directly above its list (same place the original
-      // Webflow source had them). Answer field uses inlineRichTextField
-      // (paragraphs only, no nested blocks), so we render answer blocks
-      // inline directly without recursing into the component.
-      if (!faq?.length) {
-        return chunk.block.heading ? <h2>{chunk.block.heading}</h2> : null;
-      }
+      // Webflow source had them). Answer rendering (paragraphs + lists) is
+      // shared with FaqSection via FaqAnswer.
+      if (!faq?.length) return null;
       return (
         <section>
           {chunk.block.heading && <h2>{chunk.block.heading}</h2>}
+          {chunk.block.subheading && <p>{chunk.block.subheading}</p>}
           <dl>
             {faq.map((item) => (
               <div class="mb-6">
                 <dt class="mb-2 text-lg font-semibold">{item.question}</dt>
                 <dd>
-                  {(item.answer ?? []).map((ans) => {
-                    const b = ans as TextBlock;
-                    if (b._type !== "block") return null;
-                    return <p set:html={inlineHTML(b.children, b.markDefs, lang)} />;
-                  })}
+                  <FaqAnswer answer={item.answer} {lang} />
                 </dd>
               </div>
             ))}
           </dl>
+        </section>
+      );
+    }
+
+    if (chunk.kind === "statSection") {
+      // Marker block — pulls the document's stats[] in here as cards (mirrors
+      // the faqSection field/marker split). The section H2 usually already
+      // sits above this marker as a normal body block.
+      if (!stats?.length) return null;
+      return (
+        <section class="stat-section">
+          {chunk.block.heading && <h2>{chunk.block.heading}</h2>}
+          {chunk.block.subheading && <p>{chunk.block.subheading}</p>}
+          <ul>
+            {stats.map((stat) => (
+              <li class="stat-card">
+                <p>{stat.title}</p>
+                {stat.description && (
+                  <FaqAnswer answer={stat.description} {lang} />
+                )}
+                {stat.source && (
+                  <p>
+                    <span class="font-semibold">{t(lang, "blog.source")}</span>{" "}
+                    {stat.sourceUrl ? (
+                      <a
+                        href={stat.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {stat.source}
+                      </a>
+                    ) : (
+                      <span class="text-brand">{stat.source}</span>
+                    )}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
         </section>
       );
     }

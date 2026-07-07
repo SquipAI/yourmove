@@ -1,7 +1,7 @@
 ---
 import { getRelativeLocaleUrl } from "astro:i18n";
 import type { Locale } from "@i18n/config";
-import type { ShowcaseCard } from "@lib/types";
+import type { ShowcaseCard, ShowcaseDemo } from "@lib/types";
 import Btn from "@components/shared/Btn.astro";
 import BeforeAfterDemo from "@components/home/showcase/BeforeAfterDemo.astro";
 import BioDemo from "@components/home/showcase/BioDemo.astro";
@@ -15,23 +15,18 @@ interface Props {
 }
 const { card, lang } = Astro.props;
 
-const REGISTRY = {
-  chatDemo: { Component: ChatDemo, brand: undefined },
-  openersDemo: { Component: OpenersDemo, brand: "var(--color-yellow-700)" },
-  reviewDemo: { Component: ReviewDemo, brand: "var(--color-rose-950)" },
-  bioDemo: { Component: BioDemo, brand: "var(--color-subtle)" },
-  beforeAfterDemo: {
-    Component: BeforeAfterDemo,
-    brand: "var(--color-slate-800)",
-  },
-} as const;
+// Per-demo accent color for the card background (drives --color-brand-darker).
+const BRAND: Record<ShowcaseDemo["_type"], string | undefined> = {
+  chatDemo: undefined,
+  openersDemo: "var(--color-yellow-700)",
+  reviewDemo: "var(--color-rose-950)",
+  bioDemo: "var(--color-subtle)",
+  beforeAfterDemo: "var(--color-slate-800)",
+};
 
-const FALLBACK = { Component: null, brand: "var(--color-zinc-700)" };
-
-const variant = card.demo ? REGISTRY[card.demo._type] : FALLBACK;
-// `as any`: TS can't link `_type` to matching Component props through the registry.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const Demo = variant.Component as any;
+const demo = card.demo;
+const brand = demo ? BRAND[demo._type] : "var(--color-zinc-700)";
+const demoClass = "min-h-0 overflow-clip rounded-lg bg-white/6 p-4";
 
 const href = card.external ? card.href : getRelativeLocaleUrl(lang, card.href);
 const linkAttrs = card.external
@@ -43,18 +38,16 @@ const linkAttrs = card.external
   class:list={[
     "showcase-card grid grid-cols-1 gap-4 bg-linear-150 from-brand-darker text-white",
   ]}
-  style={variant.brand ? `--color-brand-darker: ${variant.brand}` : undefined}
+  style={brand ? `--color-brand-darker: ${brand}` : undefined}
 >
   <h3 class="text-title-sm">{card.title}</h3>
-  {
-    Demo && (
-      <Demo
-        demo={card.demo}
-        {lang}
-        class="min-h-0 overflow-clip rounded-lg bg-white/6 p-4"
-      />
-    )
-  }
+  {demo?._type === "chatDemo" && <ChatDemo {demo} class={demoClass} />}
+  {demo?._type === "openersDemo" && <OpenersDemo {demo} class={demoClass} />}
+  {demo?._type === "reviewDemo" && <ReviewDemo {demo} class={demoClass} />}
+  {demo?._type === "bioDemo" && <BioDemo {demo} class={demoClass} />}
+  {demo?._type === "beforeAfterDemo" && (
+    <BeforeAfterDemo {demo} {lang} class={demoClass} />
+  )}
   {card.description && <p>{card.description}</p>}
   <Btn
     href={href}

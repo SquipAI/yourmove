@@ -6,6 +6,7 @@ import PortableText from "@components/shared/PortableText.astro";
 import SectionHeading from "@components/shared/SectionHeading.astro";
 import ShareButtons from "@components/shared/ShareButtons.astro";
 import PostList from "@components/blog/ui/PostList.astro";
+import MetaDot from "@components/blog/ui/MetaDot.astro";
 import SchemaOrg from "@components/seo/SchemaOrg.astro";
 
 import ShortLogo from "@assets/svg/ShortLogoSvg.svg";
@@ -15,7 +16,6 @@ import {
   getRelatedPosts,
   getAllPostPaths,
   getHome,
-  getBlogPage,
 } from "@lib/queries";
 import { articleSchema } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
@@ -34,17 +34,18 @@ export async function getStaticPaths() {
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 const { slug } = Astro.params;
-const [post, home, blog] = await Promise.all([
-  getPostBySlug(slug!, lang),
+if (!slug) throw new Error("Missing slug param");
+const [post, home] = await Promise.all([
+  getPostBySlug(slug, lang),
   getHome(lang),
-  getBlogPage(lang),
 ]);
 if (!post) throw new Error(`Post not found: ${slug} (${lang})`);
+if (!home) throw new Error(`Home document not found (${lang})`);
 const related = await getRelatedPosts(post._id, post.tagIds, lang);
 const alternateUrls = buildAlternateUrls(
   Astro.url.origin,
   lang,
-  slug!,
+  slug,
   post.alternates,
   "blog",
 );
@@ -59,13 +60,13 @@ const tagUrl = `${origin}${localePath(`blog/topics/${firstTag.slug}`)}`;
 const ogImage = ogImageHref(origin, lang, `blog/${slug}`);
 
 const breadcrumbsNav = [
-  { name: blog.title, url: blogUrl },
+  { name: "Blog", url: blogUrl },
   { name: firstTag.title, url: tagUrl },
 ];
 
 const breadcrumbsSchema = [
   { name: home.navLabel, url: `${origin}${localePath("")}` },
-  { name: blog.title, url: blogUrl },
+  { name: "Blog", url: blogUrl },
   { name: firstTag.title, url: tagUrl },
   { name: stripAccent(post.title), url: pageUrl },
 ];
@@ -114,26 +115,33 @@ const dateFormatted = new Intl.DateTimeFormat(lang, {
           <span class="text-subtle font-medium">YourMove Team</span>
         </div>
 
-        <span aria-hidden="true" class="text-subtle/50 hidden md:block">·</span>
+        <MetaDot />
 
         <time datetime={displayDate.toISOString()} class="text-subtle">
           {isUpdated && <span>{t(lang, "blog.updated")} </span>}{dateFormatted}
         </time>
 
-        <span aria-hidden="true" class="text-subtle/50 hidden md:block">·</span>
+        <MetaDot />
         <span class="text-subtle">
           {post.readingTime}
           {t(lang, "blog.minRead")}
         </span>
 
-        <span aria-hidden="true" class="text-subtle/50 hidden md:block">·</span>
+        <MetaDot />
 
         <ShareButtons url={pageUrl} title={stripAccent(post.title)} {lang} />
       </div>
     </header>
 
     <div class="prose">
-      <PortableText body={post.body ?? []} faq={post.faq} {lang} />
+      <PortableText
+        body={post.body ?? []}
+        faq={post.faq}
+        stats={post.stats}
+        postTitle={stripAccent(post.title)}
+        postImage={post.mainImage}
+        {lang}
+      />
     </div>
   </article>
 

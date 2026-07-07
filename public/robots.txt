@@ -3,3 +3,5 @@ Allow: /
 Disallow: /studio/
 Disallow: /api/
 
+Sitemap: https://yourmove.ai/sitemap-index.xml
+

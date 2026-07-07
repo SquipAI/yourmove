@@ -23,8 +23,11 @@ const ctaLabel = t(lang, "tools.exploreAppTools").replace("{name}", app.name);
 <article id={`app-${app.slug}`} class="card card-body">
   <header class="flex items-center gap-3">
     <span
-      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-base font-semibold text-white"
-      style={`background-color: ${app.brandColor ?? "#6B7280"}`}
+      class:list={[
+        "flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-base font-semibold text-white",
+        !app.brandColor && "bg-gray-500",
+      ]}
+      style={app.brandColor ? `background-color: ${app.brandColor}` : undefined}
       aria-hidden="true"
     >
       {initial}

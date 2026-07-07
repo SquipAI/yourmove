@@ -1,21 +1,35 @@
 ---
+export const prerender = false;
+
 import Base from "@layouts/Base.astro";
 import Btn from "@components/shared/Btn.astro";
 import PageHeading from "@components/shared/PageHeading.astro";
+import { localePathFor } from "@i18n/utils";
+import { LOCALES, DEFAULT_LOCALE, type Locale } from "@i18n/config";
+import { t } from "@i18n/ui";
+
+// SSR: unmatched /es/* and /de/* requests render this route with the original
+// URL, so derive the locale from the first path segment (falls back to EN).
+const seg = Astro.url.pathname.split("/")[1];
+const lang: Locale = (LOCALES as readonly string[]).includes(seg)
+  ? (seg as Locale)
+  : DEFAULT_LOCALE;
+const home = localePathFor(lang)("");
 ---
 
 <Base
-  title="Page Not Found | YourMove AI"
-  description="The page you're looking for doesn't exist."
+  title={t(lang, "notFound.metaTitle")}
+  description={t(lang, "notFound.metaDescription")}
+  {lang}
 >
   <meta name="robots" content="noindex" slot="head" />
   <section class="section flex flex-col items-center text-center">
     <PageHeading
       class="*:mx-auto"
-      title="Page Not Found"
-      subtitle="The page you're looking for doesn't exist or has been moved."
+      title={t(lang, "notFound.title")}
+      subtitle={t(lang, "notFound.subtitle")}
     />
     <p class="text-title-big text-subtle -order-1 mb-4 font-bold">404</p>
-    <Btn href="/">Go Home</Btn>
+    <Btn href={home}>{t(lang, "notFound.home")}</Btn>
   </section>
 </Base>

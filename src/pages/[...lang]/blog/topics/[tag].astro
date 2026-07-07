@@ -26,19 +26,21 @@ export async function getStaticPaths() {
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 const { tag: slug } = Astro.params;
+if (!slug) throw new Error("Missing slug param");
 const [tag, posts, allTags, appDownload] = await Promise.all([
-  getTagBySlug(slug!, lang),
-  getTagPosts(slug!, lang),
+  getTagBySlug(slug, lang),
+  getTagPosts(slug, lang),
   getAllTagsWithCount(lang),
   getAppDownload(),
 ]);
+if (!tag) throw new Error(`Tag not found: ${slug} (${lang})`);
 const otherTags = allTags.filter((t) => t.slug !== slug);
 const count =
   posts.length === 1 ? t(lang, "blog.article") : t(lang, "blog.articles");
 const alternateUrls = buildAlternateUrls(
   Astro.url.origin,
   lang,
-  slug!,
+  slug,
   tag.alternates,
   "blog/topics",
 );

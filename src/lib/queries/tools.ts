@@ -35,6 +35,18 @@ const TOOL_CARD = /* groq */ `{
 const TOOL_EN_ID = /* groq */ `*[_type == "translation.metadata" && schemaTypes[0] == "tool" && references(^._id)][0]
   .translations[language == "en"][0].value._ref`;
 
+// Match a tool to the current (localized) parent doc by its EN-canonical reference.
+// `tool.app` / `tool.category` are EN-only fields in Studio, so every locale's tool
+// points at the EN parent — comparing against the localized parent's own id matches
+// nothing on ES/DE. So compare tool.<field>._ref to the parent's EN sibling id.
+// Use INSIDE a `*[tool ...]` subquery nested one level in the parent's projection,
+// where `^._id` is the parent and `^.^._id` reaches it from the metadata subquery.
+// `references()` can't take a computed id, so this uses `==` (which evaluates it).
+const enRefMatch = (field: string, parentType: string) => /* groq */ `${field}._ref == coalesce(
+  *[_type == "translation.metadata" && schemaTypes[0] == "${parentType}" && references(^.^._id)][0].translations[language == "en"][0].value._ref,
+  ^._id
+)`;
+
 // "More tools for your dating life" on app hubs — curated, app-agnostic tools.
 // Hubs with >1 attached tool already cover photos/bio/review, so they get a
 // different trio than solo hubs (which still need a photo + review angle).
@@ -96,8 +108,8 @@ export function getAppsWithTools(
       `*[_type == "datingApp" && language == $lang && ${HAS_PAGE_FILTER}]{
         _id, name, "slug": slug.current, brandColor,
         "order": select(order > 0 => order, 9999),
-        "toolCount": count(*[_type == "tool" && language == $lang && references(^._id)]),
-        "tools": *[_type == "tool" && language == $lang && references(^._id)] | ${TOOL_LIST_ORDER} [0...$previewCount] { _id, "title": coalesce(cardTitle, title) }
+        "toolCount": count(*[_type == "tool" && language == $lang && ${enRefMatch("app", "datingApp")}]),
+        "tools": *[_type == "tool" && language == $lang && ${enRefMatch("app", "datingApp")}] | ${TOOL_LIST_ORDER} [0...$previewCount] { _id, "title": coalesce(cardTitle, title) }
       }[toolCount > 0] | order(order asc, name asc)`,
       { lang, previewCount },
     ),
@@ -106,32 +118,35 @@ export function getAppsWithTools(
 
 export function getAppPage(slug: string, lang = DEFAULT_LOCALE) {
   return cached(`getAppPage:${slug}:${lang}`, async () => {
-    const app = await sanityClient.fetch<AppPageData | null>(
+    // One round-trip: fetch the app plus the union of both universal-tool id sets;
+    // the exact set (multi vs solo) and its order are picked in JS from toolCount.
+    const allUniversalIds = [
+      ...new Set([...UNIVERSAL_TOOLS_MULTI, ...UNIVERSAL_TOOLS_SOLO]),
+    ];
+    const app = await sanityClient.fetch<
+      | (AppPageData & { universalPool: { enId: string; card: ToolCard }[] })
+      | null
+    >(
       `${coalesceLang("datingApp", "slug.current == $slug")}{
         _id, name, title, description, metaTitle, metaDescription, downloadHeading,
         "slug": slug.current, brandColor,
         ${ALTERNATES},
-        "tools": *[_type == "tool" && language == $lang && references(^._id)] | ${TOOL_LIST_ORDER} ${TOOL_CARD},
-        "toolCount": count(*[_type == "tool" && language == $lang && references(^._id)])
+        "tools": *[_type == "tool" && language == $lang && ${enRefMatch("app", "datingApp")}] | ${TOOL_LIST_ORDER} ${TOOL_CARD},
+        "toolCount": count(*[_type == "tool" && language == $lang && ${enRefMatch("app", "datingApp")}]),
+        "universalPool": *[_type == "tool" && language == $lang && (${TOOL_EN_ID}) in $allUniversalIds]{
+          "enId": ${TOOL_EN_ID},
+          "card": ${TOOL_CARD}
+        }
       }`,
-      { slug, lang },
+      { slug, lang, allUniversalIds },
     );
     if (!app) return null;
 
     // Curated app-agnostic tools, ordered by the id list (GROQ `in` doesn't preserve order).
     const ids =
       app.toolCount > 1 ? UNIVERSAL_TOOLS_MULTI : UNIVERSAL_TOOLS_SOLO;
-    const universal = await sanityClient.fetch<
-      { enId: string; card: ToolCard }[]
-    >(
-      `*[_type == "tool" && language == $lang && (${TOOL_EN_ID}) in $ids]{
-        "enId": ${TOOL_EN_ID},
-        "card": ${TOOL_CARD}
-      }`,
-      { lang, ids },
-    );
     app.universalTools = ids
-      .map((id) => universal.find((u) => u.enId === id)?.card)
+      .map((id) => app.universalPool.find((u) => u.enId === id)?.card)
       .filter((c): c is ToolCard => Boolean(c));
 
     return app;
@@ -332,7 +347,7 @@ export function getCategoriesWithTools(lang = DEFAULT_LOCALE) {
     sanityClient.fetch<ToolCategoryWithTools[]>(
       `*[_type == "toolCategory" && language == $lang]{
         _id, title, description, "order": select(order > 0 => order, 9999),
-        "tools": *[_type == "tool" && language == $lang && references(^._id)] | ${TOOL_LIST_ORDER} ${TOOL_CARD}
+        "tools": *[_type == "tool" && language == $lang && ${enRefMatch("category", "toolCategory")}] | ${TOOL_LIST_ORDER} ${TOOL_CARD}
       }[count(tools) > 0] | order(order asc, title asc)`,
       { lang },
     ),

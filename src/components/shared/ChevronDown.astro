@@ -1,13 +1,20 @@
 ---
 interface Props {
+  // "select": absolute-positioned overlay chevron for a custom <select> wrapper.
+  variant?: "select";
   class?: string;
 }
 
-const { class: cls } = Astro.props;
+const { variant, class: cls } = Astro.props;
+
+const variantClass =
+  variant === "select"
+    ? "pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-subtle"
+    : undefined;
 ---
 
 <svg
-  class:list={["chevron", cls]}
+  class:list={["chevron", variantClass, cls]}
   viewBox="0 0 24 24"
   fill="none"
   stroke="currentColor"

@@ -70,7 +70,21 @@ export const post = defineType({
         defineArrayMember({
           type: "image",
           fields: [
-            defineField({ name: "alt", type: "string", title: "Alt text" }),
+            defineField({
+              name: "alt",
+              type: "string",
+              title: "Alt text",
+              // Warning, not required: content images should have alt for a11y &
+              // image-search SEO, but don't block publishing on it.
+              validation: (r) =>
+                r
+                  .custom((value) =>
+                    value
+                      ? true
+                      : "Add alt text — helps accessibility and image-search SEO",
+                  )
+                  .warning(),
+            }),
             defineField({
               name: "fullWidth",
               type: "boolean",
@@ -92,12 +106,43 @@ export const post = defineType({
               description:
                 "Optional heading shown above FAQ items (e.g. 'Common Questions')",
             }),
+            defineField({
+              name: "subheading",
+              type: "text",
+              rows: 2,
+              description: "Optional subheading/intro shown under the heading",
+            }),
           ],
           preview: {
             select: { heading: "heading" },
             prepare: ({ heading }) => ({
               title: heading ?? "FAQ section",
               subtitle: "Renders document FAQ field at this position",
+            }),
+          },
+        }),
+        defineArrayMember({
+          type: "object",
+          name: "statSection",
+          title: "Statistics section",
+          fields: [
+            defineField({
+              name: "heading",
+              type: "string",
+              description: "Heading shown above the stat cards",
+            }),
+            defineField({
+              name: "subheading",
+              type: "text",
+              rows: 2,
+              description: "Optional subheading/intro shown under the heading",
+            }),
+          ],
+          preview: {
+            select: { heading: "heading" },
+            prepare: ({ heading }) => ({
+              title: heading ?? "Statistics section",
+              subtitle: "Renders document Stats field as cards at this position",
             }),
           },
         }),
@@ -214,6 +259,39 @@ export const post = defineType({
             inlineRichTextField("answer", "Answer"),
           ],
           preview: { select: { title: "question" } },
+        }),
+      ],
+    }),
+    defineField({
+      name: "stats",
+      title: "Stats",
+      type: "array",
+      group: "content",
+      description:
+        "Stat cards, rendered where the Statistics section marker sits in the body.",
+      of: [
+        defineArrayMember({
+          type: "object",
+          name: "statItem",
+          fields: [
+            defineField({
+              name: "title",
+              title: "Title *",
+              type: "string",
+              description:
+                "Headline figure or claim (e.g. '2x' or 'Personalized questions raise reply rates by 34%')",
+              validation: (r) => r.required(),
+            }),
+            inlineRichTextField("description", "Description"),
+            defineField({ name: "source", title: "Source label", type: "string" }),
+            defineField({
+              name: "sourceUrl",
+              title: "Source URL",
+              type: "url",
+              validation: (r) => r.uri({ scheme: ["http", "https"] }),
+            }),
+          ],
+          preview: { select: { title: "title", subtitle: "source" } },
         }),
       ],
     }),
