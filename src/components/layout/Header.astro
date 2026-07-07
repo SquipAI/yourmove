@@ -38,12 +38,12 @@ function isActive(href: string) {
 
 <header id="header" class="sticky top-0 z-10 bg-brand text-white shadow-xl">
   <div
-    class="py-[12px] flex flex-wrap items-center justify-between gap-x-svw gap-y-4 sm:gap-x-6"
+    class="py-[12px] flex flex-wrap items-center justify-between gap-x-[2svw] gap-y-4 sm:gap-x-6"
   >
     <a
       href={lang === DEFAULT_LOCALE ? "/" : `/${lang}`}
       aria-label={t(lang, "header.homeLabel")}
-      class="relative z-11 pt-1.25 pb-1 [&>svg]:aspect-[5.5] [&>svg]:h-5"
+      class="relative z-11 pt-1.25 pb-1 [&>svg]:aspect-[5.5] [&>svg]:h-5 [&>svg]:max-w-[32svw]"
     >
       <LogoSvg />
     </a>
@@ -227,7 +227,7 @@ function isActive(href: string) {
     <Btn
       href={ctaUrl}
       variant="inverted"
-      class="whitespace-nowrap max-md:ms-auto max-md:translate-x-svw"
+      class="whitespace-nowrap max-[24rem]:text-sm max-md:ms-auto max-md:translate-x-svw"
     >
       {t(lang, "header.cta")}
     </Btn>
