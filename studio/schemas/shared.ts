@@ -258,6 +258,21 @@ export const languageField = defineField({
   hidden: true,
 });
 
+// Hidden back-reference to the EN sibling, kept in sync by
+// wrapPublishWithSourceRefSync on publish. Lets preview.select pull the EN
+// title/image for ES/DE docs in Structure lists — the EN<->locale link itself
+// lives on a separate `translation.metadata` document, which select can't
+// traverse, and top-level Structure lists only support synchronous previews.
+export const sourceRefField = (type: string) =>
+  defineField({
+    name: "sourceRef",
+    type: "reference",
+    to: [{ type }],
+    weak: true,
+    hidden: true,
+    readOnly: true,
+  });
+
 // Field-level translation: produces a Sanity object with one sub-field per
 // locale. Use for short UI strings (nav labels, captions) on documents that
 // are NOT translated at the document level. Renders as `{ en, es, de }`.

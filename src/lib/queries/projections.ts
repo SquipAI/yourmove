@@ -23,10 +23,7 @@ export const BODY = /* groq */ `body[]{
     "width": asset->metadata.dimensions.width,
     "height": asset->metadata.dimensions.height
   },
-  _type == "embed" => {
-    ...,
-    doc->{ _type, title, "slug": ${LOCALIZED_SLUG} }
-  }
+  _type == "embed" => { ... }
 }`;
 
 // Path to a field on the canonical EN post doc. Append a field name

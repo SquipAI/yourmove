@@ -10,6 +10,7 @@ import {
 import { DeployTool } from "@studio/plugins/DeployTool";
 import { createStructure } from "@studio/structure";
 import { wrapPublishWithKindSync } from "@studio/actions/syncToolKind";
+import { wrapPublishWithSourceRefSync } from "@studio/actions/syncSourceRef";
 
 const SUPPORTED_LANGUAGES = [
   { id: "en", title: "English", flag: "🇺🇸" },
@@ -34,13 +35,22 @@ const sharedConfig = {
     },
   ],
   document: {
-    // On EN tool publish, mirror `kind` onto the ES/DE siblings.
-    actions: (prev: any[], context: { schemaType: string }) =>
-      context.schemaType === "tool"
-        ? prev.map((a) =>
-            a.action === "publish" ? wrapPublishWithKindSync(a) : a,
-          )
-        : prev,
+    actions: (prev: any[], context: { schemaType: string }) => {
+      let actions = prev;
+      // On EN tool publish, mirror `kind` onto the ES/DE siblings.
+      if (context.schemaType === "tool") {
+        actions = actions.map((a) =>
+          a.action === "publish" ? wrapPublishWithKindSync(a) : a,
+        );
+      }
+      // Keep post/tool `sourceRef` (EN back-reference, used by Structure previews) in sync.
+      if (context.schemaType === "post" || context.schemaType === "tool") {
+        actions = actions.map((a) =>
+          a.action === "publish" ? wrapPublishWithSourceRefSync(a) : a,
+        );
+      }
+      return actions;
+    },
   },
 };
 

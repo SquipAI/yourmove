@@ -3,6 +3,7 @@
 // (paragraphs-only renderer for FAQ answers).
 
 import { resolveNavHref, isExternalHref, type TargetType } from "@lib/links";
+import { parseAccent } from "@lib/parseAccent";
 import { DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
 
@@ -96,6 +97,19 @@ export function groupAnswerBlocks(
     }
   }
   return chunks;
+}
+
+// Table cells are plain strings; the only markup is the sitewide `*…*` accent
+// convention (same parser as page titles) — rendered as a styled span the CSS
+// controls, never a semantic <em>/<strong>. Escaped first, so cells can never
+// inject HTML.
+export function tableCellHTML(text: string | null | undefined): string {
+  return parseAccent((text ?? "").trim())
+    .map((part) => {
+      const html = escape(part.text).replace(/\n/g, "<br>");
+      return part.accent ? `<span class="accent">${html}</span>` : html;
+    })
+    .join("");
 }
 
 export function inlineHTML(

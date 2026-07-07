@@ -8,6 +8,7 @@ import {
   standardGroups,
   pageTitleField,
   hiddenOnNonEn,
+  sourceRefField,
 } from "../shared";
 
 export const post = defineType({
@@ -148,6 +149,76 @@ export const post = defineType({
         }),
         defineArrayMember({
           type: "object",
+          name: "table",
+          title: "Table",
+          fields: [
+            defineField({
+              name: "rows",
+              title: "Rows *",
+              type: "array",
+              description:
+                "First row is always the column header row. In cells, *asterisks* mark accented text.",
+              of: [
+                defineArrayMember({
+                  type: "object",
+                  name: "tableRow",
+                  fields: [
+                    defineField({
+                      name: "cells",
+                      title: "Cells",
+                      type: "array",
+                      of: [defineArrayMember({ type: "text", rows: 1 })],
+                      validation: (r) => r.min(1),
+                    }),
+                  ],
+                  preview: {
+                    select: { cells: "cells" },
+                    prepare: ({ cells }) => ({
+                      title: ((cells ?? []) as string[])
+                        .map((c) => c?.trim() || "—")
+                        .join(" · "),
+                    }),
+                  },
+                }),
+              ],
+              validation: (r) => [
+                r
+                  .required()
+                  .min(2)
+                  .error("A table needs a header row and at least one data row"),
+                r.custom((rows) => {
+                  const widths = ((rows ?? []) as { cells?: unknown[] }[]).map(
+                    (row) => row.cells?.length ?? 0,
+                  );
+                  return new Set(widths).size > 1
+                    ? `All rows need the same number of cells (got ${widths.join(", ")})`
+                    : true;
+                }),
+                r
+                  .custom((rows) => {
+                    const first = ((rows ?? []) as { cells?: unknown[] }[])[0];
+                    return (first?.cells?.length ?? 0) > 6
+                      ? "More than 6 columns is hard to read, especially on mobile"
+                      : true;
+                  })
+                  .warning(),
+              ],
+            }),
+          ],
+          preview: {
+            select: { rows: "rows" },
+            prepare: ({ rows }) => {
+              const all = (rows ?? []) as { cells?: string[] }[];
+              const header = (all[0]?.cells ?? []).filter(Boolean).join(" | ");
+              return {
+                title: header || "Table",
+                subtitle: `Table — ${all[0]?.cells?.length ?? 0} columns × ${Math.max(all.length - 1, 0)} rows`,
+              };
+            },
+          },
+        }),
+        defineArrayMember({
+          type: "object",
           name: "embed",
           title: "Embed",
           fields: [
@@ -161,7 +232,6 @@ export const post = defineType({
                   { title: "YouTube", value: "youtube" },
                   { title: "Mixcloud", value: "mixcloud" },
                   { title: "Google Slides", value: "googleSlides" },
-                  { title: "Internal document", value: "document" },
                 ],
                 layout: "radio",
               },
@@ -172,43 +242,20 @@ export const post = defineType({
               title: "URL or ID",
               description:
                 "YouTube: full URL or video ID. Mixcloud: feed URL. Google Slides: published embed URL.",
-              hidden: ({ parent }) =>
-                !parent?.kind || parent.kind === "document",
+              hidden: ({ parent }) => !parent?.kind,
               validation: (r) =>
                 r.custom((value, ctx) => {
                   const kind = (ctx.parent as { kind?: string } | undefined)
                     ?.kind;
-                  if (kind && kind !== "document" && !value)
-                    return "Required for media embeds";
-                  return true;
-                }),
-            }),
-            defineField({
-              name: "doc",
-              type: "reference",
-              title: "Document",
-              to: [{ type: "howToUse" }, { type: "post" }, { type: "tool" }],
-              hidden: ({ parent }) => parent?.kind !== "document",
-              validation: (r) =>
-                r.custom((value, ctx) => {
-                  const kind = (ctx.parent as { kind?: string } | undefined)
-                    ?.kind;
-                  if (kind === "document" && !value) return "Required";
+                  if (kind && !value) return "Required for media embeds";
                   return true;
                 }),
             }),
           ],
           preview: {
-            select: {
-              kind: "kind",
-              source: "source",
-              docTitle: "doc.title",
-            },
-            prepare: ({ kind, source, docTitle }) => ({
-              title:
-                kind === "document"
-                  ? `Document: ${docTitle ?? "(unset)"}`
-                  : `${kind ?? "Embed"}${source ? `: ${source}` : ""}`,
+            select: { kind: "kind", source: "source" },
+            prepare: ({ kind, source }) => ({
+              title: `${kind ?? "Embed"}${source ? `: ${source}` : ""}`,
             }),
           },
         }),
@@ -345,13 +392,20 @@ export const post = defineType({
       hidden: hiddenOnNonEn,
       validation: (r) => r.required(),
     }),
+    sourceRefField("post"),
   ],
   preview: {
-    select: { title: "title", subtitle: "language", media: "mainImage" },
-    prepare: ({ title, subtitle, media }) => ({
-      title,
+    select: {
+      title: "title",
+      subtitle: "language",
+      media: "mainImage",
+      sourceTitle: "sourceRef.title",
+      sourceMedia: "sourceRef.mainImage",
+    },
+    prepare: ({ title, subtitle, media, sourceTitle, sourceMedia }) => ({
+      title: sourceTitle || title,
       subtitle: subtitle?.toUpperCase(),
-      media,
+      media: sourceMedia || media,
     }),
   },
 });

@@ -2,9 +2,9 @@
 import { Image } from "astro:assets";
 import { YouTube } from "@astro-community/astro-embed-youtube";
 import { inlineHTML, type TextBlock } from "@lib/portableText";
-import { resolveNavHref } from "@lib/links";
 import FaqAnswer from "@components/shared/FaqAnswer.astro";
 import MixcloudEmbed from "@components/shared/MixcloudEmbed.astro";
+import TableBlock from "@components/shared/TableBlock.astro";
 import type { Locale } from "@i18n/config";
 import type { SanityImageSource } from "@sanity/image-url";
 import { t } from "@i18n/ui";
@@ -24,9 +24,8 @@ type ImageBlock = {
 type EmbedBlock = {
   _key: string;
   _type: "embed";
-  kind: "youtube" | "mixcloud" | "googleSlides" | "document";
+  kind: "youtube" | "mixcloud" | "googleSlides";
   source?: string;
-  doc?: { _type: string; title?: string; slug?: string | null } | null;
 };
 
 type HtmlEmbedBlock = {
@@ -49,13 +48,20 @@ type StatSectionBlock = {
   subheading?: string;
 };
 
+type TableBlockData = {
+  _key: string;
+  _type: "table";
+  rows: { _key: string; cells?: string[] }[];
+};
+
 type Block =
   | TextBlock
   | ImageBlock
   | EmbedBlock
   | HtmlEmbedBlock
   | FaqSectionBlock
-  | StatSectionBlock;
+  | StatSectionBlock
+  | TableBlockData;
 
 type Chunk =
   | { kind: "block"; block: TextBlock }
@@ -64,7 +70,8 @@ type Chunk =
   | { kind: "embed"; block: EmbedBlock }
   | { kind: "htmlEmbed"; block: HtmlEmbedBlock }
   | { kind: "faqSection"; block: FaqSectionBlock }
-  | { kind: "statSection"; block: StatSectionBlock };
+  | { kind: "statSection"; block: StatSectionBlock }
+  | { kind: "table"; block: TableBlockData };
 
 type FaqItem = {
   _key: string;
@@ -116,6 +123,8 @@ for (const raw of body as Block[]) {
     chunks.push({ kind: "faqSection", block: raw });
   } else if (raw._type === "statSection") {
     chunks.push({ kind: "statSection", block: raw });
+  } else if (raw._type === "table") {
+    chunks.push({ kind: "table", block: raw });
   } else if (raw._type === "block" && raw.listItem) {
     const last = chunks.at(-1);
     if (last?.kind === "list" && last.listItem === raw.listItem) {
@@ -197,19 +206,11 @@ for (const raw of body as Block[]) {
           </div>
         );
       }
-      if (block.kind === "document" && block.doc?.slug) {
-        const href = resolveNavHref(block.doc._type, block.doc.slug, null, lang);
-        if (!href) return null;
-        return (
-          <a href={href} class="card not-prose my-6 p-4">
-            <span class="text-subtle text-sm tracking-eyebrow uppercase">
-              {block.doc._type}
-            </span>
-            <div class="font-medium">{block.doc.title}</div>
-          </a>
-        );
-      }
       return null;
+    }
+
+    if (chunk.kind === "table") {
+      return <TableBlock rows={chunk.block.rows ?? []} />;
     }
 
     if (chunk.kind === "htmlEmbed") {

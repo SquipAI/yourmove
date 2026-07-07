@@ -24,6 +24,7 @@ import {
   docLang,
   exactLength,
   requiredImage,
+  sourceRefField,
 } from "../shared";
 import { linkableTo } from "@lib/links/sanity";
 import { FEATURE_ICON_NAMES } from "@lib/icons";
@@ -943,15 +944,18 @@ export const tool = defineType({
       initialValue: false,
       hidden: hiddenOnNonEn,
     }),
+    sourceRefField("tool"),
   ],
   preview: {
     select: {
       title: "title",
       cardTitle: "cardTitle",
       subtitle: "language",
+      sourceTitle: "sourceRef.title",
+      sourceCardTitle: "sourceRef.cardTitle",
     },
-    prepare: ({ title, cardTitle, subtitle }) => ({
-      title: cardTitle || title,
+    prepare: ({ title, cardTitle, subtitle, sourceTitle, sourceCardTitle }) => ({
+      title: sourceCardTitle || sourceTitle || cardTitle || title,
       subtitle: subtitle?.toUpperCase(),
     }),
   },

@@ -1,0 +1,52 @@
+---
+import { tableCellHTML } from "@lib/portableText";
+import { stripAccent } from "@lib/parseAccent";
+
+type Row = { _key: string; cells?: (string | null)[] | null };
+
+interface Props {
+  rows: Row[];
+}
+
+const { rows } = Astro.props;
+
+// First row is always the header (enforced by the Studio schema).
+const [header, ...bodyRows] = rows;
+const headerCells = (header?.cells ?? []).map((c) => c ?? "");
+const labels = headerCells.map((c) => stripAccent(c));
+
+// Layout is decided from content at build time: 3+ column tables with
+// long-form cells restack into cards on small screens (see .table-stack);
+// short-cell tables keep the grid — wide ones scroll inside the wrapper.
+const STACK_CELL_LENGTH = 60;
+const stack =
+  headerCells.length >= 3 &&
+  bodyRows.some((row) =>
+    (row.cells ?? []).some((c) => (c ?? "").length > STACK_CELL_LENGTH),
+  );
+---
+
+{
+  headerCells.length > 0 && bodyRows.length > 0 && (
+    <div class:list={["table-block not-prose my-6", stack && "table-stack"]}>
+      <table>
+        <thead>
+          <tr>
+            {headerCells.map((cell) => (
+              <th scope="col" set:html={tableCellHTML(cell)} />
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {bodyRows.map((row) => (
+            <tr>
+              {(row.cells ?? []).map((cell, i) => (
+                <td data-label={labels[i]} set:html={tableCellHTML(cell)} />
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
