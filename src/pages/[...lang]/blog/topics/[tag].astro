@@ -14,7 +14,7 @@ import {
   getAppDownload,
   getNavLabels,
 } from "@lib/queries";
-import { collectionPageSchema } from "@lib/schema";
+import { collectionPageSchema, breadcrumbTrail } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
 import { canonicalUrl } from "@lib/canonicalUrl";
 import { buildAlternateUrls, localePathFor } from "@i18n/utils";
@@ -58,12 +58,12 @@ const schema = collectionPageSchema(
   lang,
   tag.title,
   tag.metaDescription,
-  [
-    { name: nav.home, url: `${origin}${localePath("")}` },
-    { name: nav.blog, url: `${origin}${localePath("blog")}` },
-    { name: t(lang, "blog.topics"), url: `${origin}${localePath("blog/topics")}` },
+  breadcrumbTrail(origin, lang, [
+    { name: nav.home, path: "" },
+    { name: nav.blog, path: "blog" },
+    { name: t(lang, "blog.topics"), path: "blog/topics" },
     { name: tag.title },
-  ],
+  ]),
   ogImage,
   posts.map((post) => ({
     name: post.title,

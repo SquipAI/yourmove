@@ -4,10 +4,10 @@ import SchemaOrg from "@components/seo/SchemaOrg.astro";
 import PortableText from "@components/shared/PortableText.astro";
 import PageHeading from "@components/shared/PageHeading.astro";
 import { getLegalPage, getNavLabels } from "@lib/queries";
-import { webPageSchema } from "@lib/schema";
+import { webPageSchema, breadcrumbTrail } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
 import { canonicalUrl } from "@lib/canonicalUrl";
-import { getAllLocalePaths, localePathFor } from "@i18n/utils";
+import { getAllLocalePaths } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
 
 export function getStaticPaths() {
@@ -22,13 +22,15 @@ const [page, nav] = await Promise.all([
 if (!page) throw new Error(`Terms page not found (${lang})`);
 
 const origin = Astro.url.origin;
-const localePath = localePathFor(lang);
 const schema = webPageSchema(
   canonicalUrl(Astro.url),
   lang,
   page.title,
   page.metaDescription,
-  [{ name: nav.home, url: `${origin}${localePath("")}` }, { name: page.title }],
+  breadcrumbTrail(origin, lang, [
+    { name: nav.home, path: "" },
+    { name: page.title },
+  ]),
 );
 ---
 

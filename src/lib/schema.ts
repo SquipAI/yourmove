@@ -1,3 +1,4 @@
+import { getRelativeLocaleUrl } from "astro:i18n";
 import type { Locale } from "@i18n/config";
 import { stripAccent } from "./parseAccent";
 import { urlFor } from "./sanity-image";
@@ -78,6 +79,22 @@ const AUTHOR = {
 };
 
 export type BreadcrumbItem = { name: string; url?: string };
+
+// Build an absolute-URL breadcrumb trail for schema. Each crumb is {name, path?}:
+// a `path` becomes `${origin}${getRelativeLocaleUrl(lang, path)}`; the current
+// (last) crumb omits `path`, so it renders without a url (valid for BreadcrumbList).
+export function breadcrumbTrail(
+  origin: string,
+  lang: Locale,
+  crumbs: { name: string; path?: string }[],
+): BreadcrumbItem[] {
+  return crumbs.map((c) => ({
+    name: c.name,
+    ...(c.path !== undefined
+      ? { url: `${origin}${getRelativeLocaleUrl(lang, c.path)}` }
+      : {}),
+  }));
+}
 
 function buildBreadcrumb(items: BreadcrumbItem[], id: string) {
   return {

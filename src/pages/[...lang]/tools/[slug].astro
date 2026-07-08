@@ -10,7 +10,7 @@ import {
   getAppDownload,
   getNavLabels,
 } from "@lib/queries";
-import { collectionPageSchema } from "@lib/schema";
+import { collectionPageSchema, breadcrumbTrail } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
 import { canonicalUrl } from "@lib/canonicalUrl";
 import { buildAlternateUrls, localePathFor } from "@i18n/utils";
@@ -51,11 +51,11 @@ const schema = collectionPageSchema(
   lang,
   app.title,
   app.metaDescription,
-  [
-    { name: nav.home, url: `${origin}${localePath("")}` },
-    { name: nav.tools, url: `${origin}${localePath("tools")}` },
+  breadcrumbTrail(origin, lang, [
+    { name: nav.home, path: "" },
+    { name: nav.tools, path: "tools" },
     { name: app.name },
-  ],
+  ]),
   ogImage,
   app.tools.map((tool) => ({
     name: tool.cardTitle ?? tool.title,

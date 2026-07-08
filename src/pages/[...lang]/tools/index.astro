@@ -17,7 +17,7 @@ import {
   getNavLabels,
 } from "@lib/queries";
 
-import { collectionPageSchema } from "@lib/schema";
+import { collectionPageSchema, breadcrumbTrail } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
 import { canonicalUrl } from "@lib/canonicalUrl";
 import { getAllLocalePaths, localePathFor } from "@i18n/utils";
@@ -48,10 +48,10 @@ const schema = collectionPageSchema(
   lang,
   page.title,
   page.metaDescription,
-  [
-    { name: nav.home, url: `${origin}${localePath("")}` },
+  breadcrumbTrail(origin, lang, [
+    { name: nav.home, path: "" },
     { name: nav.tools },
-  ],
+  ]),
   ogImage,
   featured.map((tool) => ({
     name: tool.cardTitle ?? tool.title,
