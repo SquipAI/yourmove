@@ -22,15 +22,12 @@ import { ogImageHref } from "@lib/og/route";
 import { canonicalUrl } from "@lib/canonicalUrl";
 import { stripAccent } from "@lib/parseAccent";
 
-import { buildAlternateUrls, localePathFor } from "@i18n/utils";
+import { buildAlternateUrls, localePathFor, toLocaleParams } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 
 export async function getStaticPaths() {
-  const paths = await getAllPostPaths();
-  return paths.map(({ lang, slug }) => ({
-    params: { lang: lang === DEFAULT_LOCALE ? undefined : lang, slug },
-  }));
+  return toLocaleParams(await getAllPostPaths());
 }
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;

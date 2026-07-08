@@ -12,6 +12,17 @@ export function getAllLocalePaths() {
   }));
 }
 
+// Map fetched {lang, slug} paths to getStaticPaths params, dropping the
+// default-locale prefix. `key` is the route's dynamic param ("slug" or "tag").
+export function toLocaleParams(
+  paths: { lang: Locale; slug: string }[],
+  key = "slug",
+) {
+  return paths.map(({ lang, slug }) => ({
+    params: { lang: lang === DEFAULT_LOCALE ? undefined : lang, [key]: slug },
+  }));
+}
+
 // Core: map every locale to its absolute URL. `slugFor` returns the locale's
 // slug (path after the locale prefix), or undefined to point at the locale
 // homepage. Shared by buildAlternateUrls (translated slugs) and

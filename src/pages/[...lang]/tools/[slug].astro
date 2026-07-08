@@ -13,15 +13,12 @@ import {
 import { collectionPageSchema, breadcrumbTrail } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
 import { canonicalUrl } from "@lib/canonicalUrl";
-import { buildAlternateUrls, localePathFor } from "@i18n/utils";
+import { buildAlternateUrls, localePathFor, toLocaleParams } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 
 export async function getStaticPaths() {
-  const paths = await getAllAppPaths();
-  return paths.map(({ lang, slug }) => ({
-    params: { lang: lang === DEFAULT_LOCALE ? undefined : lang, slug },
-  }));
+  return toLocaleParams(await getAllAppPaths());
 }
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
