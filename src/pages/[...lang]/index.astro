@@ -53,7 +53,7 @@ const pressQuotes = press.filter((p) => p.quote);
 const eyebrow = home.statsEyebrow
   .replace("{count}", siteStats.userCount)
   .replace("{rating}", siteStats.userRating);
-const lp = localePathFor(lang);
+const localePath = localePathFor(lang);
 const pageUrl = canonicalUrl(Astro.url);
 const ogImage = ogImageHref(Astro.url.origin, lang, "home");
 const schema = homeSchema(
@@ -108,7 +108,7 @@ const schema = homeSchema(
 
   {
     featuredPosts.length > 0 && (
-      <ListingSection title={home.blogHeading} seeAllHref={lp("blog")} {lang}>
+      <ListingSection title={home.blogHeading} seeAllHref={localePath("blog")} {lang}>
         <FeaturedList posts={featuredPosts} {lang} />
       </ListingSection>
     )

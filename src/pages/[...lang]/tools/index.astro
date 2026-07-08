@@ -42,6 +42,7 @@ const [page, featured, categories, apps, appDownload, nav] = await Promise.all([
 const origin = Astro.url.origin;
 const localePath = localePathFor(lang);
 const pageUrl = canonicalUrl(Astro.url);
+const ogImage = ogImageHref(origin, lang, "tools");
 const schema = collectionPageSchema(
   pageUrl,
   lang,
@@ -51,7 +52,7 @@ const schema = collectionPageSchema(
     { name: nav.home, url: `${origin}${localePath("")}` },
     { name: nav.tools },
   ],
-  ogImageHref(origin, lang, "tools"),
+  ogImage,
   featured.map((tool) => ({
     name: tool.cardTitle ?? tool.title,
     url: `${origin}${localePath(tool.slug)}`,
@@ -63,7 +64,7 @@ const schema = collectionPageSchema(
   title={page.metaTitle}
   description={page.metaDescription}
   {lang}
-  ogImage={ogImageHref(Astro.url.origin, lang, "tools")}
+  {ogImage}
 >
   <SchemaOrg slot="head" {schema} />
   <ToolsHero {page} {categories} {apps} {lang} />

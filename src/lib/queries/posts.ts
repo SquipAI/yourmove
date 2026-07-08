@@ -9,7 +9,7 @@ import { DEFAULT_LOCALE } from "@i18n/config";
 
 export const BLOG_LATEST_COUNT = 4;
 export const BLOG_FEATURED_COUNT = 5;
-export const RELATED_POSTS_COUNT = 6;
+const RELATED_POSTS_COUNT = 6;
 
 // Stat cards — headline figure/claim + rich description (with link annotations,
 // resolved like FAQ answers) + cited source. Rendered by PortableText at the

@@ -52,13 +52,14 @@ const [page, latest, featured, tagSections, allTags, postCount, appDownload, nav
 
 const origin = Astro.url.origin;
 const localePath = localePathFor(lang);
+const ogImage = ogImageHref(origin, lang, "blog");
 const schema = collectionPageSchema(
   canonicalUrl(Astro.url),
   lang,
   page.title,
   page.metaDescription,
   [{ name: nav.home, url: `${origin}${localePath("")}` }, { name: nav.blog }],
-  ogImageHref(origin, lang, "blog"),
+  ogImage,
   latest.map((post) => ({
     name: post.title,
     url: `${origin}${localePath(`blog/${post.slug}`)}`,
@@ -70,7 +71,7 @@ const schema = collectionPageSchema(
   title={page.metaTitle}
   description={page.metaDescription}
   {lang}
-  ogImage={ogImageHref(Astro.url.origin, lang, "blog")}
+  {ogImage}
 >
   <SchemaOrg slot="head" {schema} />
   <header class="section pb-section-sm md:pb-svw">

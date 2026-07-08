@@ -31,6 +31,7 @@ const [tags, page, appDownload, nav] = await Promise.all([
 
 const origin = Astro.url.origin;
 const localePath = localePathFor(lang);
+const ogImage = ogImageHref(origin, lang, "blog/topics");
 const schema = collectionPageSchema(
   canonicalUrl(Astro.url),
   lang,
@@ -41,7 +42,7 @@ const schema = collectionPageSchema(
     { name: nav.blog, url: `${origin}${localePath("blog")}` },
     { name: t(lang, "blog.topics") },
   ],
-  ogImageHref(origin, lang, "blog/topics"),
+  ogImage,
   tags.map((tag) => ({
     name: tag.title,
     url: `${origin}${localePath(`blog/topics/${tag.slug}`)}`,
@@ -53,7 +54,7 @@ const schema = collectionPageSchema(
   title={page.metaTitle}
   description={page.metaDescription}
   {lang}
-  ogImage={ogImageHref(Astro.url.origin, lang, "blog/topics")}
+  {ogImage}
 >
   <SchemaOrg slot="head" {schema} />
   <section class="section">

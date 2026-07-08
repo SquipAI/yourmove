@@ -45,6 +45,7 @@ const alternateUrls = buildAlternateUrls(
 
 const origin = Astro.url.origin;
 const localePath = localePathFor(lang);
+const ogImage = ogImageHref(origin, lang, `tools/${slug}`);
 const schema = collectionPageSchema(
   canonicalUrl(Astro.url),
   lang,
@@ -55,7 +56,7 @@ const schema = collectionPageSchema(
     { name: nav.tools, url: `${origin}${localePath("tools")}` },
     { name: app.name },
   ],
-  ogImageHref(origin, lang, `tools/${slug}`),
+  ogImage,
   app.tools.map((tool) => ({
     name: tool.cardTitle ?? tool.title,
     url: `${origin}${localePath(tool.slug)}`,
@@ -68,7 +69,7 @@ const schema = collectionPageSchema(
   description={app.metaDescription}
   {lang}
   {alternateUrls}
-  ogImage={ogImageHref(Astro.url.origin, lang, `tools/${slug}`)}
+  {ogImage}
 >
   <SchemaOrg slot="head" {schema} />
   <section class="section">

@@ -30,6 +30,7 @@ const countWord =
 
 const origin = Astro.url.origin;
 const localePath = localePathFor(lang);
+const ogImage = ogImageHref(origin, lang, "blog/posts");
 const schema = collectionPageSchema(
   canonicalUrl(Astro.url),
   lang,
@@ -40,7 +41,7 @@ const schema = collectionPageSchema(
     { name: nav.blog, url: `${origin}${localePath("blog")}` },
     { name: page.title },
   ],
-  ogImageHref(origin, lang, "blog/posts"),
+  ogImage,
   posts.map((post) => ({
     name: post.title,
     url: `${origin}${localePath(`blog/${post.slug}`)}`,
@@ -52,7 +53,7 @@ const schema = collectionPageSchema(
   title={page.metaTitle}
   description={page.metaDescription}
   {lang}
-  ogImage={ogImageHref(Astro.url.origin, lang, "blog/posts")}
+  {ogImage}
 >
   <SchemaOrg slot="head" {schema} />
   <section class="section">

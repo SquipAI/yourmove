@@ -15,6 +15,7 @@ import {
 import { reviewsPageSchema } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
 import { canonicalUrl } from "@lib/canonicalUrl";
+import { stripAccent } from "@lib/parseAccent";
 import { getAllLocalePaths, localePathFor } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
 
@@ -38,7 +39,7 @@ const localePath = localePathFor(lang);
 const pageUrl = canonicalUrl(Astro.url);
 const breadcrumbs = [
   { name: home.navLabel, url: `${Astro.url.origin}${localePath("")}` },
-  { name: page.title.replace(/\*/g, ""), url: pageUrl },
+  { name: stripAccent(page.title), url: pageUrl },
 ];
 const ogImage = ogImageHref(Astro.url.origin, lang, "reviews");
 const schema = reviewsPageSchema(

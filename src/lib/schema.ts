@@ -79,7 +79,7 @@ const AUTHOR = {
 
 export type BreadcrumbItem = { name: string; url?: string };
 
-export function buildBreadcrumb(items: BreadcrumbItem[], id: string) {
+function buildBreadcrumb(items: BreadcrumbItem[], id: string) {
   return {
     "@type": "BreadcrumbList",
     "@id": id,
@@ -93,7 +93,7 @@ export function buildBreadcrumb(items: BreadcrumbItem[], id: string) {
   };
 }
 
-export function faqPageSchema(
+function faqPageSchema(
   items: FaqItem[],
   pageUrl: string,
   lang: Locale,
@@ -182,13 +182,13 @@ export function toolSchema(
   const app: Record<string, unknown> = {
     "@type": "SoftwareApplication",
     "@id": `${url}#app`,
-    name: tool.title.replace(/\*/g, ""),
+    name: stripAccent(tool.title),
     url,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",
     publisher: { "@id": ORG_ID },
     image: ogImage,
-    ...(tool.description ? { description: tool.description.replace(/\*/g, "") } : {}),
+    ...(tool.description ? { description: stripAccent(tool.description) } : {}),
   };
   const aggregate = aggregateRatingNode(testimonials);
   if (aggregate) app.aggregateRating = aggregate;

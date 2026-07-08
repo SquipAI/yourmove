@@ -52,6 +52,7 @@ const alternateUrls = buildAlternateUrls(
 
 const origin = Astro.url.origin;
 const localePath = localePathFor(lang);
+const ogImage = ogImageHref(origin, lang, `blog/topics/${slug}`);
 const schema = collectionPageSchema(
   canonicalUrl(Astro.url),
   lang,
@@ -63,7 +64,7 @@ const schema = collectionPageSchema(
     { name: t(lang, "blog.topics"), url: `${origin}${localePath("blog/topics")}` },
     { name: tag.title },
   ],
-  ogImageHref(origin, lang, `blog/topics/${slug}`),
+  ogImage,
   posts.map((post) => ({
     name: post.title,
     url: `${origin}${localePath(`blog/${post.slug}`)}`,
@@ -76,7 +77,7 @@ const schema = collectionPageSchema(
   description={tag.metaDescription}
   {lang}
   {alternateUrls}
-  ogImage={ogImageHref(Astro.url.origin, lang, `blog/topics/${slug}`)}
+  {ogImage}
 >
   <SchemaOrg slot="head" {schema} />
   <section class="section">
