@@ -47,8 +47,20 @@ export const POST_VISIBLE = /* groq */ `coalesce(${POST_EN}hidden, hidden) != tr
 // isn't hidden. The shared predicate behind every post/tag listing query.
 export const POST_LISTABLE = /* groq */ `defined(slug.current) && count(body) > 0 && ${POST_VISIBLE}`;
 
-// Standard newest-first ordering for post listings.
-export const POST_ORDER = /* groq */ `order(coalesce(createdAt, _createdAt) desc)`;
+// Standard newest-first ordering for post listings. Sorts by the EN canonical's
+// editorial createdAt so ES/DE listings match EN order (own, then _createdAt fallback).
+export const POST_ORDER = /* groq */ `order(coalesce(${POST_EN}createdAt, createdAt, _createdAt) desc)`;
+
+// Path from an EN tag doc to its current-locale sibling (via translation.metadata).
+// Used only inside POST_TAGS to re-localize the EN canonical's tag set.
+const TAG_SIB = /* groq */ `*[_type == "translation.metadata" && schemaTypes[0] == "tag" && references(^._id)][0].translations[language == $lang][0].value`;
+
+// Tag chips from the EN canonical post's tag SET (canonical membership + order),
+// each re-localized to the current locale. Editing tags on EN propagates to ES/DE.
+export const POST_TAGS = /* groq */ `${POST_EN}tags[]->{
+  "slug": coalesce(${TAG_SIB}->slug.current, slug.current),
+  "title": coalesce(${TAG_SIB}->title, title)
+}`;
 
 export const POST_CARD = /* groq */ `{
   _id, title, summary, "slug": slug.current,
@@ -56,15 +68,23 @@ export const POST_CARD = /* groq */ `{
     ${POST_EN}mainImage{ asset, hotspot, crop },
     mainImage{ asset, hotspot, crop }
   ),
-  readingTime,
-  "createdAt": coalesce(createdAt, _createdAt),
-  "tags": tags[]->{ "slug": slug.current, title }
+  "readingTime": coalesce(${POST_EN}readingTime, readingTime),
+  "createdAt": coalesce(${POST_EN}createdAt, createdAt, _createdAt),
+  "tags": ${POST_TAGS}
 }`;
 
+// EN-anchored: every call site feeds this an EN testimonial (queries filter
+// language=="en"), so identity fields render EN-canonical; only body is
+// re-localized to the current locale via the translation.metadata sibling.
 export const TESTIMONIAL_CARD = /* groq */ `{
-  _id, authorName, body, source, sourceUrl, rating,
+  _id, authorName, source, sourceUrl, rating,
   "avatar": avatar{ "url": asset->url, alt },
-  "featured": coalesce(featured, false)
+  "featured": coalesce(featured, false),
+  "body": coalesce(
+    *[_type == "translation.metadata" && references(^._id)][0]
+      .translations[value->language == $lang][0].value->body,
+    body
+  )
 }`;
 
 // Translation metadata → per-locale slug for hreflang + lang switcher.

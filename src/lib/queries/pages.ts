@@ -42,13 +42,7 @@ export function getHome(lang = DEFAULT_LOCALE) {
           "eyebrow": reviews.eyebrow,
           "heading": reviews.heading,
           "subtitle": reviews.subtitle,
-          "items": *[_id == "home"][0].reviews.items[]->{
-            "loc": coalesce(
-              *[_type == "translation.metadata" && references(^._id)][0]
-                .translations[language == $lang][0].value->,
-              @
-            )
-          }.loc ${TESTIMONIAL_CARD}
+          "items": *[_id == "home"][0].reviews.items[]-> ${TESTIMONIAL_CARD}
         },
         "faq": {
           "eyebrow": faq.eyebrow,

@@ -10,6 +10,7 @@ import {
   POST_VISIBLE,
   POST_LISTABLE,
   POST_ORDER,
+  POST_TAGS,
 } from "./projections";
 import { coalesceLang } from "./coalesceLang";
 import { cached } from "./cache";
@@ -71,9 +72,10 @@ export function getPostBySlug(slug: string, lang = DEFAULT_LOCALE) {
     sanityClient.fetch<Post | null>(
       `${coalesceLang("post", "slug.current == $slug")}{
         _id, title, summary, metaTitle, metaDescription, language,
-        createdAt, _updatedAt, readingTime,
+        "createdAt": coalesce(${POST_EN}createdAt, createdAt, _createdAt), _updatedAt,
+        "readingTime": coalesce(${POST_EN}readingTime, readingTime),
         "tagIds": tags[]._ref,
-        "tags": tags[]->{ "slug": slug.current, title },
+        "tags": ${POST_TAGS},
         "mainImage": coalesce(
           ${POST_EN}mainImage{ asset, hotspot, crop, alt },
           mainImage{ asset, hotspot, crop, alt }
@@ -109,7 +111,7 @@ export function getRelatedPosts(
               count((tags[]._ref)[@ in $tagIds]) > 0 => 1,
               0
             ) desc,
-            coalesce(createdAt, _createdAt) desc
+            coalesce(${POST_EN}createdAt, createdAt, _createdAt) desc
           ) [0...$n] ${POST_CARD}`,
       { postId, tagIds, lang, n },
     );

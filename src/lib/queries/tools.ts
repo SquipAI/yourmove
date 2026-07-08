@@ -24,16 +24,26 @@ const TOOL_EN = /* groq */ `*[_type == "translation.metadata" && schemaTypes[0] 
   .translations[language == "en"][0].value->`;
 
 const TOOL_CARD = /* groq */ `{
-  _id, title, description, cardTitle, cardDescription, paid,
+  _id, title, description, cardTitle, cardDescription,
+  "paid": coalesce(${TOOL_EN}paid, paid),
   "slug": slug.current,
-  "category": category->{ _id, title },
-  "app": app->{ _id, name, "slug": slug.current, brandColor }
+  "category": coalesce(${TOOL_EN}category, category)->{ _id, title },
+  "app": coalesce(${TOOL_EN}app, app)->{ _id, name, "slug": slug.current, brandColor }
 }`;
 
 // Canonical EN _id of the current tool — resolves regardless of locale, so a
 // fixed set of EN ids can pull the right localized variant on any locale page.
 const TOOL_EN_ID = /* groq */ `*[_type == "translation.metadata" && schemaTypes[0] == "tool" && references(^._id)][0]
   .translations[language == "en"][0].value._ref`;
+
+// Path to the canonical EN doc for the other localized types, mirroring TOOL_EN.
+// Non-translatable fields (order, brandColor, isDefault) inherit from EN via coalesce.
+const DATINGAPP_EN = /* groq */ `*[_type == "translation.metadata" && schemaTypes[0] == "datingApp" && references(^._id)][0]
+  .translations[language == "en"][0].value->`;
+const TOOLCATEGORY_EN = /* groq */ `*[_type == "translation.metadata" && schemaTypes[0] == "toolCategory" && references(^._id)][0]
+  .translations[language == "en"][0].value->`;
+const TOOLLIST_EN = /* groq */ `*[_type == "translation.metadata" && schemaTypes[0] == "toolList" && references(^._id)][0]
+  .translations[language == "en"][0].value->`;
 
 // Match a tool to the current (localized) parent doc by its EN-canonical reference.
 // `tool.app` / `tool.category` are EN-only fields in Studio, so every locale's tool
@@ -65,8 +75,8 @@ const UNIVERSAL_TOOLS_SOLO = [
 // `coalesce(featured, false)` — GROQ sorts null FIRST for desc, so null featured would outrank true.
 // `select(... > 0 => ..., 9999)` — treats unset (null) AND zero alike as "no opinion" → end of list.
 const TOOL_LIST_ORDER = /* groq */ `order(
-  coalesce(featured, false) desc,
-  select(order > 0 => order, 9999) asc,
+  coalesce(${TOOL_EN}featured, featured, false) desc,
+  select(coalesce(${TOOL_EN}order, order) > 0 => coalesce(${TOOL_EN}order, order), 9999) asc,
   defined(app) desc,
   select(app->order > 0 => app->order, 9999) asc,
   title asc
@@ -93,7 +103,7 @@ export function getToolCount(lang = DEFAULT_LOCALE) {
 export function getFeaturedTools(lang = DEFAULT_LOCALE, n = 6) {
   return cached(`getFeaturedTools:${lang}:${n}`, () =>
     sanityClient.fetch<ToolCard[]>(
-      `*[_type == "tool" && language == $lang && featured == true] | order(coalesce(order, 9999) asc, title asc) [0...$n] ${TOOL_CARD}`,
+      `*[_type == "tool" && language == $lang && coalesce(${TOOL_EN}featured, featured) == true] | order(coalesce(${TOOL_EN}order, order, 9999) asc, title asc) [0...$n] ${TOOL_CARD}`,
       { lang, n },
     ),
   );
@@ -106,8 +116,9 @@ export function getAppsWithTools(
   return cached(`getAppsWithTools:${lang}:${previewCount}`, () =>
     sanityClient.fetch<AppWithTools[]>(
       `*[_type == "datingApp" && language == $lang && ${HAS_PAGE_FILTER}]{
-        _id, name, "slug": slug.current, brandColor,
-        "order": select(order > 0 => order, 9999),
+        _id, name, "slug": slug.current,
+        "brandColor": coalesce(${DATINGAPP_EN}brandColor, brandColor),
+        "order": select(coalesce(${DATINGAPP_EN}order, order) > 0 => coalesce(${DATINGAPP_EN}order, order), 9999),
         "toolCount": count(*[_type == "tool" && language == $lang && ${enRefMatch("app", "datingApp")}]),
         "tools": *[_type == "tool" && language == $lang && ${enRefMatch("app", "datingApp")}] | ${TOOL_LIST_ORDER} [0...$previewCount] { _id, "title": coalesce(cardTitle, title) }
       }[toolCount > 0] | order(order asc, name asc)`,
@@ -129,7 +140,7 @@ export function getAppPage(slug: string, lang = DEFAULT_LOCALE) {
     >(
       `${coalesceLang("datingApp", "slug.current == $slug")}{
         _id, name, title, description, metaTitle, metaDescription, downloadHeading,
-        "slug": slug.current, brandColor,
+        "slug": slug.current, "brandColor": coalesce(${DATINGAPP_EN}brandColor, brandColor),
         ${ALTERNATES},
         "tools": *[_type == "tool" && language == $lang && ${enRefMatch("app", "datingApp")}] | ${TOOL_LIST_ORDER} ${TOOL_CARD},
         "toolCount": count(*[_type == "tool" && language == $lang && ${enRefMatch("app", "datingApp")}]),
@@ -157,17 +168,17 @@ export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
   return cached(`getToolPage:${slug}:${lang}`, () =>
     sanityClient.fetch<ToolPageData | null>(
       `${coalesceLang("tool", "slug.current == $slug")}{
-        _id, title, description, eyebrow, cardTitle, metaTitle, metaDescription,
-        "app": app->{ _id, name, "slug": slug.current },
+        _id, "enId": coalesce(${TOOL_EN_ID}, _id), title, description, eyebrow, cardTitle, metaTitle, metaDescription,
+        "app": coalesce(${TOOL_EN}app, app)->{ _id, name, "slug": slug.current },
         "toolsNavLabel": *[_type == "tools" && language == $lang][0].navLabel,
         "kind": coalesce(${TOOL_EN}kind, kind, "base"),
         "slug": slug.current,
         ${ALTERNATES},
         "embed": select(
-          defined(embedPath) => {
-            "path": embedPath,
-            "initialHeight": embedInitialHeight,
-            "geolocation": embedGeolocation
+          defined(coalesce(${TOOL_EN}embedPath, embedPath)) => {
+            "path": coalesce(${TOOL_EN}embedPath, embedPath),
+            "initialHeight": coalesce(${TOOL_EN}embedInitialHeight, embedInitialHeight),
+            "geolocation": coalesce(${TOOL_EN}embedGeolocation, embedGeolocation)
           },
           null
         ),
@@ -176,7 +187,7 @@ export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
             "title": ctaTitle,
             "subtitle": ctaSubtitle,
             "buttonText": ctaButtonText,
-            "buttonLink": { ${linkTargetFields("ctaButtonLink")} }
+            "buttonLink": { ${linkTargetFields(`${TOOL_EN}ctaButtonLink`)} }
           },
           null
         ),
@@ -245,8 +256,8 @@ export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
         },
         "reportPreview": select(
           kind == "profileReviewer" => {
-            "currentRating": reportCurrentRating,
-            "targetRating": reportTargetRating,
+            "currentRating": coalesce(${TOOL_EN}reportCurrentRating, reportCurrentRating),
+            "targetRating": coalesce(${TOOL_EN}reportTargetRating, reportTargetRating),
             "verdict": reportVerdict,
             "breakdown": reportBreakdown[]{ label, score },
             "actions": reportActions
@@ -291,7 +302,7 @@ export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
               "tools": tools[]->{ _id, "title": coalesce(cardTitle, title), "slug": slug.current }
             }
           },
-          *[_type == "toolList" && language == $lang && isDefault == true][0]{
+          *[_type == "toolList" && language == $lang && coalesce(${TOOLLIST_EN}isDefault, isDefault) == true][0]{
             title, subtitle,
             "groups": groups[]{
               heading,
@@ -346,7 +357,7 @@ export function getCategoriesWithTools(lang = DEFAULT_LOCALE) {
   return cached(`getCategoriesWithTools:${lang}`, () =>
     sanityClient.fetch<ToolCategoryWithTools[]>(
       `*[_type == "toolCategory" && language == $lang]{
-        _id, title, description, "order": select(order > 0 => order, 9999),
+        _id, title, description, "order": select(coalesce(${TOOLCATEGORY_EN}order, order) > 0 => coalesce(${TOOLCATEGORY_EN}order, order), 9999),
         "tools": *[_type == "tool" && language == $lang && ${enRefMatch("category", "toolCategory")}] | ${TOOL_LIST_ORDER} ${TOOL_CARD}
       }[count(tools) > 0] | order(order asc, title asc)`,
       { lang },

@@ -27,7 +27,7 @@ export function getReviewsPage(lang = DEFAULT_LOCALE) {
 export function getAllTestimonials(lang = DEFAULT_LOCALE) {
   return cached(`getAllTestimonials:${lang}`, () =>
     sanityClient.fetch<Testimonial[]>(
-      `*[_type == "testimonial" && language == $lang] | ${TESTIMONIAL_ORDER} ${TESTIMONIAL_CARD}`,
+      `*[_type == "testimonial" && language == "en"] | ${TESTIMONIAL_ORDER} ${TESTIMONIAL_CARD}`,
       { lang },
     ),
   );
@@ -45,8 +45,8 @@ export async function getTestimonialsForTool(
   return cached(`getTestimonialsForTool:${toolId}:${lang}:${n}`, async () => {
     const { specific, generic } = await sanityClient.fetch<TestimonialBuckets>(
       `{
-        "specific": *[_type == "testimonial" && language == $lang && references($toolId)] | ${TESTIMONIAL_ORDER} [0...$n] ${TESTIMONIAL_CARD},
-        "generic": *[_type == "testimonial" && language == $lang && count(coalesce(tools, [])) == 0] | ${TESTIMONIAL_ORDER} [0...$n] ${TESTIMONIAL_CARD}
+        "specific": *[_type == "testimonial" && language == "en" && references($toolId)] | ${TESTIMONIAL_ORDER} [0...$n] ${TESTIMONIAL_CARD},
+        "generic": *[_type == "testimonial" && language == "en" && count(coalesce(tools, [])) == 0] | ${TESTIMONIAL_ORDER} [0...$n] ${TESTIMONIAL_CARD}
       }`,
       { lang, toolId, n },
     );

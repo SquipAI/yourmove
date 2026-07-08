@@ -170,6 +170,7 @@ export type ProfileWriterData = {
 
 export type ToolPageData = {
   _id: string;
+  enId: string;
   kind: ToolKind;
   eyebrow: string | null;
   title: string;

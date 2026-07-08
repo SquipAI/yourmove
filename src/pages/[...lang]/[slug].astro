@@ -51,7 +51,7 @@ if (!tool) throw new Error(`Tool not found: ${slug} (${lang})`);
 const pageUrl = canonicalUrl(Astro.url);
 const ogImage = ogImageHref(Astro.url.origin, lang, slug);
 const { display: testimonials, specific } = await getTestimonialsForTool(
-  tool._id,
+  tool.enId,
   lang,
 );
 const [pressLogos, appDownload] = await Promise.all([
