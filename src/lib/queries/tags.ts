@@ -5,7 +5,7 @@ import type {
   TagWithCount,
   TagWithPosts,
 } from "@lib/types";
-import { ALTERNATES, POST_CARD, POST_VISIBLE } from "./projections";
+import { ALTERNATES, POST_CARD, POST_LISTABLE, POST_ORDER } from "./projections";
 import { coalesceLang } from "./coalesceLang";
 import { cached } from "./cache";
 import { DEFAULT_LOCALE } from "@i18n/config";
@@ -14,7 +14,7 @@ import type { LocalizedPath } from "./types";
 export function getAllTagPaths() {
   return cached("getAllTagPaths", () =>
     sanityClient.fetch<LocalizedPath[]>(
-      `*[_type == "tag" && defined(slug.current) && count(*[_type == "post" && language == ^.language && references(^._id) && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE}]) > 0]{
+      `*[_type == "tag" && defined(slug.current) && count(*[_type == "post" && language == ^.language && references(^._id) && ${POST_LISTABLE}]) > 0]{
         "lang": coalesce(language, "en"),
         "slug": slug.current
       }`,
@@ -27,7 +27,7 @@ export function getAllTagsWithCount(lang = DEFAULT_LOCALE) {
     sanityClient.fetch<TagWithCount[]>(
       `*[_type == "tag" && language == $lang]{
         _id, title, description, "slug": slug.current,
-        "postCount": count(*[_type == "post" && language == $lang && references(^._id) && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE}])
+        "postCount": count(*[_type == "post" && language == $lang && references(^._id) && ${POST_LISTABLE}])
       }[postCount > 0] | order(postCount desc)`,
       { lang },
     ),
@@ -37,7 +37,7 @@ export function getAllTagsWithCount(lang = DEFAULT_LOCALE) {
 export function getTagPosts(tagSlug: string, lang = DEFAULT_LOCALE) {
   return cached(`getTagPosts:${tagSlug}:${lang}`, () =>
     sanityClient.fetch<PostCard[]>(
-      `*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE} && references(*[_type == "tag" && slug.current == $tagSlug]._id)] | order(coalesce(createdAt, _createdAt) desc) ${POST_CARD}`,
+      `*[_type == "post" && language == $lang && ${POST_LISTABLE} && references(*[_type == "tag" && slug.current == $tagSlug]._id)] | ${POST_ORDER} ${POST_CARD}`,
       { tagSlug, lang },
     ),
   );
@@ -57,8 +57,8 @@ export function getTagsWithPostPreview(lang = DEFAULT_LOCALE, minPosts = 5) {
     const sections = await sanityClient.fetch<TagWithPosts[]>(
       `*[_type == "tag" && language == $lang]{
         _id, title, "slug": slug.current,
-        "postCount": count(*[_type == "post" && language == $lang && references(^._id) && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE}]),
-        "posts": *[_type == "post" && language == $lang && references(^._id) && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE}] | order(coalesce(createdAt, _createdAt) desc) [0...6] ${POST_CARD}
+        "postCount": count(*[_type == "post" && language == $lang && references(^._id) && ${POST_LISTABLE}]),
+        "posts": *[_type == "post" && language == $lang && references(^._id) && ${POST_LISTABLE}] | ${POST_ORDER} [0...6] ${POST_CARD}
       }[postCount >= $minPosts] | order(postCount desc)`,
       { lang, minPosts },
     );

@@ -1,7 +1,16 @@
 import { sanityClient } from "@lib/sanity";
 import type { Post, PostCard } from "@lib/types";
 import type { LocalizedPath } from "./types";
-import { ALTERNATES, BODY, POST_CARD, POST_EN, FAQ_ITEMS, POST_VISIBLE } from "./projections";
+import {
+  ALTERNATES,
+  BODY,
+  POST_CARD,
+  POST_EN,
+  FAQ_ITEMS,
+  POST_VISIBLE,
+  POST_LISTABLE,
+  POST_ORDER,
+} from "./projections";
 import { coalesceLang } from "./coalesceLang";
 import { cached } from "./cache";
 import { LOCALIZED_SLUG } from "@lib/links";
@@ -30,7 +39,7 @@ const STAT_ITEMS = /* groq */ `stats[]{
 export function getAllPublishedPosts(lang = DEFAULT_LOCALE) {
   return cached(`getAllPublishedPosts:${lang}`, () =>
     sanityClient.fetch<PostCard[]>(
-      `*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE}] | order(coalesce(createdAt, _createdAt) desc) ${POST_CARD}`,
+      `*[_type == "post" && language == $lang && ${POST_LISTABLE}] | ${POST_ORDER} ${POST_CARD}`,
       { lang },
     ),
   );
@@ -39,7 +48,7 @@ export function getAllPublishedPosts(lang = DEFAULT_LOCALE) {
 export function getLatestPosts(n: number, lang = DEFAULT_LOCALE) {
   return cached(`getLatestPosts:${n}:${lang}`, () =>
     sanityClient.fetch<PostCard[]>(
-      `*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE}] | order(coalesce(createdAt, _createdAt) desc) [0...$n] ${POST_CARD}`,
+      `*[_type == "post" && language == $lang && ${POST_LISTABLE}] | ${POST_ORDER} [0...$n] ${POST_CARD}`,
       { lang, n },
     ),
   );
@@ -51,7 +60,7 @@ export function getFeaturedPosts(n: number, lang = DEFAULT_LOCALE) {
       // `featured` is an editorial flag set on the EN canonical only; locales
       // inherit it (same as `hidden` via POST_VISIBLE) — otherwise ES/DE, whose
       // siblings are all featured=false, would show an empty Featured block.
-      `*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE} && coalesce(${POST_EN}featured, featured) == true] | order(coalesce(createdAt, _createdAt) desc) [0...$n] ${POST_CARD}`,
+      `*[_type == "post" && language == $lang && ${POST_LISTABLE} && coalesce(${POST_EN}featured, featured) == true] | ${POST_ORDER} [0...$n] ${POST_CARD}`,
       { lang, n },
     ),
   );
@@ -111,7 +120,7 @@ export function getRelatedPosts(
 export function getPostCount(lang = DEFAULT_LOCALE) {
   return cached(`getPostCount:${lang}`, () =>
     sanityClient.fetch<number>(
-      `count(*[_type == "post" && language == $lang && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE}])`,
+      `count(*[_type == "post" && language == $lang && ${POST_LISTABLE}])`,
       { lang },
     ),
   );
@@ -120,7 +129,7 @@ export function getPostCount(lang = DEFAULT_LOCALE) {
 export function getAllPostPaths() {
   return cached("getAllPostPaths", () =>
     sanityClient.fetch<LocalizedPath[]>(
-      `*[_type == "post" && defined(slug.current) && count(body) > 0 && ${POST_VISIBLE}]{
+      `*[_type == "post" && ${POST_LISTABLE}]{
         "lang": coalesce(language, "en"),
         "slug": slug.current
       }`,

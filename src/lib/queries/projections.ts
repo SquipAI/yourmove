@@ -43,6 +43,13 @@ export const HAS_PAGE_FILTER = /* groq */ `coalesce(
 // Single source of truth — hide a post once on EN and every locale follows.
 export const POST_VISIBLE = /* groq */ `coalesce(${POST_EN}hidden, hidden) != true`;
 
+// Filter: a post that belongs in listings — has a slug, has body content, and
+// isn't hidden. The shared predicate behind every post/tag listing query.
+export const POST_LISTABLE = /* groq */ `defined(slug.current) && count(body) > 0 && ${POST_VISIBLE}`;
+
+// Standard newest-first ordering for post listings.
+export const POST_ORDER = /* groq */ `order(coalesce(createdAt, _createdAt) desc)`;
+
 export const POST_CARD = /* groq */ `{
   _id, title, summary, "slug": slug.current,
   "mainImage": coalesce(
