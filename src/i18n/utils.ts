@@ -12,6 +12,23 @@ export function getAllLocalePaths() {
   }));
 }
 
+// Core: map every locale to its absolute URL. `slugFor` returns the locale's
+// slug (path after the locale prefix), or undefined to point at the locale
+// homepage. Shared by buildAlternateUrls (translated slugs) and
+// defaultAlternateUrls (same slug across locales).
+export function localeUrlMap(
+  origin: string,
+  slugFor: (lang: Locale) => string | undefined,
+): Record<Locale, string> {
+  return Object.fromEntries(
+    LOCALES.map((l) => {
+      const slug = slugFor(l);
+      const path = slug ? getRelativeLocaleUrl(l, slug) : getRelativeLocaleUrl(l);
+      return [l, `${origin}${path}`];
+    }),
+  ) as Record<Locale, string>;
+}
+
 // Build per-locale absolute URLs from translation.metadata alternates.
 // `prefix` joins each slug to a static path segment ("tools", "blog", "blog/topics").
 // Locales without a slug fall back to the locale homepage (never 404).
@@ -29,11 +46,5 @@ export function buildAlternateUrls(
   for (const a of alternates ?? []) {
     if (a.slug) slugs[a.lang] = join(a.slug);
   }
-  return Object.fromEntries(
-    LOCALES.map((l) => {
-      const slug = slugs[l];
-      const path = slug ? getRelativeLocaleUrl(l, slug) : getRelativeLocaleUrl(l);
-      return [l, `${origin}${path}`];
-    }),
-  ) as Record<Locale, string>;
+  return localeUrlMap(origin, (l) => slugs[l]);
 }

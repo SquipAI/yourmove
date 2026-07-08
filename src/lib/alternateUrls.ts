@@ -1,6 +1,6 @@
-import { getRelativeLocaleUrl } from "astro:i18n";
 import { LOCALES, DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
+import { localeUrlMap } from "@i18n/utils";
 import { canonicalUrl } from "./canonicalUrl";
 
 // Derives per-locale absolute URLs for the current path. Strips locale prefix
@@ -12,10 +12,5 @@ export function defaultAlternateUrls(url: URL): Record<Locale, string> {
   const slug = new URL(canonicalUrl(url)).pathname
     .replace(new RegExp(`^/(${nonDefault.join("|")})(\/|$)`), "")
     .replace(/^\//, "");
-  return Object.fromEntries(
-    LOCALES.map((l) => [
-      l,
-      `${url.origin}${slug ? getRelativeLocaleUrl(l, slug) : getRelativeLocaleUrl(l)}`,
-    ]),
-  ) as Record<Locale, string>;
+  return localeUrlMap(url.origin, () => slug || undefined);
 }
