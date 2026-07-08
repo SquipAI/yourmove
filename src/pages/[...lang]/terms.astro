@@ -1,10 +1,13 @@
 ---
 import Base from "@layouts/Base.astro";
+import SchemaOrg from "@components/seo/SchemaOrg.astro";
 import PortableText from "@components/shared/PortableText.astro";
 import PageHeading from "@components/shared/PageHeading.astro";
-import { getLegalPage } from "@lib/queries";
+import { getLegalPage, getNavLabels } from "@lib/queries";
+import { webPageSchema } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
-import { getAllLocalePaths } from "@i18n/utils";
+import { canonicalUrl } from "@lib/canonicalUrl";
+import { getAllLocalePaths, localePathFor } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
 
 export function getStaticPaths() {
@@ -12,8 +15,21 @@ export function getStaticPaths() {
 }
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
-const page = await getLegalPage("terms", lang);
+const [page, nav] = await Promise.all([
+  getLegalPage("terms", lang),
+  getNavLabels(lang),
+]);
 if (!page) throw new Error(`Terms page not found (${lang})`);
+
+const origin = Astro.url.origin;
+const localePath = localePathFor(lang);
+const schema = webPageSchema(
+  canonicalUrl(Astro.url),
+  lang,
+  page.title,
+  page.metaDescription,
+  [{ name: nav.home, url: `${origin}${localePath("")}` }, { name: page.title }],
+);
 ---
 
 <Base
@@ -22,6 +38,7 @@ if (!page) throw new Error(`Terms page not found (${lang})`);
   {lang}
   ogImage={ogImageHref(Astro.url.origin, lang, "terms")}
 >
+  <SchemaOrg slot="head" {schema} />
   <article class="section *:max-w-200">
     <PageHeading title={page.title} />
 

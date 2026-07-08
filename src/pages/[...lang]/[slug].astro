@@ -32,6 +32,7 @@ import {
 import { toolSchema } from "@lib/schema";
 import { resolveNavHref } from "@lib/links";
 import { ogImageHref } from "@lib/og/route";
+import { canonicalUrl } from "@lib/canonicalUrl";
 import { buildToolBreadcrumbs } from "@lib/toolPage";
 import { stripAccent } from "@lib/parseAccent";
 import { t } from "@i18n/ui";
@@ -50,7 +51,7 @@ const { slug } = Astro.params;
 if (!slug) throw new Error("Missing slug param");
 const tool = await getToolPage(slug, lang);
 if (!tool) throw new Error(`Tool not found: ${slug} (${lang})`);
-const pageUrl = String(Astro.url);
+const pageUrl = canonicalUrl(Astro.url);
 const ogImage = ogImageHref(Astro.url.origin, lang, slug);
 const { display: testimonials, specific } = await getTestimonialsForTool(
   tool._id,

@@ -1,6 +1,7 @@
 import { getRelativeLocaleUrl } from "astro:i18n";
 import { LOCALES, DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
+import { canonicalUrl } from "./canonicalUrl";
 
 // Derives per-locale absolute URLs for the current path. Strips locale prefix
 // (/es/privacy → privacy) and builds {en, es, de} URLs. Used for hreflang
@@ -8,7 +9,7 @@ import type { Locale } from "@i18n/config";
 // tool/post) should pass their own alternateUrls instead of using this.
 export function defaultAlternateUrls(url: URL): Record<Locale, string> {
   const nonDefault = LOCALES.filter((l) => l !== DEFAULT_LOCALE);
-  const slug = url.pathname
+  const slug = new URL(canonicalUrl(url)).pathname
     .replace(new RegExp(`^/(${nonDefault.join("|")})(\/|$)`), "")
     .replace(/^\//, "");
   return Object.fromEntries(

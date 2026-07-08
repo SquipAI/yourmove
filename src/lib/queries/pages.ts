@@ -148,6 +148,20 @@ const INSTAGRAM_SITELINK_ID = "469bab81-c3fc-4f5c-9c94-edba4425d4ee";
 const TIKTOK_SITELINK_ID = "bda114b9-483b-4738-885e-9f016b6ba34f";
 const SUPPORT_EMAIL_SITELINK_ID = "80997e6d-d270-4f14-8387-ecd6bcfd2046";
 
+// Section nav labels for breadcrumb schema (Home / Tools / Blog crumbs).
+export function getNavLabels(lang = DEFAULT_LOCALE) {
+  return cached(`getNavLabels:${lang}`, () =>
+    sanityClient.fetch<{ home: string; tools: string; blog: string }>(
+      `{
+        "home": *[_type == "home" && language == $lang][0].navLabel,
+        "tools": *[_type == "tools" && language == $lang][0].navLabel,
+        "blog": *[_type == "blog" && language == $lang][0].navLabel
+      }`,
+      { lang },
+    ),
+  );
+}
+
 // Tools dropdown content — shared by header and footer.
 export function getNavTools(lang = DEFAULT_LOCALE) {
   return cached(`getNavTools:${lang}`, () =>

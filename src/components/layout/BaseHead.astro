@@ -1,6 +1,7 @@
 ---
 import { LOCALES, HREFLANG, OGLOCALE, DEFAULT_LOCALE } from "@i18n/config";
 import type { Locale } from "@i18n/config";
+import { canonicalUrl } from "@lib/canonicalUrl";
 
 interface Props {
   title: string;
@@ -22,10 +23,7 @@ const {
 } = Astro.props;
 
 const origin = Astro.url.origin;
-const rawUrl = Astro.url.toString();
-const canonical =
-  Astro.props.canonical ??
-  rawUrl.replace(/index\.html$/, "").replace(/\.html$/, "");
+const canonical = Astro.props.canonical ?? canonicalUrl(Astro.url);
 const ogImageUrl = ogImage ?? `${origin}/og.png`;
 
 function localePath(l: Locale) {
@@ -53,10 +51,13 @@ function localePath(l: Locale) {
 <link rel="canonical" href={canonical} />
 
 <meta property="og:type" content={ogType} />
+<meta property="og:site_name" content="YourMove AI" />
 <meta property="og:url" content={canonical} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
 <meta property="og:image" content={ogImageUrl} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
 <meta property="og:locale" content={OGLOCALE[lang]} />
 {
   LOCALES.filter((l) => l !== lang).map((l) => (

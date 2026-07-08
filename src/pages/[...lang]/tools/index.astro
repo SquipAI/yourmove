@@ -7,16 +7,20 @@ import ToolList from "@components/tools/ui/ToolList.astro";
 import ToolsHero from "@components/tools/ui/ToolsHero.astro";
 import CtaSection from "@components/shared/CtaSection.astro";
 
+import SchemaOrg from "@components/seo/SchemaOrg.astro";
 import {
   getToolsPage,
   getFeaturedTools,
   getCategoriesWithTools,
   getAppsWithTools,
   getAppDownload,
+  getNavLabels,
 } from "@lib/queries";
 
+import { collectionPageSchema } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
-import { getAllLocalePaths } from "@i18n/utils";
+import { canonicalUrl } from "@lib/canonicalUrl";
+import { getAllLocalePaths, localePathFor } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 
@@ -26,13 +30,33 @@ export function getStaticPaths() {
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 
-const [page, featured, categories, apps, appDownload] = await Promise.all([
+const [page, featured, categories, apps, appDownload, nav] = await Promise.all([
   getToolsPage(lang),
   getFeaturedTools(lang),
   getCategoriesWithTools(lang),
   getAppsWithTools(lang),
   getAppDownload(),
+  getNavLabels(lang),
 ]);
+
+const origin = Astro.url.origin;
+const localePath = localePathFor(lang);
+const pageUrl = canonicalUrl(Astro.url);
+const schema = collectionPageSchema(
+  pageUrl,
+  lang,
+  page.title,
+  page.metaDescription,
+  [
+    { name: nav.home, url: `${origin}${localePath("")}` },
+    { name: nav.tools },
+  ],
+  ogImageHref(origin, lang, "tools"),
+  featured.map((tool) => ({
+    name: tool.cardTitle ?? tool.title,
+    url: `${origin}${localePath(tool.slug)}`,
+  })),
+);
 ---
 
 <Base
@@ -41,6 +65,7 @@ const [page, featured, categories, apps, appDownload] = await Promise.all([
   {lang}
   ogImage={ogImageHref(Astro.url.origin, lang, "tools")}
 >
+  <SchemaOrg slot="head" {schema} />
   <ToolsHero {page} {categories} {apps} {lang} />
 
   {

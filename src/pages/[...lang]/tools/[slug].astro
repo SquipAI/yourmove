@@ -1,11 +1,19 @@
 ---
 import Base from "@layouts/Base.astro";
+import SchemaOrg from "@components/seo/SchemaOrg.astro";
 import PageHeading from "@components/shared/PageHeading.astro";
 import ToolList from "@components/tools/ui/ToolList.astro";
 import CtaSection from "@components/shared/CtaSection.astro";
-import { getAppPage, getAllAppPaths, getAppDownload } from "@lib/queries";
+import {
+  getAppPage,
+  getAllAppPaths,
+  getAppDownload,
+  getNavLabels,
+} from "@lib/queries";
+import { collectionPageSchema } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
-import { buildAlternateUrls } from "@i18n/utils";
+import { canonicalUrl } from "@lib/canonicalUrl";
+import { buildAlternateUrls, localePathFor } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 
@@ -19,9 +27,10 @@ export async function getStaticPaths() {
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 const { slug } = Astro.params;
 if (!slug) throw new Error("Missing slug param");
-const [app, appDownload] = await Promise.all([
+const [app, appDownload, nav] = await Promise.all([
   getAppPage(slug, lang),
   getAppDownload(),
+  getNavLabels(lang),
 ]);
 if (!app) throw new Error(`App not found: ${slug} (${lang})`);
 const count =
@@ -33,6 +42,25 @@ const alternateUrls = buildAlternateUrls(
   app.alternates,
   "tools",
 );
+
+const origin = Astro.url.origin;
+const localePath = localePathFor(lang);
+const schema = collectionPageSchema(
+  canonicalUrl(Astro.url),
+  lang,
+  app.title,
+  app.metaDescription,
+  [
+    { name: nav.home, url: `${origin}${localePath("")}` },
+    { name: nav.tools, url: `${origin}${localePath("tools")}` },
+    { name: app.name },
+  ],
+  ogImageHref(origin, lang, `tools/${slug}`),
+  app.tools.map((tool) => ({
+    name: tool.cardTitle ?? tool.title,
+    url: `${origin}${localePath(tool.slug)}`,
+  })),
+);
 ---
 
 <Base
@@ -42,6 +70,7 @@ const alternateUrls = buildAlternateUrls(
   {alternateUrls}
   ogImage={ogImageHref(Astro.url.origin, lang, `tools/${slug}`)}
 >
+  <SchemaOrg slot="head" {schema} />
   <section class="section">
     <PageHeading
       title={app.title}

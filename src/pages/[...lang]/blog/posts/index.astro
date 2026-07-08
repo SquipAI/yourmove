@@ -1,10 +1,17 @@
 ---
 import Base from "@layouts/Base.astro";
+import SchemaOrg from "@components/seo/SchemaOrg.astro";
 import PostList from "@components/blog/ui/PostList.astro";
 import PageHeading from "@components/shared/PageHeading.astro";
-import { getAllPublishedPosts, getBlogPostsPage } from "@lib/queries";
+import {
+  getAllPublishedPosts,
+  getBlogPostsPage,
+  getNavLabels,
+} from "@lib/queries";
+import { collectionPageSchema } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
-import { getAllLocalePaths } from "@i18n/utils";
+import { canonicalUrl } from "@lib/canonicalUrl";
+import { getAllLocalePaths, localePathFor } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 
@@ -13,12 +20,32 @@ export function getStaticPaths() {
 }
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
-const [posts, page] = await Promise.all([
+const [posts, page, nav] = await Promise.all([
   getAllPublishedPosts(lang),
   getBlogPostsPage(lang),
+  getNavLabels(lang),
 ]);
 const countWord =
   posts.length === 1 ? t(lang, "blog.article") : t(lang, "blog.articles");
+
+const origin = Astro.url.origin;
+const localePath = localePathFor(lang);
+const schema = collectionPageSchema(
+  canonicalUrl(Astro.url),
+  lang,
+  page.title,
+  page.metaDescription,
+  [
+    { name: nav.home, url: `${origin}${localePath("")}` },
+    { name: nav.blog, url: `${origin}${localePath("blog")}` },
+    { name: page.title },
+  ],
+  ogImageHref(origin, lang, "blog/posts"),
+  posts.map((post) => ({
+    name: post.title,
+    url: `${origin}${localePath(`blog/${post.slug}`)}`,
+  })),
+);
 ---
 
 <Base
@@ -27,6 +54,7 @@ const countWord =
   {lang}
   ogImage={ogImageHref(Astro.url.origin, lang, "blog/posts")}
 >
+  <SchemaOrg slot="head" {schema} />
   <section class="section">
     <PageHeading
       title={page.title}

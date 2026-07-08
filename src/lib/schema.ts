@@ -292,6 +292,83 @@ export function homeSchema(
   return { "@context": "https://schema.org", "@graph": graph };
 }
 
+// Listing/hub page: CollectionPage + BreadcrumbList, plus an ItemList when
+// `items` are given. Used by /tools, /tools/{app}, /blog, /blog/posts,
+// /blog/topics and topic pages.
+export function collectionPageSchema(
+  url: string,
+  lang: Locale,
+  name: string,
+  description: string,
+  breadcrumbs: BreadcrumbItem[],
+  ogImage: string,
+  items?: { name: string; url: string }[],
+) {
+  const page: Record<string, unknown> = {
+    "@type": "CollectionPage",
+    "@id": url,
+    url,
+    inLanguage: lang,
+    name: stripAccent(name),
+    isPartOf: { "@id": SITE_ID },
+    breadcrumb: { "@id": `${url}#breadcrumb` },
+    image: ogImage,
+    ...(description ? { description } : {}),
+  };
+
+  const graph: unknown[] = [
+    orgNode(lang),
+    WEBSITE,
+    page,
+    buildBreadcrumb(breadcrumbs, `${url}#breadcrumb`),
+  ];
+
+  if (items?.length) {
+    page.mainEntity = { "@id": `${url}#list` };
+    graph.push({
+      "@type": "ItemList",
+      "@id": `${url}#list`,
+      numberOfItems: items.length,
+      itemListElement: items.map((item, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: stripAccent(item.name),
+        url: item.url,
+      })),
+    });
+  }
+
+  return { "@context": "https://schema.org", "@graph": graph };
+}
+
+// Minimal static page (privacy / terms): WebPage + BreadcrumbList.
+export function webPageSchema(
+  url: string,
+  lang: Locale,
+  name: string,
+  description: string,
+  breadcrumbs: BreadcrumbItem[],
+) {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      orgNode(lang),
+      WEBSITE,
+      {
+        "@type": "WebPage",
+        "@id": url,
+        url,
+        inLanguage: lang,
+        name: stripAccent(name),
+        isPartOf: { "@id": SITE_ID },
+        breadcrumb: { "@id": `${url}#breadcrumb` },
+        ...(description ? { description } : {}),
+      },
+      buildBreadcrumb(breadcrumbs, `${url}#breadcrumb`),
+    ],
+  };
+}
+
 function quotationNode(p: Press, lang: Locale) {
   const node: Record<string, unknown> = {
     "@type": "Quotation",

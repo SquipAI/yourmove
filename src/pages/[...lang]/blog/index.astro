@@ -11,6 +11,7 @@ import SeeAllLink from "@components/blog/ui/SeeAllLink.astro";
 import TagList from "@components/blog/ui/TagList.astro";
 import CtaSection from "@components/shared/CtaSection.astro";
 
+import SchemaOrg from "@components/seo/SchemaOrg.astro";
 import {
   getBlogPage,
   getLatestPosts,
@@ -19,11 +20,14 @@ import {
   getAllTagsWithCount,
   getPostCount,
   getAppDownload,
+  getNavLabels,
   BLOG_LATEST_COUNT,
   BLOG_FEATURED_COUNT,
 } from "@lib/queries";
 
+import { collectionPageSchema } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
+import { canonicalUrl } from "@lib/canonicalUrl";
 import { getAllLocalePaths, localePathFor } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
@@ -34,7 +38,7 @@ export function getStaticPaths() {
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 
-const [page, latest, featured, tagSections, allTags, postCount, appDownload] =
+const [page, latest, featured, tagSections, allTags, postCount, appDownload, nav] =
   await Promise.all([
     getBlogPage(lang),
     getLatestPosts(BLOG_LATEST_COUNT, lang),
@@ -43,9 +47,23 @@ const [page, latest, featured, tagSections, allTags, postCount, appDownload] =
     getAllTagsWithCount(lang),
     getPostCount(lang),
     getAppDownload(),
+    getNavLabels(lang),
   ]);
 
+const origin = Astro.url.origin;
 const localePath = localePathFor(lang);
+const schema = collectionPageSchema(
+  canonicalUrl(Astro.url),
+  lang,
+  page.title,
+  page.metaDescription,
+  [{ name: nav.home, url: `${origin}${localePath("")}` }, { name: nav.blog }],
+  ogImageHref(origin, lang, "blog"),
+  latest.map((post) => ({
+    name: post.title,
+    url: `${origin}${localePath(`blog/${post.slug}`)}`,
+  })),
+);
 ---
 
 <Base
@@ -54,6 +72,7 @@ const localePath = localePathFor(lang);
   {lang}
   ogImage={ogImageHref(Astro.url.origin, lang, "blog")}
 >
+  <SchemaOrg slot="head" {schema} />
   <header class="section pb-section-sm md:pb-svw">
     <PageHeading title={page.title} subtitle={page.description} size="big" />
   </header>

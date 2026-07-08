@@ -19,6 +19,7 @@ import {
 } from "@lib/queries";
 import { articleSchema } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
+import { canonicalUrl } from "@lib/canonicalUrl";
 import { stripAccent } from "@lib/parseAccent";
 
 import { buildAlternateUrls, localePathFor } from "@i18n/utils";
@@ -51,7 +52,7 @@ const alternateUrls = buildAlternateUrls(
 );
 
 const origin = Astro.url.origin;
-const pageUrl = String(Astro.url);
+const pageUrl = canonicalUrl(Astro.url);
 const localePath = localePathFor(lang);
 const blogUrl = `${origin}${localePath("blog")}`;
 const firstTag = post.tags[0];

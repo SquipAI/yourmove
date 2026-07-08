@@ -1,5 +1,6 @@
 ---
 import Base from "@layouts/Base.astro";
+import SchemaOrg from "@components/seo/SchemaOrg.astro";
 import PostList from "@components/blog/ui/PostList.astro";
 import TagList from "@components/blog/ui/TagList.astro";
 import PageHeading from "@components/shared/PageHeading.astro";
@@ -11,9 +12,12 @@ import {
   getTagBySlug,
   getTagPosts,
   getAppDownload,
+  getNavLabels,
 } from "@lib/queries";
+import { collectionPageSchema } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
-import { buildAlternateUrls } from "@i18n/utils";
+import { canonicalUrl } from "@lib/canonicalUrl";
+import { buildAlternateUrls, localePathFor } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 
@@ -27,11 +31,12 @@ export async function getStaticPaths() {
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 const { tag: slug } = Astro.params;
 if (!slug) throw new Error("Missing slug param");
-const [tag, posts, allTags, appDownload] = await Promise.all([
+const [tag, posts, allTags, appDownload, nav] = await Promise.all([
   getTagBySlug(slug, lang),
   getTagPosts(slug, lang),
   getAllTagsWithCount(lang),
   getAppDownload(),
+  getNavLabels(lang),
 ]);
 if (!tag) throw new Error(`Tag not found: ${slug} (${lang})`);
 const otherTags = allTags.filter((t) => t.slug !== slug);
@@ -44,6 +49,26 @@ const alternateUrls = buildAlternateUrls(
   tag.alternates,
   "blog/topics",
 );
+
+const origin = Astro.url.origin;
+const localePath = localePathFor(lang);
+const schema = collectionPageSchema(
+  canonicalUrl(Astro.url),
+  lang,
+  tag.title,
+  tag.metaDescription,
+  [
+    { name: nav.home, url: `${origin}${localePath("")}` },
+    { name: nav.blog, url: `${origin}${localePath("blog")}` },
+    { name: t(lang, "blog.topics"), url: `${origin}${localePath("blog/topics")}` },
+    { name: tag.title },
+  ],
+  ogImageHref(origin, lang, `blog/topics/${slug}`),
+  posts.map((post) => ({
+    name: post.title,
+    url: `${origin}${localePath(`blog/${post.slug}`)}`,
+  })),
+);
 ---
 
 <Base
@@ -53,6 +78,7 @@ const alternateUrls = buildAlternateUrls(
   {alternateUrls}
   ogImage={ogImageHref(Astro.url.origin, lang, `blog/topics/${slug}`)}
 >
+  <SchemaOrg slot="head" {schema} />
   <section class="section">
     <PageHeading
       title={`${tag.title}: *${tag.metaTitle}*`}
