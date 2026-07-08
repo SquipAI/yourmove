@@ -23,7 +23,7 @@ export const downloadCtaGroup: FieldGroupDefinition = {
 
 // Reusable inline-link annotation. Used in `post.body`, `post.faq[].answer`,
 // and any other portable-text array that needs the same link picker.
-// Targets internal docs (post/tool/howToUse/home), siteLinks, or a one-off URL.
+// Targets internal docs (post/tool/home), siteLinks, or a one-off URL.
 export const linkAnnotation = () =>
   defineField({
     name: "link",
@@ -391,7 +391,7 @@ export const faqArrayField = (group = "content") =>
 
 // Shared preview block for routable / singleton page schemas — title from the
 // `title` field with optional fallback, language code uppercased as subtitle.
-// `tool`/`howToUse`/`datingApp` use custom previews with media or different
+// `tool`/`datingApp` use custom previews with media or different
 // title fields; this helper covers the remaining ~8 page docs.
 export function singletonPagePreview(defaultTitle?: string) {
   return {

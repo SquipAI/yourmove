@@ -7,7 +7,6 @@ import { testimonial } from "./testimonial";
 import { reviewsPage } from "./reviewsPage";
 import { tools } from "./tools/tools";
 import { tag } from "./blog/tag";
-import { howToUse } from "./howToUse";
 import { siteLink } from "./settings/siteLink";
 import { home } from "./home";
 import { blog } from "./blog/blog";
@@ -36,7 +35,6 @@ export const schemaTypes = [
   testimonial,
   reviewsPage,
   tag,
-  howToUse,
   siteLink,
   press,
 ];
@@ -50,7 +48,6 @@ export const translatedSchemaTypes = [
   "testimonial",
   "reviewsPage",
   "tag",
-  "howToUse",
   "privacy",
   "terms",
   "home",

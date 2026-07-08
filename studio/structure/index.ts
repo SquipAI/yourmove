@@ -115,7 +115,6 @@ export function createStructure(lang: string) {
                 localizedList(S, "datingApp", "Dating Apps", lang),
               ]),
           ),
-        localizedList(S, "howToUse", "How to Use", lang),
         S.divider(),
         S.listItem()
           .title("Reviews")
