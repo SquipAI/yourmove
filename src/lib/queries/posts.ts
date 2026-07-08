@@ -74,7 +74,7 @@ export function getPostBySlug(slug: string, lang = DEFAULT_LOCALE) {
         _id, title, summary, metaTitle, metaDescription, language,
         "createdAt": coalesce(${POST_EN}createdAt, createdAt, _createdAt), _updatedAt,
         "readingTime": coalesce(${POST_EN}readingTime, readingTime),
-        "tagIds": tags[]._ref,
+        "tagIds": ${POST_EN}tags[]._ref,
         "tags": ${POST_TAGS},
         "mainImage": coalesce(
           ${POST_EN}mainImage{ asset, hotspot, crop, alt },
@@ -106,9 +106,9 @@ export function getRelatedPosts(
       `*[_type == "post" && language == $lang && defined(slug.current) && ${POST_VISIBLE} && _id != $postId]
         | order(
             select(
-              featured == true && count((tags[]._ref)[@ in $tagIds]) > 0 => 3,
+              featured == true && count((${POST_EN}tags[]._ref)[@ in $tagIds]) > 0 => 3,
               featured == true => 2,
-              count((tags[]._ref)[@ in $tagIds]) > 0 => 1,
+              count((${POST_EN}tags[]._ref)[@ in $tagIds]) > 0 => 1,
               0
             ) desc,
             coalesce(${POST_EN}createdAt, createdAt, _createdAt) desc

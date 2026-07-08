@@ -62,6 +62,12 @@ export const POST_TAGS = /* groq */ `${POST_EN}tags[]->{
   "title": coalesce(${TAG_SIB}->title, title)
 }`;
 
+// Membership predicate: the tag is in the post's EN-canonical tag set. Use INSIDE
+// a post subquery nested exactly ONE level in a tag scope (replaces the old
+// `references(^._id)`) — ^._id is the tag, ^.^._id reaches it from the metadata
+// subquery (à la enRefMatch). So topic membership follows EN, not the locale doc.
+export const POST_HAS_TAG_EN = /* groq */ `coalesce(*[_type == "translation.metadata" && schemaTypes[0] == "tag" && references(^.^._id)][0].translations[language == "en"][0].value._ref, ^._id) in ${POST_EN}tags[]._ref`;
+
 export const POST_CARD = /* groq */ `{
   _id, title, summary, "slug": slug.current,
   "mainImage": coalesce(
