@@ -1,0 +1,7 @@
+# pnpm 11 config home. Allow native packages to run their build/postinstall
+# scripts (blocked by default). See https://pnpm.io/settings
+allowBuilds:
+  sharp: true
+  esbuild: true
+  fsevents: true
+  workerd: true

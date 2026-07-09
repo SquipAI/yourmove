@@ -2,6 +2,7 @@
   "name": "yourmove",
   "type": "module",
   "version": "0.0.1",
+  "packageManager": "pnpm@11.10.0",
   "engines": {
     "node": ">=22.12.0"
   },
@@ -18,9 +19,12 @@
     "@astrojs/react": "^6.0.0",
     "@astrojs/sitemap": "^3.7.3",
     "@portabletext/to-html": "^5.0.2",
+    "@sanity/client": "^7.23.0",
     "@sanity/document-internationalization": "^6.2.9",
+    "@sanity/icons": "^3.7.4",
     "@sanity/image-url": "^2.1.1",
     "@sanity/language-filter": "^5.0.4",
+    "@sanity/ui": "^3.2.0",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.4",
     "@types/react": "^19.2.14",
@@ -35,18 +39,10 @@
     "styled-components": "^6.4.1",
     "tailwindcss": "^4.2.4"
   },
-  "overrides": {
-    "vite": "^8"
-  },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "@types/node": "^24.12.3",
     "typescript": "^6.0.3",
     "wrangler": "^4.90.0"
-  },
-  "allowScripts": {
-    "esbuild@0.28.1": true,
-    "fsevents@2.3.3": true,
-    "sharp@0.34.5": true,
-    "workerd@1.20260625.1": true
   }
 }

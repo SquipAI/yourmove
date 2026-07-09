@@ -1,43 +1,36 @@
-# Astro Starter Kit: Minimal
+# YourMove AI
 
-```sh
-npm create astro@latest -- --template minimal
-```
+Astro 7 (static, Cloudflare) + Sanity (document-level i18n: EN/ES/DE) + Tailwind 4.
+The repo holds both the public site (`src/`) and the Sanity Studio (`studio/`,
+`sanity.config.ts`).
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Requirements
 
-## 🚀 Project Structure
+- Node **24** (see `.node-version`)
+- **pnpm** — run `corepack enable` once; the pinned version comes from
+  `package.json` → `packageManager`.
 
-Inside of your Astro project, you'll see the following folders and files:
+## Commands
+
+Run from the project root:
+
+| Command             | Action                                            |
+| :------------------ | :------------------------------------------------ |
+| `pnpm install`      | Install dependencies                              |
+| `pnpm dev`          | Start the site dev server (`localhost:4321`)      |
+| `pnpm build`        | Build the static site to `./dist/`                |
+| `pnpm preview`      | Preview the production build locally              |
+| `pnpm astro check`  | Type-check the project                            |
+| `pnpm sanity dev`   | Run the Sanity Studio locally                     |
+| `pnpm sanity deploy`| Deploy the hosted Studio                          |
+
+## Structure
 
 ```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+src/          # Astro site — pages, components, lib/queries (Sanity data layer)
+studio/       # Sanity Studio — schemas, structure, actions, plugins
+public/       # static assets
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+The build fetches published content from Sanity at build time; the site deploys as
+static assets to Cloudflare.
