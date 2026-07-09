@@ -3,11 +3,9 @@ import type { Post, PostCard } from "@lib/types";
 import {
   ALTERNATES,
   BODY,
-  POST_CARD,
   POST_EN,
   FAQ_ITEMS,
   POST_VISIBLE,
-  POST_LISTABLE,
   POST_ORDER,
   POST_TAGS,
 } from "./projections";
@@ -35,95 +33,98 @@ const STAT_ITEMS = /* groq */ `stats[]{
   }
 }`;
 
-export function getAllPublishedPosts(lang = DEFAULT_LOCALE) {
-  return cached(`getAllPublishedPosts:${lang}`, () =>
-    sanityClient.fetch<PostCard[]>(
-      `*[_type == "post" && language == $lang && ${POST_LISTABLE}] | ${POST_ORDER} ${POST_CARD}`,
+// The single cached post dataset per locale: every visible, slugged post with
+// the full page projection plus the raw flags listings/scoring need, sorted
+// newest-first (POST_ORDER) so slice-based selectors need no re-sort. This is
+// the one source of truth behind post pages AND every post/tag listing — all of
+// which are pure JS selectors over it, so there is no per-view collection scan.
+export type LocalePost = Post & {
+  slug: string;
+  featured: boolean | null; // locale-doc flag — related scoring
+  featuredEn: boolean | null; // EN-inherited flag — Featured listings
+};
+
+export function getAllPosts(lang = DEFAULT_LOCALE) {
+  return cached(`getAllPosts:${lang}`, () =>
+    sanityClient.fetch<LocalePost[]>(
+      `*[_type == "post" && language == $lang && defined(slug.current) && ${POST_VISIBLE}] | ${POST_ORDER} {
+        _id, title, summary, metaTitle, metaDescription, language,
+        "slug": slug.current,
+        "createdAt": coalesce(${POST_EN}createdAt, createdAt, _createdAt), _updatedAt,
+        "readingTime": coalesce(${POST_EN}readingTime, readingTime),
+        "featured": featured,
+        "featuredEn": coalesce(${POST_EN}featured, featured),
+        "tagIds": ${POST_EN}tags[]._ref,
+        "tags": ${POST_TAGS},
+        "mainImage": coalesce(
+          ${POST_EN}mainImage{ asset, hotspot, crop, alt },
+          mainImage{ asset, hotspot, crop, alt }
+        ),
+        ${ALTERNATES},
+        ${BODY},
+        ${FAQ_ITEMS},
+        ${STAT_ITEMS}
+      }`,
       { lang },
     ),
+  );
+}
+
+// A post has renderable body copy (mirrors POST_LISTABLE's count(body) > 0).
+export const postHasBody = (p: LocalePost) => (p.body?.length ?? 0) > 0;
+
+// Narrow the full record to the card shape listings render.
+export const toPostCard = (p: LocalePost): PostCard => ({
+  _id: p._id,
+  title: p.title,
+  summary: p.summary,
+  slug: p.slug,
+  mainImage: p.mainImage,
+  readingTime: p.readingTime,
+  createdAt: p.createdAt,
+  tags: p.tags,
+});
+
+// Post pages get their full body via getStaticPaths props — one batch per locale
+// instead of a point lookup per page. `hasBody` gates out body-less drafts,
+// matching the old getAllPostPaths/POST_LISTABLE selection (validated 1:1).
+export async function getAllPostsForBuild() {
+  const perLocale = await Promise.all(
+    LOCALES.map(async (lang) =>
+      (await getAllPosts(lang))
+        .filter(postHasBody)
+        .map((post) => ({ lang, slug: post.slug, post })),
+    ),
+  );
+  return perLocale.flat();
+}
+
+export function getAllPublishedPosts(lang = DEFAULT_LOCALE) {
+  return cached(`getAllPublishedPosts:${lang}`, async () =>
+    (await getAllPosts(lang)).filter(postHasBody).map(toPostCard),
   );
 }
 
 export function getLatestPosts(n: number, lang = DEFAULT_LOCALE) {
-  return cached(`getLatestPosts:${n}:${lang}`, () =>
-    sanityClient.fetch<PostCard[]>(
-      `*[_type == "post" && language == $lang && ${POST_LISTABLE}] | ${POST_ORDER} [0...$n] ${POST_CARD}`,
-      { lang, n },
-    ),
+  return cached(`getLatestPosts:${n}:${lang}`, async () =>
+    (await getAllPosts(lang)).filter(postHasBody).slice(0, n).map(toPostCard),
   );
 }
 
 export function getFeaturedPosts(n: number, lang = DEFAULT_LOCALE) {
-  return cached(`getFeaturedPosts:${n}:${lang}`, () =>
-    sanityClient.fetch<PostCard[]>(
-      // `featured` is an editorial flag set on the EN canonical only; locales
-      // inherit it (same as `hidden` via POST_VISIBLE) — otherwise ES/DE, whose
-      // siblings are all featured=false, would show an empty Featured block.
-      `*[_type == "post" && language == $lang && ${POST_LISTABLE} && coalesce(${POST_EN}featured, featured) == true] | ${POST_ORDER} [0...$n] ${POST_CARD}`,
-      { lang, n },
-    ),
+  // `featuredEn` is the EN-canonical flag; locales inherit it, so ES/DE (whose
+  // siblings are all featured=false) still surface the same Featured block.
+  return cached(`getFeaturedPosts:${n}:${lang}`, async () =>
+    (await getAllPosts(lang))
+      .filter((p) => postHasBody(p) && p.featuredEn === true)
+      .slice(0, n)
+      .map(toPostCard),
   );
 }
 
-// One fetch per locale of every buildable post with the full page projection —
-// replaces the per-page getPostBySlug (378 point lookups) with 3 batch reads,
-// consumed via getStaticPaths props. Selection validated 1:1 against the old
-// coalesceLang-by-slug lookup; `slug` rides along for the route params.
-export function getAllPostsForBuild() {
-  return cached("getAllPostsForBuild", async () => {
-    const perLocale = await Promise.all(
-      LOCALES.map((lang) =>
-        sanityClient
-          .fetch<(Post & { slug: string })[]>(
-            `*[_type == "post" && language == $lang && ${POST_LISTABLE}]{
-              _id, title, summary, metaTitle, metaDescription, language,
-              "slug": slug.current,
-              "createdAt": coalesce(${POST_EN}createdAt, createdAt, _createdAt), _updatedAt,
-              "readingTime": coalesce(${POST_EN}readingTime, readingTime),
-              "tagIds": ${POST_EN}tags[]._ref,
-              "tags": ${POST_TAGS},
-              "mainImage": coalesce(
-                ${POST_EN}mainImage{ asset, hotspot, crop, alt },
-                mainImage{ asset, hotspot, crop, alt }
-              ),
-              ${ALTERNATES},
-              ${BODY},
-              ${FAQ_ITEMS},
-              ${STAT_ITEMS}
-            }`,
-            { lang },
-          )
-          .then((posts) => posts.map((post) => ({ lang, slug: post.slug, post }))),
-      ),
-    );
-    return perLocale.flat();
-  });
-}
-
-// A post card enriched with the raw fields JS scoring/filtering needs: `featured`
-// (locale doc) + EN-canonical tag refs for overlap + whether it has body copy.
-// Shared by related-posts scoring and tag-topic listing.
-export type PostCandidate = PostCard & {
-  featured: boolean | null;
-  tagIds: string[] | null;
-  hasBody: boolean;
-};
-const POST_CANDIDATE = POST_CARD.replace(
-  /}\s*$/,
-  `,\n  "featured": featured,\n  "tagIds": ${POST_EN}tags[]._ref,\n  "hasBody": count(body) > 0\n}`,
-);
-
-// Every post of a locale as a candidate, fetched once (cached) instead of
-// re-scanned per page. The scan re-resolves the EN canonical for hidden/tags/
-// createdAt on every post, so doing it once per locale — not once per related or
-// topic page — is the build's biggest single win. Filter keeps any visible,
-// slugged post (body-less ones included); callers narrow with `hasBody`.
-export function getPostCandidates(lang = DEFAULT_LOCALE) {
-  return cached(`getPostCandidates:${lang}`, () =>
-    sanityClient.fetch<PostCandidate[]>(
-      `*[_type == "post" && language == $lang && defined(slug.current) && ${POST_VISIBLE}] ${POST_CANDIDATE}`,
-      { lang },
-    ),
+export function getPostCount(lang = DEFAULT_LOCALE) {
+  return cached(`getPostCount:${lang}`, async () =>
+    (await getAllPosts(lang)).filter(postHasBody).length,
   );
 }
 
@@ -134,17 +135,17 @@ export function getRelatedPosts(
   n = RELATED_POSTS_COUNT,
 ) {
   return cached(`getRelatedPosts:${postId}:${lang}`, async () => {
-    // Score + order in JS over the once-fetched candidate set. Mirrors the old
-    // GROQ exactly: featured+tag-overlap=3, featured=2, overlap=1, else 0; ties
-    // broken by createdAt desc (ISO strings sort lexically).
-    const candidates = await getPostCandidates(lang);
+    // Score over the newest-first set: featured+tag-overlap=3, featured=2,
+    // overlap=1, else 0; ties broken by createdAt desc — matching the old
+    // order(score desc, createdAt desc).
+    const posts = await getAllPosts(lang);
     const want = new Set(tagIds);
-    const score = (p: PostCandidate) => {
+    const score = (p: LocalePost) => {
       const overlap = p.tagIds?.some((t) => want.has(t)) ?? false;
       if (p.featured === true) return overlap ? 3 : 2;
       return overlap ? 1 : 0;
     };
-    return candidates
+    return posts
       .filter((p) => p._id !== postId)
       .map((p) => ({ p, s: score(p) }))
       .sort(
@@ -153,16 +154,6 @@ export function getRelatedPosts(
           (a.p.createdAt < b.p.createdAt ? 1 : a.p.createdAt > b.p.createdAt ? -1 : 0),
       )
       .slice(0, n)
-      .map((x) => x.p);
+      .map((x) => toPostCard(x.p));
   });
 }
-
-export function getPostCount(lang = DEFAULT_LOCALE) {
-  return cached(`getPostCount:${lang}`, () =>
-    sanityClient.fetch<number>(
-      `count(*[_type == "post" && language == $lang && ${POST_LISTABLE}])`,
-      { lang },
-    ),
-  );
-}
-
