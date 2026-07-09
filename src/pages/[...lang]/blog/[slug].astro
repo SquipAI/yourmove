@@ -5,6 +5,7 @@ import PageHeading from "@components/shared/PageHeading.astro";
 import PortableText from "@components/shared/PortableText.astro";
 import SectionHeading from "@components/shared/SectionHeading.astro";
 import ShareButtons from "@components/shared/ShareButtons.astro";
+import CtaSection from "@components/shared/CtaSection.astro";
 import PostList from "@components/blog/ui/PostList.astro";
 import MetaDot from "@components/blog/ui/MetaDot.astro";
 import SchemaOrg from "@components/seo/SchemaOrg.astro";
@@ -16,6 +17,8 @@ import {
   getRelatedPosts,
   getAllPostPaths,
   getHome,
+  getBlogPage,
+  getAppDownload,
 } from "@lib/queries";
 import { articleSchema } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
@@ -33,9 +36,11 @@ export async function getStaticPaths() {
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 const { slug } = Astro.params;
 if (!slug) throw new Error("Missing slug param");
-const [post, home] = await Promise.all([
+const [post, home, blogPage, appDownload] = await Promise.all([
   getPostBySlug(slug, lang),
   getHome(lang),
+  getBlogPage(lang),
+  getAppDownload(),
 ]);
 if (!post) throw new Error(`Post not found: ${slug} (${lang})`);
 if (!home) throw new Error(`Home document not found (${lang})`);
@@ -155,4 +160,6 @@ const dateFormatted = new Intl.DateTimeFormat(lang, {
       </section>
     )
   }
+
+  <CtaSection heading={blogPage.downloadHeading} {...appDownload} {lang} />
 </Base>
