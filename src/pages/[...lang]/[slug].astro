@@ -22,8 +22,7 @@ import PageHeading from "@components/shared/PageHeading.astro";
 import TestimonialsSection from "@components/testimonials/TestimonialsSection.astro";
 
 import {
-  getToolPage,
-  getAllToolPaths,
+  getAllToolsForBuild,
   getTestimonialsForTool,
   getCompatibilityApps,
   getPress,
@@ -36,18 +35,21 @@ import { canonicalUrl } from "@lib/canonicalUrl";
 import { buildToolBreadcrumbs } from "@lib/toolPage";
 import { stripAccent } from "@lib/parseAccent";
 import { t } from "@i18n/ui";
-import { buildAlternateUrls, toLocaleParams } from "@i18n/utils";
+import { buildAlternateUrls } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
 
 export async function getStaticPaths() {
-  return toLocaleParams(await getAllToolPaths());
+  const tools = await getAllToolsForBuild();
+  return tools.map(({ lang, slug, tool }) => ({
+    params: { lang: lang === DEFAULT_LOCALE ? undefined : lang, slug },
+    props: { tool },
+  }));
 }
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 const { slug } = Astro.params;
 if (!slug) throw new Error("Missing slug param");
-const tool = await getToolPage(slug, lang);
-if (!tool) throw new Error(`Tool not found: ${slug} (${lang})`);
+const { tool } = Astro.props;
 const pageUrl = canonicalUrl(Astro.url);
 const ogImage = ogImageHref(Astro.url.origin, lang, slug);
 const { display: testimonials, specific } = await getTestimonialsForTool(

@@ -1,10 +1,9 @@
 import { sanityClient } from "@lib/sanity";
 import { coalesceLang } from "./coalesceLang";
 import { cached } from "./cache";
-import { DEFAULT_LOCALE } from "@i18n/config";
+import { DEFAULT_LOCALE, LOCALES } from "@i18n/config";
 import { linkTargetFields } from "@lib/links";
 import { ALTERNATES, FAQ_ITEMS, HAS_PAGE_FILTER } from "./projections";
-import type { LocalizedPath } from "./types";
 import type {
   ToolCard,
   ToolsPageData,
@@ -127,18 +126,10 @@ export function getAppsWithTools(
   );
 }
 
-export function getAppPage(slug: string, lang = DEFAULT_LOCALE) {
-  return cached(`getAppPage:${slug}:${lang}`, async () => {
-    // One round-trip: fetch the app plus the union of both universal-tool id sets;
-    // the exact set (multi vs solo) and its order are picked in JS from toolCount.
-    const allUniversalIds = [
-      ...new Set([...UNIVERSAL_TOOLS_MULTI, ...UNIVERSAL_TOOLS_SOLO]),
-    ];
-    const app = await sanityClient.fetch<
-      | (AppPageData & { universalPool: { enId: string; card: ToolCard }[] })
-      | null
-    >(
-      `${coalesceLang("datingApp", "slug.current == $slug")}{
+// The full app-page projection, extracted so the build batch reads exactly what
+// the old per-slug getAppPage produced. `universalPool` is the union of both
+// universal-tool id sets; the exact pick happens in JS from toolCount.
+const APP_PAGE_PROJECTION = /* groq */ `{
         _id, name, title, description, metaTitle, metaDescription, downloadHeading,
         "slug": slug.current, "brandColor": coalesce(${DATINGAPP_EN}brandColor, brandColor),
         ${ALTERNATES},
@@ -148,26 +139,39 @@ export function getAppPage(slug: string, lang = DEFAULT_LOCALE) {
           "enId": ${TOOL_EN_ID},
           "card": ${TOOL_CARD}
         }
-      }`,
-      { slug, lang, allUniversalIds },
-    );
-    if (!app) return null;
+      }`;
 
-    // Curated app-agnostic tools, ordered by the id list (GROQ `in` doesn't preserve order).
-    const ids =
-      app.toolCount > 1 ? UNIVERSAL_TOOLS_MULTI : UNIVERSAL_TOOLS_SOLO;
-    app.universalTools = ids
-      .map((id) => app.universalPool.find((u) => u.enId === id)?.card)
-      .filter((c): c is ToolCard => Boolean(c));
-
-    return app;
-  });
+// App pages via getStaticPaths props — one batch per locale. The universal-tools
+// pick (multi vs solo, ordered by the id list) happens in JS per app, exactly as
+// the old getAppPage did.
+export async function getAllAppsForBuild() {
+  const allUniversalIds = [
+    ...new Set([...UNIVERSAL_TOOLS_MULTI, ...UNIVERSAL_TOOLS_SOLO]),
+  ];
+  const perLocale = await Promise.all(
+    LOCALES.map(async (lang) => {
+      const apps = await sanityClient.fetch<
+        (AppPageData & { universalPool: { enId: string; card: ToolCard }[] })[]
+      >(
+        `*[_type == "datingApp" && language == $lang && defined(slug.current) && ${HAS_PAGE_FILTER}] ${APP_PAGE_PROJECTION}`,
+        { lang, allUniversalIds },
+      );
+      return apps.map((app) => {
+        const ids =
+          app.toolCount > 1 ? UNIVERSAL_TOOLS_MULTI : UNIVERSAL_TOOLS_SOLO;
+        app.universalTools = ids
+          .map((id) => app.universalPool.find((u) => u.enId === id)?.card)
+          .filter((c): c is ToolCard => Boolean(c));
+        return { lang, slug: app.slug, app };
+      });
+    }),
+  );
+  return perLocale.flat();
 }
 
-export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
-  return cached(`getToolPage:${slug}:${lang}`, () =>
-    sanityClient.fetch<ToolPageData | null>(
-      `${coalesceLang("tool", "slug.current == $slug")}{
+// The full tool-page projection, extracted so the build batch reads exactly
+// what the old per-slug getToolPage produced (no transcription drift).
+const TOOL_PAGE_PROJECTION = /* groq */ `{
         _id, "enId": coalesce(${TOOL_EN_ID}, _id), title, description, eyebrow, cardTitle, metaTitle, metaDescription,
         "app": coalesce(${TOOL_EN}app, app)->{ _id, name, "slug": slug.current },
         "toolsNavLabel": *[_type == "tools" && language == $lang][0].navLabel,
@@ -310,10 +314,22 @@ export function getToolPage(slug: string, lang = DEFAULT_LOCALE) {
             }
           }
         )
-      }`,
-      { slug, lang },
-    ),
+      }`;
+
+// Tool pages get their data via getStaticPaths props — one batch per locale
+// instead of a coalesceLang point lookup per page. Selection validated 1:1
+// against the old getToolPage (same slug-unique-per-locale invariant as posts).
+export async function getAllToolsForBuild() {
+  const perLocale = await Promise.all(
+    LOCALES.map(async (lang) => {
+      const tools = await sanityClient.fetch<ToolPageData[]>(
+        `*[_type == "tool" && language == $lang && defined(slug.current)] ${TOOL_PAGE_PROJECTION}`,
+        { lang },
+      );
+      return tools.map((tool) => ({ lang, slug: tool.slug, tool }));
+    }),
   );
+  return perLocale.flat();
 }
 
 // All EN dating apps with a logo, optionally excluding one by id.
@@ -327,28 +343,6 @@ export function getCompatibilityApps(excludeAppId: string | null = null) {
           _id, name, "logoUrl": logo.asset->url
         }[defined(logoUrl)]`,
       { excludeAppId: excludeAppId ?? "" },
-    ),
-  );
-}
-
-export function getAllToolPaths() {
-  return cached("getAllToolPaths", () =>
-    sanityClient.fetch<LocalizedPath[]>(
-      `*[_type == "tool" && defined(slug.current)]{
-        "lang": coalesce(language, "en"),
-        "slug": slug.current
-      }`,
-    ),
-  );
-}
-
-export function getAllAppPaths() {
-  return cached("getAllAppPaths", () =>
-    sanityClient.fetch<LocalizedPath[]>(
-      `*[_type == "datingApp" && defined(slug.current) && ${HAS_PAGE_FILTER}]{
-        "lang": coalesce(language, "en"),
-        "slug": slug.current
-      }`,
     ),
   );
 }

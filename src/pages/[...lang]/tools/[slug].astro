@@ -5,31 +5,33 @@ import PageHeading from "@components/shared/PageHeading.astro";
 import ToolList from "@components/tools/ui/ToolList.astro";
 import CtaSection from "@components/shared/CtaSection.astro";
 import {
-  getAppPage,
-  getAllAppPaths,
+  getAllAppsForBuild,
   getAppDownload,
   getNavLabels,
 } from "@lib/queries";
 import { collectionPageSchema, breadcrumbTrail } from "@lib/schema";
 import { ogImageHref } from "@lib/og/route";
 import { canonicalUrl } from "@lib/canonicalUrl";
-import { buildAlternateUrls, localePathFor, toLocaleParams } from "@i18n/utils";
+import { buildAlternateUrls, localePathFor } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 
 export async function getStaticPaths() {
-  return toLocaleParams(await getAllAppPaths());
+  const apps = await getAllAppsForBuild();
+  return apps.map(({ lang, slug, app }) => ({
+    params: { lang: lang === DEFAULT_LOCALE ? undefined : lang, slug },
+    props: { app },
+  }));
 }
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 const { slug } = Astro.params;
 if (!slug) throw new Error("Missing slug param");
-const [app, appDownload, nav] = await Promise.all([
-  getAppPage(slug, lang),
+const { app } = Astro.props;
+const [appDownload, nav] = await Promise.all([
   getAppDownload(),
   getNavLabels(lang),
 ]);
-if (!app) throw new Error(`App not found: ${slug} (${lang})`);
 const count =
   app.tools.length === 1 ? t(lang, "tools.tool") : t(lang, "tools.tools");
 const alternateUrls = buildAlternateUrls(
