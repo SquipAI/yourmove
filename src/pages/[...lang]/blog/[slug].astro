@@ -13,9 +13,8 @@ import SchemaOrg from "@components/seo/SchemaOrg.astro";
 import ShortLogo from "@assets/svg/ShortLogoSvg.svg";
 
 import {
-  getPostBySlug,
   getRelatedPosts,
-  getAllPostPaths,
+  getAllPostsForBuild,
   getHome,
   getBlogPage,
   getAppDownload,
@@ -25,24 +24,27 @@ import { ogImageHref } from "@lib/og/route";
 import { canonicalUrl } from "@lib/canonicalUrl";
 import { stripAccent } from "@lib/parseAccent";
 
-import { buildAlternateUrls, localePathFor, toLocaleParams } from "@i18n/utils";
+import { buildAlternateUrls, localePathFor } from "@i18n/utils";
 import { DEFAULT_LOCALE, type Locale } from "@i18n/config";
 import { t } from "@i18n/ui";
 
 export async function getStaticPaths() {
-  return toLocaleParams(await getAllPostPaths());
+  const posts = await getAllPostsForBuild();
+  return posts.map(({ lang, slug, post }) => ({
+    params: { lang: lang === DEFAULT_LOCALE ? undefined : lang, slug },
+    props: { post },
+  }));
 }
 
 const lang = (Astro.params.lang ?? DEFAULT_LOCALE) as Locale;
 const { slug } = Astro.params;
 if (!slug) throw new Error("Missing slug param");
-const [post, home, blogPage, appDownload] = await Promise.all([
-  getPostBySlug(slug, lang),
+const { post } = Astro.props;
+const [home, blogPage, appDownload] = await Promise.all([
   getHome(lang),
   getBlogPage(lang),
   getAppDownload(),
 ]);
-if (!post) throw new Error(`Post not found: ${slug} (${lang})`);
 if (!home) throw new Error(`Home document not found (${lang})`);
 const related = await getRelatedPosts(post._id, post.tagIds, lang);
 const alternateUrls = buildAlternateUrls(

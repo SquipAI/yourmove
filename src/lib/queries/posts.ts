@@ -1,6 +1,5 @@
 import { sanityClient } from "@lib/sanity";
 import type { Post, PostCard } from "@lib/types";
-import type { LocalizedPath } from "./types";
 import {
   ALTERNATES,
   BODY,
@@ -12,10 +11,9 @@ import {
   POST_ORDER,
   POST_TAGS,
 } from "./projections";
-import { coalesceLang } from "./coalesceLang";
 import { cached } from "./cache";
 import { LOCALIZED_SLUG } from "@lib/links";
-import { DEFAULT_LOCALE } from "@i18n/config";
+import { DEFAULT_LOCALE, LOCALES } from "@i18n/config";
 
 export const BLOG_LATEST_COUNT = 4;
 export const BLOG_FEATURED_COUNT = 5;
@@ -67,27 +65,39 @@ export function getFeaturedPosts(n: number, lang = DEFAULT_LOCALE) {
   );
 }
 
-export function getPostBySlug(slug: string, lang = DEFAULT_LOCALE) {
-  return cached(`getPostBySlug:${slug}:${lang}`, () =>
-    sanityClient.fetch<Post | null>(
-      `${coalesceLang("post", "slug.current == $slug")}{
-        _id, title, summary, metaTitle, metaDescription, language,
-        "createdAt": coalesce(${POST_EN}createdAt, createdAt, _createdAt), _updatedAt,
-        "readingTime": coalesce(${POST_EN}readingTime, readingTime),
-        "tagIds": ${POST_EN}tags[]._ref,
-        "tags": ${POST_TAGS},
-        "mainImage": coalesce(
-          ${POST_EN}mainImage{ asset, hotspot, crop, alt },
-          mainImage{ asset, hotspot, crop, alt }
-        ),
-        ${ALTERNATES},
-        ${BODY},
-        ${FAQ_ITEMS},
-        ${STAT_ITEMS}
-      }`,
-      { slug, lang },
-    ),
-  );
+// One fetch per locale of every buildable post with the full page projection —
+// replaces the per-page getPostBySlug (378 point lookups) with 3 batch reads,
+// consumed via getStaticPaths props. Selection validated 1:1 against the old
+// coalesceLang-by-slug lookup; `slug` rides along for the route params.
+export function getAllPostsForBuild() {
+  return cached("getAllPostsForBuild", async () => {
+    const perLocale = await Promise.all(
+      LOCALES.map((lang) =>
+        sanityClient
+          .fetch<(Post & { slug: string })[]>(
+            `*[_type == "post" && language == $lang && ${POST_LISTABLE}]{
+              _id, title, summary, metaTitle, metaDescription, language,
+              "slug": slug.current,
+              "createdAt": coalesce(${POST_EN}createdAt, createdAt, _createdAt), _updatedAt,
+              "readingTime": coalesce(${POST_EN}readingTime, readingTime),
+              "tagIds": ${POST_EN}tags[]._ref,
+              "tags": ${POST_TAGS},
+              "mainImage": coalesce(
+                ${POST_EN}mainImage{ asset, hotspot, crop, alt },
+                mainImage{ asset, hotspot, crop, alt }
+              ),
+              ${ALTERNATES},
+              ${BODY},
+              ${FAQ_ITEMS},
+              ${STAT_ITEMS}
+            }`,
+            { lang },
+          )
+          .then((posts) => posts.map((post) => ({ lang, slug: post.slug, post }))),
+      ),
+    );
+    return perLocale.flat();
+  });
 }
 
 // A post card enriched with the raw fields JS scoring/filtering needs: `featured`
@@ -156,13 +166,3 @@ export function getPostCount(lang = DEFAULT_LOCALE) {
   );
 }
 
-export function getAllPostPaths() {
-  return cached("getAllPostPaths", () =>
-    sanityClient.fetch<LocalizedPath[]>(
-      `*[_type == "post" && ${POST_LISTABLE}]{
-        "lang": coalesce(language, "en"),
-        "slug": slug.current
-      }`,
-    ),
-  );
-}
