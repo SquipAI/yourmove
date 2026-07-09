@@ -1,9 +1,5 @@
 import { sanityClient } from "@lib/sanity";
-import type {
-  Testimonial,
-  TestimonialBuckets,
-  ReviewsPageData,
-} from "@lib/types";
+import type { Testimonial, ReviewsPageData } from "@lib/types";
 import { coalesceLang } from "./coalesceLang";
 import { TESTIMONIAL_CARD } from "./projections";
 import { cached } from "./cache";
@@ -24,32 +20,43 @@ export function getReviewsPage(lang = DEFAULT_LOCALE) {
   );
 }
 
+// The single cached testimonial dataset per locale: every EN testimonial (bodies
+// localized to `lang`) plus the tool refs the per-tool buckets need. One source
+// of truth behind the reviews page, home reviews, and per-tool testimonials.
+type TestimonialWithTools = Testimonial & { toolIds: string[] | null };
+const TESTIMONIAL_CARD_WITH_TOOLS = TESTIMONIAL_CARD.replace(
+  /}\s*$/,
+  `, "toolIds": tools[]._ref }`,
+);
+
 export function getAllTestimonials(lang = DEFAULT_LOCALE) {
   return cached(`getAllTestimonials:${lang}`, () =>
-    sanityClient.fetch<Testimonial[]>(
-      `*[_type == "testimonial" && language == "en"] | ${TESTIMONIAL_ORDER} ${TESTIMONIAL_CARD}`,
+    sanityClient.fetch<TestimonialWithTools[]>(
+      `*[_type == "testimonial" && language == "en"] | ${TESTIMONIAL_ORDER} ${TESTIMONIAL_CARD_WITH_TOOLS}`,
       { lang },
     ),
   );
 }
 
-// Per-tool testimonials. `specific` = testimonials whose tools[] references
-// this tool (the only ones eligible for review/rating schema — see schema.ts).
-// `display` pads specific with generic (untagged) ones up to N so the section
-// never looks empty, but generic ones must NOT drive the tool's aggregateRating.
-export async function getTestimonialsForTool(
+// Per-tool testimonials, derived in JS from the cached set (no per-tool fetch).
+// `specific` = testimonials whose tools[] references this tool (the only ones
+// eligible for review/rating schema — see schema.ts). `display` pads specific
+// with generic (untagged) ones up to N so the section never looks empty, but
+// generic ones must NOT drive the tool's aggregateRating. The set is pre-sorted
+// by TESTIMONIAL_ORDER, so filter+slice mirrors the old `[0...n]`.
+export function getTestimonialsForTool(
   toolId: string,
   lang = DEFAULT_LOCALE,
   n = TESTIMONIALS_TOOL_COUNT,
 ) {
   return cached(`getTestimonialsForTool:${toolId}:${lang}:${n}`, async () => {
-    const { specific, generic } = await sanityClient.fetch<TestimonialBuckets>(
-      `{
-        "specific": *[_type == "testimonial" && language == "en" && references($toolId)] | ${TESTIMONIAL_ORDER} [0...$n] ${TESTIMONIAL_CARD},
-        "generic": *[_type == "testimonial" && language == "en" && count(coalesce(tools, [])) == 0] | ${TESTIMONIAL_ORDER} [0...$n] ${TESTIMONIAL_CARD}
-      }`,
-      { lang, toolId, n },
-    );
+    const all = await getAllTestimonials(lang);
+    const specific = all
+      .filter((t) => t.toolIds?.includes(toolId) ?? false)
+      .slice(0, n);
+    const generic = all
+      .filter((t) => (t.toolIds?.length ?? 0) === 0)
+      .slice(0, n);
     const display =
       specific.length >= n
         ? specific

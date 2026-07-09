@@ -332,18 +332,24 @@ export async function getAllToolsForBuild() {
   return perLocale.flat();
 }
 
-// All EN dating apps with a logo, optionally excluding one by id.
-// Used by the Photo Enhancer template: general page shows all; app-specific
-// pages drop the current app's logo.
-export function getCompatibilityApps(excludeAppId: string | null = null) {
-  return cached(`getCompatibilityApps:${excludeAppId ?? ""}`, () =>
+// All EN dating apps with a logo, ordered — the one cached source for the Photo
+// Enhancer compatibility row. Per-page exclusion happens in JS.
+export function getAllCompatibilityApps() {
+  return cached("getAllCompatibilityApps", () =>
     sanityClient.fetch<CompatibilityApp[]>(
-      `*[_type == "datingApp" && language == "en" && defined(logo.asset) && _id != $excludeAppId]
+      `*[_type == "datingApp" && language == "en" && defined(logo.asset)]
         | order(select(order > 0 => order, 9999) asc, name asc) {
           _id, name, "logoUrl": logo.asset->url
         }[defined(logoUrl)]`,
-      { excludeAppId: excludeAppId ?? "" },
     ),
+  );
+}
+
+// Compatibility logos for a page: general page shows all; an app-specific page
+// drops its own logo. Filters the cached set in JS (order preserved).
+export function getCompatibilityApps(excludeAppId: string | null = null) {
+  return cached(`getCompatibilityApps:${excludeAppId ?? ""}`, async () =>
+    (await getAllCompatibilityApps()).filter((a) => a._id !== excludeAppId),
   );
 }
 
