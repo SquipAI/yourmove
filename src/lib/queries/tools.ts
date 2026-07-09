@@ -81,6 +81,64 @@ const TOOL_LIST_ORDER = /* groq */ `order(
   title asc
 )`;
 
+// EN-canonical id of a parent doc — tools reference EN parents, so listings group
+// tools under the current-locale parent by matching tool.<parent>._id (already EN)
+// to the parent's EN id.
+const DATINGAPP_EN_ID = /* groq */ `coalesce(*[_type == "translation.metadata" && schemaTypes[0] == "datingApp" && references(^._id)][0].translations[language == "en"][0].value._ref, _id)`;
+const TOOLCATEGORY_EN_ID = /* groq */ `coalesce(*[_type == "translation.metadata" && schemaTypes[0] == "toolCategory" && references(^._id)][0].translations[language == "en"][0].value._ref, _id)`;
+
+// The single cached tool dataset per locale: every tool as a card plus the raw
+// sort keys the listings need. One source of truth behind the featured / apps /
+// category listings and the tool count — all pure JS selectors over it.
+type ToolListItem = ToolCard & {
+  featuredEn: boolean;
+  orderEn: number | null;
+  appOrder: number | null;
+};
+const TOOL_LIST_ITEM = TOOL_CARD.replace(
+  /}\s*$/,
+  `,
+  "featuredEn": coalesce(${TOOL_EN}featured, featured, false),
+  "orderEn": coalesce(${TOOL_EN}order, order),
+  "appOrder": coalesce(${TOOL_EN}app, app)->order
+}`,
+);
+
+export function getAllTools(lang = DEFAULT_LOCALE) {
+  return cached(`getAllTools:${lang}`, () =>
+    sanityClient.fetch<ToolListItem[]>(
+      `*[_type == "tool" && language == $lang] ${TOOL_LIST_ITEM}`,
+      { lang },
+    ),
+  );
+}
+
+const toToolCard = (t: ToolListItem): ToolCard => ({
+  _id: t._id,
+  title: t.title,
+  slug: t.slug,
+  description: t.description,
+  cardTitle: t.cardTitle,
+  cardDescription: t.cardDescription,
+  paid: t.paid,
+  category: t.category,
+  app: t.app,
+});
+
+// GROQ orders strings by code point; match that (localeCompare would differ).
+const cmpStr = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+// TOOL_LIST_ORDER's `select(x > 0 => x, 9999)` — unset (null) and 0 both go last.
+const listRank = (o: number | null) => (o != null && o > 0 ? o : 9999);
+
+// Mirrors GROQ TOOL_LIST_ORDER: featured desc, tool order asc (0/null last),
+// has-app desc, app order asc (0/null last), title asc.
+const byToolListOrder = (a: ToolListItem, b: ToolListItem) =>
+  Number(b.featuredEn) - Number(a.featuredEn) ||
+  listRank(a.orderEn) - listRank(b.orderEn) ||
+  Number(Boolean(b.app)) - Number(Boolean(a.app)) ||
+  listRank(a.appOrder) - listRank(b.appOrder) ||
+  cmpStr(a.title, b.title);
+
 export function getToolsPage(lang = DEFAULT_LOCALE) {
   return cached(`getToolsPage:${lang}`, () =>
     sanityClient.fetch<ToolsPageData>(
@@ -91,20 +149,20 @@ export function getToolsPage(lang = DEFAULT_LOCALE) {
 }
 
 export function getToolCount(lang = DEFAULT_LOCALE) {
-  return cached(`getToolCount:${lang}`, () =>
-    sanityClient.fetch<number>(
-      `count(*[_type == "tool" && language == $lang])`,
-      { lang },
-    ),
-  );
+  return cached(`getToolCount:${lang}`, async () => (await getAllTools(lang)).length);
 }
 
 export function getFeaturedTools(lang = DEFAULT_LOCALE, n = 6) {
-  return cached(`getFeaturedTools:${lang}:${n}`, () =>
-    sanityClient.fetch<ToolCard[]>(
-      `*[_type == "tool" && language == $lang && coalesce(${TOOL_EN}featured, featured) == true] | order(coalesce(${TOOL_EN}order, order, 9999) asc, title asc) [0...$n] ${TOOL_CARD}`,
-      { lang, n },
-    ),
+  // order(coalesce(order, 9999) asc, title asc) — keeps 0 as 0, unlike
+  // TOOL_LIST_ORDER which sends 0 to the end.
+  return cached(`getFeaturedTools:${lang}:${n}`, async () =>
+    (await getAllTools(lang))
+      .filter((t) => t.featuredEn === true)
+      .sort(
+        (a, b) => (a.orderEn ?? 9999) - (b.orderEn ?? 9999) || cmpStr(a.title, b.title),
+      )
+      .slice(0, n)
+      .map(toToolCard),
   );
 }
 
@@ -112,18 +170,49 @@ export function getAppsWithTools(
   lang = DEFAULT_LOCALE,
   previewCount = APP_PREVIEW_COUNT,
 ) {
-  return cached(`getAppsWithTools:${lang}:${previewCount}`, () =>
-    sanityClient.fetch<AppWithTools[]>(
-      `*[_type == "datingApp" && language == $lang && ${HAS_PAGE_FILTER}]{
-        _id, name, "slug": slug.current,
-        "brandColor": coalesce(${DATINGAPP_EN}brandColor, brandColor),
-        "order": select(coalesce(${DATINGAPP_EN}order, order) > 0 => coalesce(${DATINGAPP_EN}order, order), 9999),
-        "toolCount": count(*[_type == "tool" && language == $lang && ${enRefMatch("app", "datingApp")}]),
-        "tools": *[_type == "tool" && language == $lang && ${enRefMatch("app", "datingApp")}] | ${TOOL_LIST_ORDER} [0...$previewCount] { _id, "title": coalesce(cardTitle, title) }
-      }[toolCount > 0] | order(order asc, name asc)`,
-      { lang, previewCount },
-    ),
-  );
+  return cached(`getAppsWithTools:${lang}:${previewCount}`, async () => {
+    const [apps, tools] = await Promise.all([
+      sanityClient.fetch<
+        {
+          _id: string;
+          enId: string;
+          name: string;
+          slug: string;
+          brandColor: string | null;
+          order: number;
+        }[]
+      >(
+        `*[_type == "datingApp" && language == $lang && ${HAS_PAGE_FILTER}]{
+          _id, "enId": ${DATINGAPP_EN_ID}, name, "slug": slug.current,
+          "brandColor": coalesce(${DATINGAPP_EN}brandColor, brandColor),
+          "order": select(coalesce(${DATINGAPP_EN}order, order) > 0 => coalesce(${DATINGAPP_EN}order, order), 9999)
+        }`,
+        { lang },
+      ),
+      getAllTools(lang),
+    ]);
+    return apps
+      .map((app) => ({
+        app,
+        appTools: tools
+          .filter((t) => t.app?._id === app.enId)
+          .sort(byToolListOrder),
+      }))
+      .filter(({ appTools }) => appTools.length > 0)
+      .sort((a, b) => a.app.order - b.app.order || cmpStr(a.app.name, b.app.name))
+      .map(
+        ({ app, appTools }): AppWithTools => ({
+          _id: app._id,
+          name: app.name,
+          slug: app.slug,
+          brandColor: app.brandColor,
+          toolCount: appTools.length,
+          tools: appTools
+            .slice(0, previewCount)
+            .map((t) => ({ _id: t._id, title: t.cardTitle ?? t.title })),
+        }),
+      );
+  });
 }
 
 // The full app-page projection, extracted so the build batch reads exactly what
@@ -354,13 +443,39 @@ export function getCompatibilityApps(excludeAppId: string | null = null) {
 }
 
 export function getCategoriesWithTools(lang = DEFAULT_LOCALE) {
-  return cached(`getCategoriesWithTools:${lang}`, () =>
-    sanityClient.fetch<ToolCategoryWithTools[]>(
-      `*[_type == "toolCategory" && language == $lang]{
-        _id, title, description, "order": select(coalesce(${TOOLCATEGORY_EN}order, order) > 0 => coalesce(${TOOLCATEGORY_EN}order, order), 9999),
-        "tools": *[_type == "tool" && language == $lang && ${enRefMatch("category", "toolCategory")}] | ${TOOL_LIST_ORDER} ${TOOL_CARD}
-      }[count(tools) > 0] | order(order asc, title asc)`,
-      { lang },
-    ),
-  );
+  return cached(`getCategoriesWithTools:${lang}`, async () => {
+    const [categories, tools] = await Promise.all([
+      sanityClient.fetch<
+        {
+          _id: string;
+          enId: string;
+          title: string;
+          description: string | null;
+          order: number;
+        }[]
+      >(
+        `*[_type == "toolCategory" && language == $lang]{
+          _id, "enId": ${TOOLCATEGORY_EN_ID}, title, description,
+          "order": select(coalesce(${TOOLCATEGORY_EN}order, order) > 0 => coalesce(${TOOLCATEGORY_EN}order, order), 9999)
+        }`,
+        { lang },
+      ),
+      getAllTools(lang),
+    ]);
+    return categories
+      .map(
+        (cat): ToolCategoryWithTools => ({
+          _id: cat._id,
+          title: cat.title,
+          description: cat.description,
+          order: cat.order,
+          tools: tools
+            .filter((t) => t.category?._id === cat.enId)
+            .sort(byToolListOrder)
+            .map(toToolCard),
+        }),
+      )
+      .filter((c) => c.tools.length > 0)
+      .sort((a, b) => a.order - b.order || cmpStr(a.title, b.title));
+  });
 }
