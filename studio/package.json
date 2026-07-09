@@ -1,0 +1,30 @@
+{
+  "name": "yourmove-studio",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "packageManager": "pnpm@11.10.0",
+  "scripts": {
+    "dev": "sanity dev",
+    "build": "sanity build",
+    "deploy": "sanity deploy",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sanity/document-internationalization": "^6.2.9",
+    "@sanity/icons": "^3.7.4",
+    "@sanity/language-filter": "^5.0.4",
+    "@sanity/ui": "^3.2.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "sanity": "^6.2.0",
+    "sanity-plugin-internationalized-array": "^5.1.9",
+    "styled-components": "^6.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^6.0.3"
+  }
+}

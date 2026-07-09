@@ -12,9 +12,9 @@ export default defineCliConfig({
   vite: {
     resolve: {
       alias: {
-        "@studio": path.resolve("./studio"),
-        "@i18n": path.resolve("./src/i18n"),
-        "@lib": path.resolve("./src/lib"),
+        "@studio": path.resolve("."),
+        "@i18n": path.resolve("../src/i18n"),
+        "@lib": path.resolve("../src/lib"),
       },
     },
   },

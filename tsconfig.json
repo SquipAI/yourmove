@@ -1,7 +1,7 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*", "./worker-configuration.d.ts"],
-  "exclude": ["dist"],
+  "exclude": ["dist", "studio"],
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"],
@@ -10,10 +10,7 @@
       "@lib/*": ["./src/lib/*"],
       "@i18n/*": ["./src/i18n/*"],
       "@styles/*": ["./src/styles/*"],
-      "@assets/*": ["./src/assets/*"],
-      "@studio/*": ["./studio/*"]
-    },
-    "jsx": "react-jsx",
-    "jsxImportSource": "react"
+      "@assets/*": ["./src/assets/*"]
+    }
   }
 }

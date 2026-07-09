@@ -1,0 +1,3 @@
+# Standalone package (not linked to the site). Allow native build scripts.
+allowBuilds:
+  esbuild: true
