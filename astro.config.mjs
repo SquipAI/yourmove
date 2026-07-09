@@ -3,7 +3,6 @@ import { defineConfig } from "astro/config";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import cloudflare from "@astrojs/cloudflare";
-import react from "@astrojs/react";
 
 export default defineConfig({
   site: "https://yourmove.ai",
@@ -21,7 +20,6 @@ export default defineConfig({
         },
       },
     }),
-    react(),
   ],
 
   vite: {

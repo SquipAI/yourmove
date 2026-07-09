@@ -6,9 +6,11 @@ The repo holds both the public site (`src/`) and the Sanity Studio (`studio/`,
 
 ## Requirements
 
-- Node **24** (see `.node-version`)
-- **pnpm** — run `corepack enable` once; the pinned version comes from
-  `package.json` → `packageManager`.
+- Node **24** (see `.node-version` — use `fnm`/`nvm` to match)
+- **pnpm** (not npm). The version is pinned in `package.json` → `packageManager`.
+
+> **First-time / after cloning:** run `corepack enable` once, then `pnpm install`.
+> Don't run `npm install` — this repo uses a pnpm lockfile and npm will fight it.
 
 ## Commands
 

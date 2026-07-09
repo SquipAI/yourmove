@@ -16,7 +16,6 @@
     "@astro-community/astro-embed-youtube": "^0.5.10",
     "@astrojs/cloudflare": "^14.0.1",
     "@astrojs/markdown-remark": "^7.2.0",
-    "@astrojs/react": "^6.0.0",
     "@astrojs/sitemap": "^3.7.3",
     "@portabletext/to-html": "^5.0.2",
     "@sanity/client": "^7.23.0",
