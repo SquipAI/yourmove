@@ -8,11 +8,11 @@ import type {
 import {
   ALTERNATES,
   POST_CARD,
-  POST_EN,
   POST_HAS_TAG_EN,
   POST_LISTABLE,
   POST_ORDER,
 } from "./projections";
+import { getPostCandidates } from "./posts";
 import { coalesceLang } from "./coalesceLang";
 import { cached } from "./cache";
 import { DEFAULT_LOCALE } from "@i18n/config";
@@ -43,18 +43,23 @@ export function getAllTagsWithCount(lang = DEFAULT_LOCALE) {
 
 export function getTagPosts(tagSlug: string, lang = DEFAULT_LOCALE) {
   return cached(`getTagPosts:${tagSlug}:${lang}`, async () => {
-    // Resolve the topic's EN-canonical tag id from the localized slug, then list
-    // posts whose EN tag set includes it — membership follows EN, not the locale doc.
+    // Resolve the topic's EN-canonical tag id from the localized slug (membership
+    // follows EN, not the locale doc), then filter the once-fetched candidate set
+    // in JS — the same shared set as related posts, so no per-topic collection
+    // scan. Order by createdAt desc, mirroring POST_ORDER (ISO strings sort lexically).
     const enTagId = await sanityClient.fetch<string | null>(
       `*[_type == "tag" && slug.current == $tagSlug && language == $lang][0]{
         "enId": coalesce(*[_type == "translation.metadata" && schemaTypes[0] == "tag" && references(^._id)][0].translations[language == "en"][0].value._ref, _id)
       }.enId`,
       { tagSlug, lang },
     );
-    return sanityClient.fetch<PostCard[]>(
-      `*[_type == "post" && language == $lang && ${POST_LISTABLE} && $enTagId in ${POST_EN}tags[]._ref] | ${POST_ORDER} ${POST_CARD}`,
-      { lang, enTagId },
-    );
+    if (!enTagId) return [];
+    const candidates = await getPostCandidates(lang);
+    return candidates
+      .filter((p) => p.hasBody && (p.tagIds?.includes(enTagId) ?? false))
+      .sort((a, b) =>
+        a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0,
+      );
   });
 }
 

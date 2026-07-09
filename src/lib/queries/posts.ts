@@ -90,25 +90,28 @@ export function getPostBySlug(slug: string, lang = DEFAULT_LOCALE) {
   );
 }
 
-// A related-post candidate: the card shape plus the two raw fields the score
-// needs — `featured` (locale doc) and the EN-canonical tag refs for overlap.
-type RelatedCandidate = PostCard & {
+// A post card enriched with the raw fields JS scoring/filtering needs: `featured`
+// (locale doc) + EN-canonical tag refs for overlap + whether it has body copy.
+// Shared by related-posts scoring and tag-topic listing.
+export type PostCandidate = PostCard & {
   featured: boolean | null;
   tagIds: string[] | null;
+  hasBody: boolean;
 };
-const RELATED_CANDIDATE = POST_CARD.replace(
+const POST_CANDIDATE = POST_CARD.replace(
   /}\s*$/,
-  `,\n  "featured": featured,\n  "tagIds": ${POST_EN}tags[]._ref\n}`,
+  `,\n  "featured": featured,\n  "tagIds": ${POST_EN}tags[]._ref,\n  "hasBody": count(body) > 0\n}`,
 );
 
-// Every candidate of a locale, fetched once (cached) instead of re-scanned per
-// post. The scan re-resolves the EN canonical for hidden/tags/createdAt on every
-// post, so doing it once per locale — not once per page — is the build's biggest
-// single win. Filter matches the old related query (no body-count requirement).
-function getRelatedCandidates(lang = DEFAULT_LOCALE) {
-  return cached(`getRelatedCandidates:${lang}`, () =>
-    sanityClient.fetch<RelatedCandidate[]>(
-      `*[_type == "post" && language == $lang && defined(slug.current) && ${POST_VISIBLE}] ${RELATED_CANDIDATE}`,
+// Every post of a locale as a candidate, fetched once (cached) instead of
+// re-scanned per page. The scan re-resolves the EN canonical for hidden/tags/
+// createdAt on every post, so doing it once per locale — not once per related or
+// topic page — is the build's biggest single win. Filter keeps any visible,
+// slugged post (body-less ones included); callers narrow with `hasBody`.
+export function getPostCandidates(lang = DEFAULT_LOCALE) {
+  return cached(`getPostCandidates:${lang}`, () =>
+    sanityClient.fetch<PostCandidate[]>(
+      `*[_type == "post" && language == $lang && defined(slug.current) && ${POST_VISIBLE}] ${POST_CANDIDATE}`,
       { lang },
     ),
   );
@@ -124,9 +127,9 @@ export function getRelatedPosts(
     // Score + order in JS over the once-fetched candidate set. Mirrors the old
     // GROQ exactly: featured+tag-overlap=3, featured=2, overlap=1, else 0; ties
     // broken by createdAt desc (ISO strings sort lexically).
-    const candidates = await getRelatedCandidates(lang);
+    const candidates = await getPostCandidates(lang);
     const want = new Set(tagIds);
-    const score = (p: RelatedCandidate) => {
+    const score = (p: PostCandidate) => {
       const overlap = p.tagIds?.some((t) => want.has(t)) ?? false;
       if (p.featured === true) return overlap ? 3 : 2;
       return overlap ? 1 : 0;
