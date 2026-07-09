@@ -90,6 +90,30 @@ export function getPostBySlug(slug: string, lang = DEFAULT_LOCALE) {
   );
 }
 
+// A related-post candidate: the card shape plus the two raw fields the score
+// needs — `featured` (locale doc) and the EN-canonical tag refs for overlap.
+type RelatedCandidate = PostCard & {
+  featured: boolean | null;
+  tagIds: string[] | null;
+};
+const RELATED_CANDIDATE = POST_CARD.replace(
+  /}\s*$/,
+  `,\n  "featured": featured,\n  "tagIds": ${POST_EN}tags[]._ref\n}`,
+);
+
+// Every candidate of a locale, fetched once (cached) instead of re-scanned per
+// post. The scan re-resolves the EN canonical for hidden/tags/createdAt on every
+// post, so doing it once per locale — not once per page — is the build's biggest
+// single win. Filter matches the old related query (no body-count requirement).
+function getRelatedCandidates(lang = DEFAULT_LOCALE) {
+  return cached(`getRelatedCandidates:${lang}`, () =>
+    sanityClient.fetch<RelatedCandidate[]>(
+      `*[_type == "post" && language == $lang && defined(slug.current) && ${POST_VISIBLE}] ${RELATED_CANDIDATE}`,
+      { lang },
+    ),
+  );
+}
+
 export function getRelatedPosts(
   postId: string,
   tagIds: string[],
@@ -97,25 +121,26 @@ export function getRelatedPosts(
   n = RELATED_POSTS_COUNT,
 ) {
   return cached(`getRelatedPosts:${postId}:${lang}`, async () => {
-    // Score + order over cheap doc fields, slice to N, THEN apply the heavy
-    // POST_CARD projection (mainImage translation.metadata subquery + tag deref)
-    // to only the N survivors — same as getLatestPosts/getFeaturedPosts. Scoring
-    // before the projection keeps cost O(posts) per page instead of projecting
-    // every post of the language just to drop all but N.
-    const result = await sanityClient.fetch<PostCard[] | null>(
-      `*[_type == "post" && language == $lang && defined(slug.current) && ${POST_VISIBLE} && _id != $postId]
-        | order(
-            select(
-              featured == true && count((${POST_EN}tags[]._ref)[@ in $tagIds]) > 0 => 3,
-              featured == true => 2,
-              count((${POST_EN}tags[]._ref)[@ in $tagIds]) > 0 => 1,
-              0
-            ) desc,
-            coalesce(${POST_EN}createdAt, createdAt, _createdAt) desc
-          ) [0...$n] ${POST_CARD}`,
-      { postId, tagIds, lang, n },
-    );
-    return result ?? [];
+    // Score + order in JS over the once-fetched candidate set. Mirrors the old
+    // GROQ exactly: featured+tag-overlap=3, featured=2, overlap=1, else 0; ties
+    // broken by createdAt desc (ISO strings sort lexically).
+    const candidates = await getRelatedCandidates(lang);
+    const want = new Set(tagIds);
+    const score = (p: RelatedCandidate) => {
+      const overlap = p.tagIds?.some((t) => want.has(t)) ?? false;
+      if (p.featured === true) return overlap ? 3 : 2;
+      return overlap ? 1 : 0;
+    };
+    return candidates
+      .filter((p) => p._id !== postId)
+      .map((p) => ({ p, s: score(p) }))
+      .sort(
+        (a, b) =>
+          b.s - a.s ||
+          (a.p.createdAt < b.p.createdAt ? 1 : a.p.createdAt > b.p.createdAt ? -1 : 0),
+      )
+      .slice(0, n)
+      .map((x) => x.p);
   });
 }
 
