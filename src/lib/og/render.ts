@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 import satori from "satori";
 import sharp from "sharp";
@@ -8,6 +9,11 @@ import { parseAccent } from "@lib/parseAccent";
 // root). import.meta.url-relative reads break once the module is bundled into dist/.
 const fontDir = join(process.cwd(), "src/assets/fonts");
 const readFont = (file: string) => readFileSync(join(fontDir, file));
+
+// Cache PNGs by title under Astro's cacheDir — the one dir CF Workers Builds
+// persists between builds. Bump CARD_VERSION when the card design changes.
+const CARD_VERSION = "1";
+const ogCacheDir = join(process.cwd(), "node_modules/.astro/og-cache");
 
 const FRAUNCES = readFont("Fraunces72pt-Regular.otf");
 const FRAUNCES_ITALIC = readFont("Fraunces72pt-Italic.otf");
@@ -127,6 +133,10 @@ function card(title: string): Node {
 }
 
 export async function renderOgPng(title: string): Promise<Buffer> {
+  const key = createHash("sha1").update(`${CARD_VERSION}\n${title}`).digest("hex");
+  const cachePath = join(ogCacheDir, `${key}.png`);
+  if (existsSync(cachePath)) return readFileSync(cachePath);
+
   const svg = await satori(card(title) as never, {
     width: 1200,
     height: 630,
@@ -136,5 +146,8 @@ export async function renderOgPng(title: string): Promise<Buffer> {
       { name: "DM Mono", data: DM_MONO, weight: 300, style: "normal" },
     ],
   });
-  return sharp(Buffer.from(svg)).png().toBuffer();
+  const png = await sharp(Buffer.from(svg)).png().toBuffer();
+  mkdirSync(ogCacheDir, { recursive: true });
+  writeFileSync(cachePath, png);
+  return png;
 }

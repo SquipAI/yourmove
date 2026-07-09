@@ -33,9 +33,24 @@ function resolveFooterColumns(data: FooterNavData | null, lang: Locale) {
   };
 }
 
+// Base.astro calls this on every page, but nav/footer data is per-locale and
+// constant within a build — so memoize by locale (caching the promise also
+// dedupes concurrent prerenders). Skipped in dev so Sanity nav edits show live.
+const chromeCache = new Map<Locale, ReturnType<typeof buildSiteChromeFor>>();
+
+export function buildSiteChrome(lang: Locale) {
+  if (!import.meta.env.PROD) return buildSiteChromeFor(lang);
+  let cached = chromeCache.get(lang);
+  if (!cached) {
+    cached = buildSiteChromeFor(lang);
+    chromeCache.set(lang, cached);
+  }
+  return cached;
+}
+
 // Aggregates everything Header + Footer need for a given locale: tools column
 // (shared), header-only flat links, and Sanity-driven footer columns.
-export async function buildSiteChrome(lang: Locale) {
+async function buildSiteChromeFor(lang: Locale) {
   const [navTools, headerLinks, footerNav] = await Promise.all([
     getNavTools(lang),
     getHeaderLinks(lang),
