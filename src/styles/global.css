@@ -133,6 +133,10 @@
     }
   }
 
+  .section#tool > div {
+    @apply mx-0 2xl:mx-0;
+  }
+
   #footer {
     @apply pt-section pb-section-sm lg:pt-section-sm lg:pb-section-xs;
 
